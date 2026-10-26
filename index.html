@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Our Game Shelf</title>
+<meta name="description" content="A personal page that combines two BoardGameGeek collections into one list of the board games, expansions and accessories we own.">
+<style>
+  :root {
+    --bg: #f7f4ee; --card: #ffffff; --ink: #1f1d1a; --muted: #6b665e; --line: #e4ded3;
+    --accent: #3f5bd8; --remy: #c2410c; --jon: #0f766e; --both: #6d28d9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #16150f; --card: #211f19; --ink: #f2eee6; --muted: #a39d92; --line: #36332b;
+      --accent: #8ea2ff; --remy: #fb923c; --jon: #2dd4bf; --both: #c4b5fd; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 880px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { font-size: 2rem; margin: 0 0 4px; letter-spacing: -0.02em; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .notice h2 { margin: 0 0 8px; font-size: 1.15rem; }
+  .notice p { margin: 0 0 8px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .controls input, .controls select { font: inherit; padding: 8px 12px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+  .controls input { flex: 1 1 220px; }
+  .stats { color: var(--muted); font-size: 0.9rem; margin-bottom: 12px; }
+  ul.games { list-style: none; margin: 0; padding: 0; }
+  ul.games li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+  ul.games img { width: 48px; height: 48px; object-fit: contain; border-radius: 6px; flex: none; background: var(--line); }
+  .title { flex: 1; min-width: 0; }
+  .title a { color: var(--ink); text-decoration: none; font-weight: 600; }
+  .title a:hover { text-decoration: underline; }
+  .meta { color: var(--muted); font-size: 0.85rem; }
+  .pill { font-size: 0.8rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; border: 1px solid currentColor; flex: none; }
+  .pill.Remy { color: var(--remy); } .pill.Jonathan { color: var(--jon); } .pill.Both { color: var(--both); }
+  footer { margin-top: 32px; color: var(--muted); font-size: 0.9rem; }
+  footer a { color: var(--accent); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Our Game Shelf</h1>
+  <p class="sub">Every board game, expansion and accessory we own, combined from two BoardGameGeek collections and refreshed daily.</p>
+
+  <section id="notice" class="card notice">
+    <h2 id="notice-title">Loading…</h2>
+    <p id="notice-body"></p>
+  </section>
+
+  <section id="app" hidden>
+    <div class="controls">
+      <input id="q" type="search" placeholder="Search titles" aria-label="Search titles">
+      <select id="owner" aria-label="Owner">
+        <option value="">Everyone</option>
+        <option>Both</option><option>Remy</option><option>Jonathan</option>
+      </select>
+      <select id="type" aria-label="Type">
+        <option value="">All types</option>
+        <option>Base game</option><option>Expansion</option><option>Accessory</option>
+      </select>
+    </div>
+    <div class="stats" id="stats"></div>
+    <ul class="games" id="list"></ul>
+  </section>
+
+  <footer>
+    <p>A personal, non-commercial page listing the owned collections of BGG users Asianofchaos and celestinpro.</p>
+    <p><a href="https://boardgamegeek.com" target="_blank" rel="noopener">Powered by BoardGameGeek</a></p>
+  </footer>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id);
+  let games = [];
+
+  function showNotice(title, body) {
+    $("notice-title").textContent = title;
+    $("notice-body").textContent = body;
+    $("notice").hidden = false;
+    $("app").hidden = true;
+  }
+
+  function render() {
+    const q = $("q").value.trim().toLowerCase();
+    const owner = $("owner").value;
+    const type = $("type").value;
+    const shown = games.filter((g) =>
+      (!q || g.name.toLowerCase().includes(q)) &&
+      (!owner || g.ownedBy === owner) &&
+      (!type || g.type === type));
+    $("stats").textContent = `${shown.length} of ${games.length} items`;
+    const list = $("list");
+    list.replaceChildren(...shown.map((g) => {
+      const li = document.createElement("li");
+      const img = document.createElement("img");
+      img.alt = ""; img.loading = "lazy";
+      if (g.thumbnail) img.src = g.thumbnail;
+      const t = document.createElement("div"); t.className = "title";
+      const a = document.createElement("a");
+      a.href = g.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = g.name;
+      const m = document.createElement("div"); m.className = "meta";
+      m.textContent = [g.type, g.year].filter(Boolean).join(" · ");
+      t.append(a, m);
+      const p = document.createElement("span");
+      p.className = "pill " + g.ownedBy; p.textContent = g.ownedBy;
+      li.append(img, t, p);
+      return li;
+    }));
+  }
+
+  async function load() {
+    try {
+      const res = await fetch("/api/collection");
+      const data = await res.json();
+      if (data.status === "not_configured") {
+        return showNotice("Coming soon",
+          "This page is waiting on BoardGameGeek API access. Once it's approved, both collections will appear here automatically.");
+      }
+      if (data.status !== "ok") {
+        return showNotice("Couldn't reach BoardGameGeek", data.message || "Please try again in a few minutes.");
+      }
+      games = data.games;
+      $("notice").hidden = true;
+      $("app").hidden = false;
+      render();
+    } catch {
+      showNotice("Couldn't load the list", "Please try again in a few minutes.");
+    }
+  }
+
+  ["q", "owner", "type"].forEach((id) => $(id).addEventListener("input", render));
+  load();
+</script>
+</body>
+</html>
