@@ -42,7 +42,12 @@
   .row .spacer { flex: 1; }
   .copied { color: var(--muted); font-size: 0.9rem; }
   .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-  .controls input { flex: 1 1 220px; }
+  .controls input { flex: 1 1 100%; }
+  .controls select { flex: 1 1 160px; }
+  .controls .sort { display: flex; gap: 8px; flex: 1 1 220px; }
+  .controls .sort select { flex: 1; }
+  .controls .sort button { width: 44px; padding: 8px 0; }
+  .mech { color: var(--muted); font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .stats { color: var(--muted); font-size: 0.9rem; margin-bottom: 12px; }
   .warnings { color: var(--warn); font-size: 0.9rem; margin: 0 0 12px; padding-left: 20px; }
   ul.games { list-style: none; margin: 0; padding: 0; }
@@ -96,7 +101,19 @@
         <option value="">All types</option>
         <option>Base game</option><option>Expansion</option><option>Accessory</option>
       </select>
+      <select id="players" aria-label="Player count"></select>
+      <select id="mechanic" aria-label="Mechanic"><option value="">All mechanics</option></select>
+      <span class="sort">
+        <select id="sort" aria-label="Sort by">
+          <option value="name">Sort: Name</option>
+          <option value="best">Sort: Best player count</option>
+          <option value="time">Sort: Length</option>
+          <option value="weight">Sort: Complexity</option>
+        </select>
+        <button type="button" id="dir" aria-label="Reverse sort order" title="Reverse sort order">↑</button>
+      </span>
     </div>
+    <div class="stats" id="details-status" hidden></div>
     <div class="stats" id="stats"></div>
     <ul class="games" id="list"></ul>
   </section>
@@ -119,6 +136,9 @@
   let group = [];   // [{ username, label, color }]
   let games = [];   // merged: [{ ...item, owners: [label] }]
   let loadToken = 0;
+  const details = {}; // BGG id -> { minPlayers, maxPlayers, bestPlayers, playTime, weight, mechanics, ... }
+  let sortDir = 1;    // 1 = ascending, -1 = descending
+  const DETAIL_BATCH = 20; // BGG's per-request limit
 
   // ---- group <-> link: ?u=username:Nickname&u=username2 ----
   function readGroupFromUrl() {
@@ -203,21 +223,105 @@
 
   function setupOwnerFilter() {
     const sel = $("owner");
-    const opts = [["", "Everyone's games"]];
+    const opts = [["", "Everyone"]];
     if (group.length > 1) opts.push(["__all", "Owned by all"]);
     group.forEach((p) => opts.push([p.label, `${p.label}'s games`]));
     sel.replaceChildren(...opts.map(([value, text]) => Object.assign(document.createElement("option"), { value, text })));
+  }
+
+  function setupPlayerFilter() {
+    const counts = [1, 2, 3, 4, 5, 6, 7, 8];
+    const label = (n) => (n === 8 ? "8+" : String(n));
+    const optgroup = (title, prefix, text) => {
+      const g = document.createElement("optgroup"); g.label = title;
+      counts.forEach((n) => g.append(Object.assign(document.createElement("option"), { value: `${prefix}:${n}`, text: text(label(n)) })));
+      return g;
+    };
+    $("players").replaceChildren(
+      Object.assign(document.createElement("option"), { value: "", text: "Any players" }),
+      optgroup("Plays", "p", (n) => `Plays ${n}`),
+      optgroup("Community's best", "b", (n) => `Best at ${n}`));
+  }
+
+  function setupMechanicFilter() {
+    const sel = $("mechanic");
+    const current = sel.value;
+    const counts = new Map();
+    for (const g of games) for (const m of details[g.id]?.mechanics || []) counts.set(m, (counts.get(m) || 0) + 1);
+    const names = [...counts.keys()].sort((a, b) => a.localeCompare(b));
+    if (current && !counts.has(current)) names.unshift(current);
+    sel.replaceChildren(
+      Object.assign(document.createElement("option"), { value: "", text: "All mechanics" }),
+      ...names.map((m) => Object.assign(document.createElement("option"), { value: m, text: `${m} (${counts.get(m) || 0})` })));
+    sel.value = current;
+  }
+
+  function matchesPlayers(g, filter) {
+    if (!filter) return true;
+    const d = details[g.id];
+    if (!d) return false;
+    const [kind, s] = filter.split(":");
+    const n = Number(s);
+    if (kind === "b") return d.bestPlayers.some((b) => (n === 8 ? b >= 8 : b === n));
+    if (!d.minPlayers || !d.maxPlayers) return false;
+    return n === 8 ? d.maxPlayers >= 8 : d.minPlayers <= n && n <= d.maxPlayers;
+  }
+
+  const SORT_KEYS = {
+    best: (d) => (d?.bestPlayers.length ? Math.min(...d.bestPlayers) : null),
+    time: (d) => d?.playTime ?? null,
+    weight: (d) => d?.weight ?? null,
+  };
+
+  function compare(a, b, sort) {
+    const byName = a.name.localeCompare(b.name);
+    if (sort === "name") return byName * sortDir;
+    const ka = SORT_KEYS[sort](details[a.id]);
+    const kb = SORT_KEYS[sort](details[b.id]);
+    if (ka === null || kb === null) return ka === kb ? byName : ka === null ? 1 : -1; // unknowns last
+    return (ka - kb) * sortDir || byName;
+  }
+
+  // [3, 4, 5, 7] -> "3–5, 7"
+  function ranges(nums) {
+    const out = [];
+    [...nums].sort((a, b) => a - b).forEach((n) => {
+      const last = out[out.length - 1];
+      if (last && n === last[1] + 1) last[1] = n; else out.push([n, n]);
+    });
+    return out.map(([a, b]) => (a === b ? `${a}` : `${a}–${b}`)).join(", ");
+  }
+
+  function detailText(d) {
+    if (!d) return [];
+    const parts = [];
+    if (d.minPlayers && d.maxPlayers) {
+      let p = d.minPlayers === d.maxPlayers ? `${d.minPlayers}` : `${d.minPlayers}–${d.maxPlayers}`;
+      p += d.maxPlayers === 1 ? " player" : " players";
+      if (d.bestPlayers.length) p += ` (best ${ranges(d.bestPlayers)})`;
+      parts.push(p);
+    }
+    if (d.minPlayTime && d.maxPlayTime && d.minPlayTime !== d.maxPlayTime) parts.push(`${d.minPlayTime}–${d.maxPlayTime} min`);
+    else if (d.playTime) parts.push(`${d.playTime} min`);
+    if (d.weight) parts.push(`Complexity ${d.weight.toFixed(1)}/5`);
+    return parts;
   }
 
   function render() {
     const q = $("q").value.trim().toLowerCase();
     const owner = $("owner").value;
     const type = $("type").value;
+    const players = $("players").value;
+    const mechanic = $("mechanic").value;
+    const sort = $("sort").value;
     const everyone = group.length > 1;
     const shown = games.filter((g) =>
       (!q || g.name.toLowerCase().includes(q)) &&
       (!owner || (owner === "__all" ? g.owners.length === group.length : g.owners.includes(owner))) &&
-      (!type || g.type === type));
+      (!type || g.type === type) &&
+      matchesPlayers(g, players) &&
+      (!mechanic || (details[g.id]?.mechanics || []).includes(mechanic)))
+      .sort((a, b) => compare(a, b, sort));
     $("stats").textContent = `${shown.length} of ${games.length} items across ${group.length} ${group.length === 1 ? "collection" : "collections"}`;
     $("list").replaceChildren(...shown.map((g) => {
       const li = document.createElement("li");
@@ -228,8 +332,14 @@
       const a = document.createElement("a");
       a.href = g.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = g.name;
       const m = document.createElement("div"); m.className = "meta";
-      m.textContent = [g.type, g.year].filter(Boolean).join(" · ");
+      const d = details[g.id];
+      m.textContent = [g.type, g.year, ...detailText(d)].filter(Boolean).join(" · ");
       t.append(a, m);
+      if (d?.mechanics.length) {
+        const mech = document.createElement("div"); mech.className = "mech";
+        mech.textContent = mech.title = d.mechanics.join(", ");
+        t.append(mech);
+      }
       const o = document.createElement("div"); o.className = "owners";
       if (everyone && g.owners.length === group.length) {
         o.append(pill(group.length === 2 ? "Both" : "Everyone", "var(--all)"));
@@ -308,9 +418,46 @@
     $("warnings").replaceChildren(...warnings.map((w) => Object.assign(document.createElement("li"), { textContent: w })));
     $("warnings").hidden = !warnings.length;
     setupOwnerFilter();
+    setupMechanicFilter();
     $("notice").hidden = true;
     $("app").hidden = false;
     render();
+    loadDetails(token);
+  }
+
+  // Player counts, length, complexity and mechanics come from a second BGG endpoint.
+  // The list shows right away; these fill in batch by batch.
+  async function loadDetails(token) {
+    const ids = games.map((g) => g.id).filter((id) => !details[id]).sort((a, b) => a - b);
+    const batches = [];
+    for (let i = 0; i < ids.length; i += DETAIL_BATCH) batches.push(ids.slice(i, i + DETAIL_BATCH));
+    const status = $("details-status");
+    if (!batches.length) { status.hidden = true; return; }
+    let done = 0, failed = 0, next = 0;
+    const update = () => {
+      status.hidden = false;
+      status.textContent = `Loading player counts, length, complexity and mechanics… ${Math.min(done * DETAIL_BATCH, ids.length)} of ${ids.length}`;
+    };
+    update();
+    async function worker() {
+      while (next < batches.length) {
+        const batch = batches[next++];
+        let data;
+        try {
+          data = await (await fetch(`/api/things?ids=${batch.join(",")}`)).json();
+        } catch { data = { status: "error" }; }
+        if (token !== loadToken) return;
+        if (data.status === "ok") Object.assign(details, data.things); else failed++;
+        done++;
+        update();
+        setupMechanicFilter();
+        render();
+      }
+    }
+    await Promise.all([worker(), worker()]);
+    if (token !== loadToken) return;
+    if (failed) status.textContent = "Some game details couldn't load from BoardGameGeek, so sorting and filters may be incomplete. Reload to try again.";
+    else status.hidden = true;
   }
 
   // ---- wiring ----
@@ -334,8 +481,14 @@
     setTimeout(() => ($("copied").textContent = ""), 2500);
   });
 
-  ["q", "owner", "type"].forEach((id) => $(id).addEventListener("input", render));
+  ["q", "owner", "type", "players", "mechanic", "sort"].forEach((id) => $(id).addEventListener("input", render));
+  $("dir").addEventListener("click", () => {
+    sortDir = -sortDir;
+    $("dir").textContent = sortDir === 1 ? "↑" : "↓";
+    render();
+  });
 
+  setupPlayerFilter();
   const initial = readGroupFromUrl();
   fillEditor(initial);
   load(initial);
