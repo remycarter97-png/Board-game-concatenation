@@ -4,30 +4,47 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Our Game Shelf</title>
-<meta name="description" content="A personal page that combines two BoardGameGeek collections into one list of the board games, expansions and accessories we own.">
+<meta name="description" content="Combine the BoardGameGeek collections of everyone in your group into one searchable list of the board games, expansions and accessories you own.">
 <style>
   :root {
     --bg: #f7f4ee; --card: #ffffff; --ink: #1f1d1a; --muted: #6b665e; --line: #e4ded3;
-    --accent: #3f5bd8; --remy: #c2410c; --jon: #0f766e; --both: #6d28d9;
+    --accent: #3f5bd8; --accent-ink: #ffffff; --warn: #b45309;
+    --p0: #c2410c; --p1: #0f766e; --p2: #6d28d9; --p3: #be185d;
+    --p4: #1d4ed8; --p5: #4d7c0f; --p6: #a16207; --p7: #0e7490; --all: #1f1d1a;
   }
   @media (prefers-color-scheme: dark) {
     :root { --bg: #16150f; --card: #211f19; --ink: #f2eee6; --muted: #a39d92; --line: #36332b;
-      --accent: #8ea2ff; --remy: #fb923c; --jon: #2dd4bf; --both: #c4b5fd; }
+      --accent: #8ea2ff; --accent-ink: #16150f; --warn: #fbbf24;
+      --p0: #fb923c; --p1: #2dd4bf; --p2: #c4b5fd; --p3: #f9a8d4;
+      --p4: #93c5fd; --p5: #bef264; --p6: #fde047; --p7: #67e8f9; --all: #f2eee6; }
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
     font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
   main { max-width: 880px; margin: 0 auto; padding: 32px 16px 48px; }
   h1 { font-size: 2rem; margin: 0 0 4px; letter-spacing: -0.02em; }
+  h2 { font-size: 1.15rem; margin: 0 0 8px; }
   .sub { color: var(--muted); margin: 0 0 24px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
-  .notice h2 { margin: 0 0 8px; font-size: 1.15rem; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
   .notice p { margin: 0 0 8px; }
+  input, select, button { font: inherit; }
+  input, select { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink); min-width: 0; }
+  button { padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .hint { color: var(--muted); font-size: 0.9rem; margin: 0 0 12px; }
+  .people { display: grid; gap: 8px; margin-bottom: 12px; }
+  .person { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; }
+  .person button { width: 40px; padding: 8px 0; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .row .spacer { flex: 1; }
+  .copied { color: var(--muted); font-size: 0.9rem; }
   .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-  .controls input, .controls select { font: inherit; padding: 8px 12px; border-radius: 10px;
-    border: 1px solid var(--line); background: var(--card); color: var(--ink); }
   .controls input { flex: 1 1 220px; }
   .stats { color: var(--muted); font-size: 0.9rem; margin-bottom: 12px; }
+  .warnings { color: var(--warn); font-size: 0.9rem; margin: 0 0 12px; padding-left: 20px; }
   ul.games { list-style: none; margin: 0; padding: 0; }
   ul.games li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
   ul.games img { width: 48px; height: 48px; object-fit: contain; border-radius: 6px; flex: none; background: var(--line); }
@@ -35,30 +52,46 @@
   .title a { color: var(--ink); text-decoration: none; font-weight: 600; }
   .title a:hover { text-decoration: underline; }
   .meta { color: var(--muted); font-size: 0.85rem; }
-  .pill { font-size: 0.8rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; border: 1px solid currentColor; flex: none; }
-  .pill.Remy { color: var(--remy); } .pill.Jonathan { color: var(--jon); } .pill.Both { color: var(--both); }
+  .owners { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; max-width: 45%; }
+  .pill { font-size: 0.8rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
   footer { margin-top: 32px; color: var(--muted); font-size: 0.9rem; }
   footer a { color: var(--accent); }
   [hidden] { display: none !important; }
+  @media (max-width: 520px) {
+    .person { grid-template-columns: 1fr auto; }
+    .person .nick { grid-column: 1; }
+    .person button { grid-row: 1 / span 2; grid-column: 2; }
+  }
 </style>
 </head>
 <body>
 <main>
   <h1>Our Game Shelf</h1>
-  <p class="sub">Every board game, expansion and accessory we own, combined from two BoardGameGeek collections and refreshed daily.</p>
+  <p class="sub">Every board game, expansion and accessory your group owns, combined from everyone's BoardGameGeek collections and refreshed daily.</p>
 
-  <section id="notice" class="card notice">
-    <h2 id="notice-title">Loading…</h2>
+  <form id="group" class="card" autocomplete="off">
+    <h2>Your group</h2>
+    <p class="hint">Add each person's BGG username. Nicknames are optional and are what the list shows.</p>
+    <div id="people" class="people"></div>
+    <div class="row">
+      <button type="button" id="add">+ Add person</button>
+      <span class="spacer"></span>
+      <span id="copied" class="copied" role="status"></span>
+      <button type="button" id="copy">Copy group link</button>
+      <button type="submit" class="primary">Show shelf</button>
+    </div>
+  </form>
+
+  <section id="notice" class="card notice" hidden>
+    <h2 id="notice-title"></h2>
     <p id="notice-body"></p>
   </section>
 
   <section id="app" hidden>
+    <ul id="warnings" class="warnings" hidden></ul>
     <div class="controls">
       <input id="q" type="search" placeholder="Search titles" aria-label="Search titles">
-      <select id="owner" aria-label="Owner">
-        <option value="">Everyone</option>
-        <option>Both</option><option>Remy</option><option>Jonathan</option>
-      </select>
+      <select id="owner" aria-label="Owner"></select>
       <select id="type" aria-label="Type">
         <option value="">All types</option>
         <option>Base game</option><option>Expansion</option><option>Accessory</option>
@@ -69,14 +102,92 @@
   </section>
 
   <footer>
-    <p>A personal, non-commercial page listing the owned collections of BGG users Asianofchaos and celestinpro.</p>
+    <p>A non-commercial page that combines the owned collections of the BGG users you enter. Share the group link and everyone sees the same shelf.</p>
     <p><a href="https://boardgamegeek.com" target="_blank" rel="noopener">Powered by BoardGameGeek</a></p>
   </footer>
 </main>
 <script>
   const $ = (id) => document.getElementById(id);
-  let games = [];
+  const MAX_PEOPLE = 12;
+  const PALETTE = 8;
+  // Shown when the page is opened without a group in the link, so the original link still works.
+  const DEFAULT_GROUP = [
+    { username: "Asianofchaos", nick: "Remy" },
+    { username: "celestinpro", nick: "Jonathan" },
+  ];
 
+  let group = [];   // [{ username, label, color }]
+  let games = [];   // merged: [{ ...item, owners: [label] }]
+  let loadToken = 0;
+
+  // ---- group <-> link: ?u=username:Nickname&u=username2 ----
+  function readGroupFromUrl() {
+    const people = new URLSearchParams(location.search).getAll("u").map((v) => {
+      const i = v.indexOf(":");
+      return i < 0 ? { username: v.trim(), nick: "" }
+                   : { username: v.slice(0, i).trim(), nick: v.slice(i + 1).trim() };
+    }).filter((p) => p.username);
+    return people.length ? people : DEFAULT_GROUP;
+  }
+
+  function groupUrl(people) {
+    const params = new URLSearchParams();
+    people.forEach((p) => params.append("u", p.nick ? `${p.username}:${p.nick}` : p.username));
+    return `${location.origin}${location.pathname}?${params}`;
+  }
+
+  // ---- editor ----
+  function addRow(person = { username: "", nick: "" }) {
+    const row = document.createElement("div");
+    row.className = "person";
+    const user = Object.assign(document.createElement("input"), {
+      className: "user", placeholder: "BGG username", value: person.username,
+      maxLength: 50, spellcheck: false, autocapitalize: "off",
+    });
+    user.setAttribute("aria-label", "BGG username");
+    const nick = Object.assign(document.createElement("input"), {
+      className: "nick", placeholder: "Nickname (optional)", value: person.nick, maxLength: 30,
+    });
+    nick.setAttribute("aria-label", "Nickname");
+    const remove = Object.assign(document.createElement("button"), {
+      type: "button", textContent: "×", title: "Remove",
+    });
+    remove.setAttribute("aria-label", "Remove person");
+    remove.addEventListener("click", () => {
+      row.remove();
+      if (!$("people").children.length) addRow();
+      syncEditor();
+    });
+    row.append(user, nick, remove);
+    $("people").append(row);
+    syncEditor();
+    return user;
+  }
+
+  function syncEditor() {
+    $("add").disabled = $("people").children.length >= MAX_PEOPLE;
+  }
+
+  function readEditor() {
+    const seen = new Set();
+    const people = [];
+    for (const row of $("people").children) {
+      const username = row.querySelector(".user").value.trim();
+      const nick = row.querySelector(".nick").value.trim();
+      if (!username || seen.has(username.toLowerCase())) continue;
+      seen.add(username.toLowerCase());
+      people.push({ username, nick });
+    }
+    return people;
+  }
+
+  function fillEditor(people) {
+    $("people").replaceChildren();
+    people.slice(0, MAX_PEOPLE).forEach(addRow);
+    if (!people.length) addRow();
+  }
+
+  // ---- display ----
   function showNotice(title, body) {
     $("notice-title").textContent = title;
     $("notice-body").textContent = body;
@@ -84,17 +195,31 @@
     $("app").hidden = true;
   }
 
+  function pill(text, color) {
+    const p = document.createElement("span");
+    p.className = "pill"; p.textContent = text; p.style.color = color;
+    return p;
+  }
+
+  function setupOwnerFilter() {
+    const sel = $("owner");
+    const opts = [["", "Everyone's games"]];
+    if (group.length > 1) opts.push(["__all", "Owned by all"]);
+    group.forEach((p) => opts.push([p.label, `${p.label}'s games`]));
+    sel.replaceChildren(...opts.map(([value, text]) => Object.assign(document.createElement("option"), { value, text })));
+  }
+
   function render() {
     const q = $("q").value.trim().toLowerCase();
     const owner = $("owner").value;
     const type = $("type").value;
+    const everyone = group.length > 1;
     const shown = games.filter((g) =>
       (!q || g.name.toLowerCase().includes(q)) &&
-      (!owner || g.ownedBy === owner) &&
+      (!owner || (owner === "__all" ? g.owners.length === group.length : g.owners.includes(owner))) &&
       (!type || g.type === type));
-    $("stats").textContent = `${shown.length} of ${games.length} items`;
-    const list = $("list");
-    list.replaceChildren(...shown.map((g) => {
+    $("stats").textContent = `${shown.length} of ${games.length} items across ${group.length} ${group.length === 1 ? "collection" : "collections"}`;
+    $("list").replaceChildren(...shown.map((g) => {
       const li = document.createElement("li");
       const img = document.createElement("img");
       img.alt = ""; img.loading = "lazy";
@@ -105,35 +230,115 @@
       const m = document.createElement("div"); m.className = "meta";
       m.textContent = [g.type, g.year].filter(Boolean).join(" · ");
       t.append(a, m);
-      const p = document.createElement("span");
-      p.className = "pill " + g.ownedBy; p.textContent = g.ownedBy;
-      li.append(img, t, p);
+      const o = document.createElement("div"); o.className = "owners";
+      if (everyone && g.owners.length === group.length) {
+        o.append(pill(group.length === 2 ? "Both" : "Everyone", "var(--all)"));
+      } else {
+        group.filter((p) => g.owners.includes(p.label)).forEach((p) => o.append(pill(p.label, p.color)));
+      }
+      li.append(img, t, o);
       return li;
     }));
   }
 
-  async function load() {
+  // ---- loading ----
+  async function fetchCollection(username) {
     try {
-      const res = await fetch("/api/collection");
-      const data = await res.json();
-      if (data.status === "not_configured") {
-        return showNotice("Coming soon",
-          "This page is waiting on BoardGameGeek API access. Once it's approved, both collections will appear here automatically.");
-      }
-      if (data.status !== "ok") {
-        return showNotice("Couldn't reach BoardGameGeek", data.message || "Please try again in a few minutes.");
-      }
-      games = data.games;
-      $("notice").hidden = true;
-      $("app").hidden = false;
-      render();
+      const res = await fetch(`/api/collection?username=${encodeURIComponent(username)}`);
+      return await res.json();
     } catch {
-      showNotice("Couldn't load the list", "Please try again in a few minutes.");
+      return { status: "error", message: "Couldn't reach the server." };
     }
   }
 
+  async function load(people) {
+    const token = ++loadToken;
+    const labels = new Set();
+    group = people.map((p, i) => {
+      let label = p.nick || p.username;
+      while (labels.has(label)) label += "*";   // keep labels unique so filters work
+      labels.add(label);
+      return { username: p.username, label, color: `var(--p${i % PALETTE})` };
+    });
+    if (!group.length) return showNotice("Add someone", "Enter at least one BGG username above.");
+
+    let done = 0;
+    showNotice("Loading…", `Fetching 0 of ${group.length} collections from BoardGameGeek.`);
+    const results = new Array(group.length);
+    // A few at a time: BGG queues big collections, and this keeps us under its rate limits.
+    let next = 0;
+    async function worker() {
+      while (next < group.length) {
+        const i = next++;
+        results[i] = await fetchCollection(group[i].username);
+        if (token !== loadToken) return;
+        $("notice-body").textContent = `Fetching ${++done} of ${group.length} collections from BoardGameGeek.`;
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(3, group.length) }, worker));
+    if (token !== loadToken) return;   // a newer group was submitted meanwhile
+
+    if (results.some((r) => r.status === "not_configured")) {
+      return showNotice("Coming soon",
+        "This page is waiting on BoardGameGeek API access. Once it's approved, collections will appear here automatically.");
+    }
+
+    const merged = new Map();
+    const warnings = [];
+    results.forEach((r, i) => {
+      const person = group[i];
+      if (r.status !== "ok") {
+        warnings.push(`${person.label}: ${r.message || "couldn't load this collection."}`);
+        return;
+      }
+      for (const item of r.games) {
+        const existing = merged.get(item.id);
+        if (existing) existing.owners.push(person.label);
+        else merged.set(item.id, { ...item, owners: [person.label] });
+      }
+    });
+
+    if (warnings.length === group.length) {
+      return showNotice("Couldn't load any collections", warnings.join(" "));
+    }
+
+    // Only members whose collections loaded count toward filters and "Owned by all".
+    group = group.filter((_, i) => results[i].status === "ok");
+    games = [...merged.values()].sort((a, b) => a.name.localeCompare(b.name));
+    $("warnings").replaceChildren(...warnings.map((w) => Object.assign(document.createElement("li"), { textContent: w })));
+    $("warnings").hidden = !warnings.length;
+    setupOwnerFilter();
+    $("notice").hidden = true;
+    $("app").hidden = false;
+    render();
+  }
+
+  // ---- wiring ----
+  $("add").addEventListener("click", () => addRow().focus());
+
+  $("group").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const people = readEditor();
+    history.replaceState(null, "", groupUrl(people));
+    load(people);
+  });
+
+  $("copy").addEventListener("click", async () => {
+    const url = groupUrl(readEditor());
+    try {
+      await navigator.clipboard.writeText(url);
+      $("copied").textContent = "Link copied";
+    } catch {
+      prompt("Copy this link to share your group:", url);
+    }
+    setTimeout(() => ($("copied").textContent = ""), 2500);
+  });
+
   ["q", "owner", "type"].forEach((id) => $(id).addEventListener("input", render));
-  load();
+
+  const initial = readGroupFromUrl();
+  fillEditor(initial);
+  load(initial);
 </script>
 </body>
 </html>
