@@ -108,6 +108,9 @@
   .warn { color: var(--muted); font-size: 0.85rem; margin: 0 0 10px; }
   footer { margin-top: 32px; color: var(--muted); font-size: 0.9rem; }
   footer a { color: var(--accent); }
+  /* BGG's logo has dark lettering, so it sits on a white card to stay legible in dark mode. */
+  .bgg-logo { display: inline-block; background: #ffffff; border-radius: 10px; padding: 6px 10px; line-height: 0; }
+  .bgg-logo img { display: block; width: 220px; height: auto; }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -153,7 +156,7 @@
 
   <footer>
     <p>A personal, non-commercial page. Game data comes from BoardGameGeek and is shown as provided. This site isn't affiliated with or endorsed by BoardGameGeek.</p>
-    <p><a href="https://boardgamegeek.com" target="_blank" rel="noopener">Powered by BoardGameGeek</a></p>
+    <p><a class="bgg-logo" href="https://boardgamegeek.com" target="_blank" rel="noopener"><img src="/powered-by-bgg.png" width="220" height="65" alt="Powered by BGG"></a></p>
   </footer>
 </main>
 <script>
