@@ -7,36 +7,105 @@
 <meta name="description" content="A personal page listing the board games, expansions and accessories we own.">
 <style>
   :root {
-    --bg: #f7f4ee; --card: #ffffff; --ink: #1f1d1a; --muted: #6b665e; --line: #e4ded3;
-    --accent: #3f5bd8; --remy: #c2410c; --jon: #0f766e; --both: #6d28d9;
+    --bg: #f7f4ee; --card: #ffffff; --ink: #1f1d1a; --muted: #6b665e; --line: #e4ded3; --soft: #efe9df;
+    --accent: #3f5bd8; --accent-ink: #ffffff; --remy: #c2410c; --jon: #0f766e; --both: #6d28d9;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #16150f; --card: #211f19; --ink: #f2eee6; --muted: #a39d92; --line: #36332b;
-      --accent: #8ea2ff; --remy: #fb923c; --jon: #2dd4bf; --both: #c4b5fd; }
+    :root { --bg: #16150f; --card: #211f19; --ink: #f2eee6; --muted: #a39d92; --line: #36332b; --soft: #2a2720;
+      --accent: #8ea2ff; --accent-ink: #11131f; --remy: #fb923c; --jon: #2dd4bf; --both: #c4b5fd; }
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
     font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
-  main { max-width: 880px; margin: 0 auto; padding: 32px 16px 48px; }
+  main { max-width: 920px; margin: 0 auto; padding: 32px 16px 48px; }
   h1 { font-size: 2rem; margin: 0 0 4px; letter-spacing: -0.02em; }
   .sub { color: var(--muted); margin: 0 0 24px; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
   .notice h2 { margin: 0 0 8px; font-size: 1.15rem; }
   .notice p { margin: 0 0 8px; }
-  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-  .controls input, .controls select { font: inherit; padding: 8px 12px; border-radius: 10px;
-    border: 1px solid var(--line); background: var(--card); color: var(--ink); }
-  .controls input { flex: 1 1 220px; }
-  .stats { color: var(--muted); font-size: 0.9rem; margin-bottom: 12px; }
+  button, input, select { font: inherit; color: var(--ink); }
+  .field { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); min-height: 42px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  #q { flex: 1 1 240px; min-width: 0; }
+  .controls select { flex: 0 1 auto; max-width: 100%; }
+
+  /* Mechanics picker */
+  .picker { position: relative; }
+  .picker > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .picker > summary::-webkit-details-marker { display: none; }
+  .picker > summary::after { content: "▾"; color: var(--muted); font-size: 0.8em; }
+  .picker[open] > summary { border-color: var(--accent); }
+  .picker .panel { position: absolute; z-index: 10; top: calc(100% + 6px); left: 0; width: min(340px, calc(100vw - 32px));
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 32px rgb(0 0 0 / 0.18); padding: 10px; }
+  .picker .panel input[type=search] { width: 100%; margin-bottom: 8px; }
+  .picker .opts { max-height: 300px; overflow: auto; }
+  .picker label { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-radius: 6px; cursor: pointer; }
+  .picker label:hover { background: var(--soft); }
+  .picker label span.n { margin-left: auto; color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+  .picker .foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-top: 8px; margin-top: 6px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; }
+  .linkbtn { background: none; border: 0; padding: 4px; color: var(--accent); cursor: pointer; font-size: 0.9rem; }
+  .linkbtn:hover { text-decoration: underline; }
+
+  @media (max-width: 560px) {
+    .controls { position: relative; }
+    .controls > select, .controls > .picker { flex: 1 1 calc(50% - 4px); min-width: 0; }
+    .controls > .picker > summary { width: 100%; }
+    .picker { position: static; }
+    .picker .panel { left: 0; right: 0; width: auto; }
+  }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 14px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px 2px 10px; border-radius: 999px;
+    background: var(--soft); border: 1px solid var(--line); font-size: 0.85rem; }
+  .chip button { background: none; border: 0; cursor: pointer; color: var(--muted); width: 22px; height: 22px; border-radius: 50%; line-height: 1; }
+  .chip button:hover { background: var(--line); color: var(--ink); }
+
+  /* Pagination (same pattern as Shelf to Stacks) */
+  .pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; font-size: 0.9rem; margin: 6px 0 12px; }
+  .pager .left { display: flex; align-items: center; gap: 12px; color: var(--muted); }
+  .pager .count { font-variant-numeric: tabular-nums; }
+  .pager .left label { display: flex; align-items: center; gap: 6px; }
+  .pager .left select { padding: 6px 8px; min-height: 40px; }
+  .pager .pages { display: flex; align-items: center; gap: 4px; }
+  .pager .nav { min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); cursor: pointer; }
+  .pager .nav:disabled { opacity: 0.45; cursor: default; }
+  .pager .num { min-height: 40px; min-width: 40px; padding: 0 8px; border: 0; border-radius: 8px; background: none; color: var(--muted);
+    cursor: pointer; font-variant-numeric: tabular-nums; }
+  .pager .num:hover { background: var(--soft); color: var(--ink); }
+  .pager .num[aria-current=page] { background: var(--accent); color: var(--accent-ink); border-radius: 999px; font-weight: 600; }
+  .pager .gap { color: var(--muted); padding: 0 2px; }
+  .pager .of { display: none; color: var(--muted); padding: 0 4px; font-variant-numeric: tabular-nums; }
+  @media (max-width: 560px) {
+    .pager .num:not([aria-current=page]), .pager .gap { display: none; }
+    .pager .of { display: inline; }
+  }
+
+  /* List */
   ul.games { list-style: none; margin: 0; padding: 0; }
-  ul.games li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
-  ul.games img { width: 48px; height: 48px; object-fit: contain; border-radius: 6px; flex: none; background: var(--line); }
+  ul.games > li { border-top: 1px solid var(--line); padding: 12px 0; }
+  .row { display: flex; align-items: flex-start; gap: 12px; }
+  .row img { width: 56px; height: 56px; object-fit: contain; border-radius: 8px; flex: none; background: var(--soft); }
   .title { flex: 1; min-width: 0; }
   .title a { color: var(--ink); text-decoration: none; font-weight: 600; }
   .title a:hover { text-decoration: underline; }
-  .meta { color: var(--muted); font-size: 0.85rem; }
-  .pill { font-size: 0.8rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; border: 1px solid currentColor; flex: none; }
+  .meta { color: var(--muted); font-size: 0.85rem; overflow-wrap: anywhere; }
+  .meta .best { color: var(--ink); }
+  .tag { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; margin-left: 6px; vertical-align: 2px; white-space: nowrap; }
+  .pill { font-size: 0.8rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; border: 1px solid currentColor; flex: none; margin-top: 2px; }
   .pill.Remy { color: var(--remy); } .pill.Jonathan { color: var(--jon); } .pill.Both { color: var(--both); }
+
+  details.kids { margin: 8px 0 0 68px; }
+  details.kids > summary { cursor: pointer; color: var(--muted); font-size: 0.85rem; padding: 2px 0; width: fit-content; }
+  details.kids > summary:hover { color: var(--ink); }
+  details.kids ul { list-style: none; margin: 6px 0 0; padding: 0 0 0 12px; border-left: 2px solid var(--line); }
+  details.kids li { padding: 6px 0; }
+  details.kids .row img { width: 36px; height: 36px; border-radius: 6px; }
+  details.kids .title a { font-weight: 500; }
+  @media (max-width: 560px) { details.kids { margin-left: 20px; } }
+
+  .empty { color: var(--muted); padding: 24px 0; border-top: 1px solid var(--line); }
+  .warn { color: var(--muted); font-size: 0.85rem; margin: 0 0 10px; }
   footer { margin-top: 32px; color: var(--muted); font-size: 0.9rem; }
   footer a { color: var(--accent); }
   [hidden] { display: none !important; }
@@ -45,7 +114,7 @@
 <body>
 <main>
   <h1>Our Game Shelf</h1>
-  <p class="sub">Every board game, expansion and accessory we own, combined from two BoardGameGeek collections and refreshed daily.</p>
+  <p class="sub">Every board game we own, with expansions and accessories tucked under the game they belong to. Refreshed daily.</p>
 
   <section id="notice" class="card notice">
     <h2 id="notice-title">Loading…</h2>
@@ -54,18 +123,32 @@
 
   <section id="app" hidden>
     <div class="controls">
-      <input id="q" type="search" placeholder="Search titles" aria-label="Search titles">
-      <select id="owner" aria-label="Owner">
+      <input id="q" class="field" type="search" placeholder="Search games, expansions and accessories" aria-label="Search titles">
+      <select id="owner" class="field" aria-label="Owner">
         <option value="">Everyone</option>
-        <option>Both</option><option>Remy</option><option>Jonathan</option>
+        <option value="Both">Owned by both</option>
+        <option value="Remy">Remy</option>
+        <option value="Jonathan">Jonathan</option>
       </select>
-      <select id="type" aria-label="Type">
-        <option value="">All types</option>
-        <option>Base game</option><option>Expansion</option><option>Accessory</option>
+      <select id="best" class="field" aria-label="Best player count">
+        <option value="">Best at any count</option>
       </select>
+      <details class="picker" id="mech-picker">
+        <summary class="field" id="mech-summary">Mechanics</summary>
+        <div class="panel">
+          <input id="mech-q" class="field" type="search" placeholder="Find a mechanic" aria-label="Find a mechanic">
+          <div class="opts" id="mech-opts" role="group" aria-label="Mechanics"></div>
+          <div class="foot"><span>Shows games with any selected</span><button type="button" class="linkbtn" id="mech-clear">Clear</button></div>
+        </div>
+      </details>
     </div>
-    <div class="stats" id="stats"></div>
+    <div class="chips" id="chips" hidden></div>
+    <p class="warn" id="details-warn" hidden>Some game details didn't load from BoardGameGeek, so mechanics and player counts may be missing for a few games. They'll fill in on a later refresh.</p>
+
+    <nav class="pager" id="pager-top" aria-label="Pages, top"></nav>
     <ul class="games" id="list"></ul>
+    <p class="empty" id="empty" hidden>No games match these filters.</p>
+    <nav class="pager" id="pager-bottom" aria-label="Pages, bottom"></nav>
   </section>
 
   <footer>
@@ -75,7 +158,18 @@
 </main>
 <script>
   const $ = (id) => document.getElementById(id);
-  let games = [];
+  const PAGE_SIZES = [10, 25, 50, 100, 200, 300];
+  const KIND_ORDER = { "Expansion": 0, "Accessory": 1 };
+
+  const store = {
+    get(area, key, fallback) { try { const v = window[area].getItem("game-shelf:" + key); return v === null ? fallback : JSON.parse(v); } catch { return fallback; } },
+    set(area, key, value) { try { window[area].setItem("game-shelf:" + key, JSON.stringify(value)); } catch {} },
+  };
+
+  let groups = [];           // [{ head, kids: [] }]
+  let selectedMechs = new Set();
+  let pageSize = PAGE_SIZES.includes(store.get("localStorage", "page-size", 25)) ? store.get("localStorage", "page-size", 25) : 25;
+  let page = Number(store.get("sessionStorage", "page", 1)) || 1;
 
   function showNotice(title, body) {
     $("notice-title").textContent = title;
@@ -84,32 +178,242 @@
     $("app").hidden = true;
   }
 
+  function el(tag, props = {}, ...children) {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else if (k in n) n[k] = v;
+      else n.setAttribute(k, v);
+    }
+    n.append(...children.filter((c) => c !== null && c !== undefined && c !== false));
+    return n;
+  }
+
+  // Expansions and accessories go under the base game(s) BGG links them to. When BGG marks
+  // some links as pointing back to the game an item belongs to ("inbound"), those win.
+  function buildGroups(items) {
+    const byId = new Map(items.map((g) => [g.id, g]));
+    const bases = new Map();
+    for (const g of items) if (g.type === "Base game") bases.set(g.id, { head: g, kids: [] });
+    const orphans = [];
+    for (const g of items) {
+      if (g.type === "Base game") continue;
+      const owned = [...new Set((g.links || []).filter((id) => bases.has(id)))];
+      if (owned.length) owned.forEach((id) => bases.get(id).kids.push(g));
+      else orphans.push({ head: g, kids: [] });
+    }
+    const all = [...bases.values(), ...orphans];
+    for (const grp of all) grp.kids.sort((a, b) => (KIND_ORDER[a.type] - KIND_ORDER[b.type]) || a.name.localeCompare(b.name));
+    return all.sort((a, b) => a.head.name.localeCompare(b.head.name));
+  }
+
+  function playerText(g) {
+    if (!g.minPlayers) return "";
+    const range = g.maxPlayers && g.maxPlayers !== g.minPlayers ? `${g.minPlayers}–${g.maxPlayers}` : `${g.minPlayers}`;
+    return `${range} player${range === "1" ? "" : "s"}`;
+  }
+
+  function mechanicText(g) {
+    const m = g.mechanics || [];
+    if (!m.length) return "";
+    return m.length > 4 ? `${m.slice(0, 4).join(" · ")} · +${m.length - 4} more` : m.join(" · ");
+  }
+
+  function itemRow(g, isHead) {
+    const img = el("img", { alt: "", loading: "lazy" });
+    if (g.thumbnail) img.src = g.thumbnail;
+    const title = el("div", { class: "title" },
+      el("a", { href: g.url, target: "_blank", rel: "noopener", text: g.name }),
+      g.year ? el("span", { class: "meta", text: ` (${g.year})` }) : null,
+      g.type !== "Base game" && isHead ? el("span", { class: "tag", text: g.type }) : null,
+    );
+    const facts = [playerText(g)].filter(Boolean);
+    const meta = el("div", { class: "meta" });
+    if (facts.length || g.bestWith) {
+      meta.append(facts.join(""));
+      if (g.bestWith) meta.append(facts.length ? " · " : "", el("span", { class: "best", text: g.bestWith }));
+    }
+    const mech = mechanicText(g);
+    const mechLine = isHead && mech ? el("div", { class: "meta", text: mech, title: (g.mechanics || []).join(", ") }) : null;
+    if (meta.childNodes.length) title.append(meta);
+    if (mechLine) title.append(mechLine);
+    return el("div", { class: "row" }, img, title, el("span", { class: "pill " + g.ownedBy, text: g.ownedBy }));
+  }
+
+  function kidSummary(kids) {
+    const n = (t) => kids.filter((k) => k.type === t).length;
+    const parts = [];
+    const e = n("Expansion"), a = n("Accessory");
+    if (e) parts.push(`${e} expansion${e === 1 ? "" : "s"}`);
+    if (a) parts.push(`${a} accessor${a === 1 ? "y" : "ies"}`);
+    return parts.join(" · ");
+  }
+
+  function filters() {
+    return {
+      q: $("q").value.trim().toLowerCase(),
+      owner: $("owner").value,
+      best: $("best").value ? Number($("best").value) : null,
+    };
+  }
+
+  // Filters check the base game; its expansions and accessories follow it. Search and the
+  // owner filter also look at the nested items, so a game shows if something under it matches.
+  function visibleGroups() {
+    const f = filters();
+    const out = [];
+    for (const grp of groups) {
+      const h = grp.head;
+      if (f.best !== null && !(h.bestPlayers || []).includes(f.best)) continue;
+      if (selectedMechs.size && !(h.mechanics || []).some((m) => selectedMechs.has(m))) continue;
+      let kids = grp.kids;
+      if (f.owner) {
+        const headOk = h.ownedBy === f.owner;
+        kids = kids.filter((k) => k.ownedBy === f.owner);
+        if (!headOk && !kids.length) continue;
+      }
+      if (f.q) {
+        const headHit = h.name.toLowerCase().includes(f.q);
+        const kidHits = kids.filter((k) => k.name.toLowerCase().includes(f.q));
+        if (!headHit && !kidHits.length) continue;
+        if (!headHit) kids = kidHits;
+      }
+      out.push({ head: h, kids });
+    }
+    return out;
+  }
+
+  function pageList(p, pages) {
+    const want = [...new Set([1, pages, p - 1, p, p + 1])].filter((n) => n >= 1 && n <= pages).sort((a, b) => a - b);
+    const out = [];
+    want.forEach((n, i) => { if (i > 0 && n - want[i - 1] > 1) out.push("gap"); out.push(n); });
+    return out;
+  }
+
+  function renderPager(nav, total, pages, current) {
+    const from = total === 0 ? 0 : (current - 1) * pageSize + 1;
+    const to = Math.min(total, current * pageSize);
+    const size = el("select", { class: "field", "aria-label": "Games per page" },
+      ...PAGE_SIZES.map((n) => el("option", { value: String(n), text: String(n), selected: n === pageSize })));
+    size.addEventListener("change", () => {
+      const firstIndex = (current - 1) * pageSize; // keep the first game on screen in view
+      pageSize = Number(size.value);
+      store.set("localStorage", "page-size", pageSize);
+      setPage(Math.floor(firstIndex / pageSize) + 1);
+      render();
+    });
+    const left = el("div", { class: "left" },
+      el("span", { class: "count", "aria-live": "polite", text: `${from}–${to} of ${total} game${total === 1 ? "" : "s"}` }),
+      el("label", {}, "Show", size));
+    nav.replaceChildren(left);
+    if (pages > 1) {
+      const btn = (text, target, label, disabled) => {
+        const b = el("button", { type: "button", class: "nav", text, disabled, "aria-label": label });
+        b.addEventListener("click", () => goTo(target));
+        return b;
+      };
+      const right = el("div", { class: "pages" }, btn("‹ Prev", current - 1, "Previous page", current <= 1));
+      for (const p of pageList(current, pages)) {
+        if (p === "gap") { right.append(el("span", { class: "gap", "aria-hidden": "true", text: "…" })); continue; }
+        const b = el("button", { type: "button", class: "num", text: String(p), "aria-label": `Page ${p}` });
+        if (p === current) b.setAttribute("aria-current", "page");
+        b.addEventListener("click", () => goTo(p));
+        right.append(b);
+      }
+      right.append(el("span", { class: "of", text: `of ${pages}` }), btn("Next ›", current + 1, "Next page", current >= pages));
+      nav.append(right);
+    }
+  }
+
+  function setPage(p) { page = p; store.set("sessionStorage", "page", p); }
+  function goTo(p) {
+    setPage(p);
+    render();
+    $("pager-top").scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+
   function render() {
-    const q = $("q").value.trim().toLowerCase();
-    const owner = $("owner").value;
-    const type = $("type").value;
-    const shown = games.filter((g) =>
-      (!q || g.name.toLowerCase().includes(q)) &&
-      (!owner || g.ownedBy === owner) &&
-      (!type || g.type === type));
-    $("stats").textContent = `${shown.length} of ${games.length} items`;
-    const list = $("list");
-    list.replaceChildren(...shown.map((g) => {
-      const li = document.createElement("li");
-      const img = document.createElement("img");
-      img.alt = ""; img.loading = "lazy";
-      if (g.thumbnail) img.src = g.thumbnail;
-      const t = document.createElement("div"); t.className = "title";
-      const a = document.createElement("a");
-      a.href = g.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = g.name;
-      const m = document.createElement("div"); m.className = "meta";
-      m.textContent = [g.type, g.year].filter(Boolean).join(" · ");
-      t.append(a, m);
-      const p = document.createElement("span");
-      p.className = "pill " + g.ownedBy; p.textContent = g.ownedBy;
-      li.append(img, t, p);
+    const shown = visibleGroups();
+    const pages = Math.max(1, Math.ceil(shown.length / pageSize));
+    const current = Math.min(Math.max(1, page), pages);
+    const rows = shown.slice((current - 1) * pageSize, current * pageSize);
+
+    $("list").replaceChildren(...rows.map(({ head, kids }) => {
+      const li = el("li", {}, itemRow(head, true));
+      if (kids.length) {
+        li.append(el("details", { class: "kids", open: true },
+          el("summary", { text: kidSummary(kids) }),
+          el("ul", {}, ...kids.map((k) => el("li", {}, itemRow(k, false))))));
+      }
       return li;
     }));
+    $("empty").hidden = shown.length > 0;
+    renderPager($("pager-top"), shown.length, pages, current);
+    if (shown.length > pageSize) renderPager($("pager-bottom"), shown.length, pages, current);
+    else $("pager-bottom").replaceChildren();
+    renderChips();
+  }
+
+  // Any change to the filters starts back on page 1.
+  function filtersChanged() { setPage(1); render(); }
+
+  function setupBestFilter() {
+    const counts = new Set();
+    for (const g of groups) (g.head.bestPlayers || []).forEach((n) => counts.add(n));
+    const sel = $("best");
+    for (const n of [...counts].sort((a, b) => a - b)) {
+      sel.append(el("option", { value: String(n), text: `Best with ${n} player${n === 1 ? "" : "s"}` }));
+    }
+    sel.disabled = counts.size === 0;
+  }
+
+  function mechanicCounts() {
+    const counts = new Map();
+    for (const g of groups) for (const m of g.head.mechanics || []) counts.set(m, (counts.get(m) || 0) + 1);
+    return [...counts].sort((a, b) => a[0].localeCompare(b[0]));
+  }
+
+  let mechList = [];
+  function renderMechOptions() {
+    const q = $("mech-q").value.trim().toLowerCase();
+    const opts = mechList.filter(([m]) => !q || m.toLowerCase().includes(q)).map(([m, n]) => {
+      const box = el("input", { type: "checkbox", checked: selectedMechs.has(m) });
+      box.addEventListener("change", () => {
+        if (box.checked) selectedMechs.add(m); else selectedMechs.delete(m);
+        updateMechSummary();
+        filtersChanged();
+      });
+      return el("label", {}, box, el("span", { text: m }), el("span", { class: "n", text: String(n) }));
+    });
+    $("mech-opts").replaceChildren(...(opts.length ? opts : [el("p", { class: "meta", text: mechList.length ? "No mechanics match." : "No mechanics available yet." })]));
+  }
+
+  function updateMechSummary() {
+    $("mech-summary").textContent = selectedMechs.size ? `Mechanics (${selectedMechs.size})` : "Mechanics";
+  }
+
+  function renderChips() {
+    const chips = [...selectedMechs].sort().map((m) => {
+      const x = el("button", { type: "button", "aria-label": `Remove ${m}`, text: "×" });
+      x.addEventListener("click", () => {
+        selectedMechs.delete(m);
+        updateMechSummary(); renderMechOptions(); filtersChanged();
+      });
+      return el("span", { class: "chip" }, m, x);
+    });
+    const f = filters();
+    const any = chips.length || f.q || f.owner || f.best !== null;
+    if (any) {
+      const clear = el("button", { type: "button", class: "linkbtn", text: "Clear all filters" });
+      clear.addEventListener("click", () => {
+        $("q").value = ""; $("owner").value = ""; $("best").value = "";
+        selectedMechs.clear(); updateMechSummary(); renderMechOptions(); filtersChanged();
+      });
+      chips.push(clear);
+    }
+    $("chips").replaceChildren(...chips);
+    $("chips").hidden = !any;
   }
 
   async function load() {
@@ -123,7 +427,11 @@
       if (data.status !== "ok") {
         return showNotice("Couldn't reach BoardGameGeek", data.message || "Please try again in a few minutes.");
       }
-      games = data.games;
+      groups = buildGroups(data.games);
+      mechList = mechanicCounts();
+      setupBestFilter();
+      renderMechOptions();
+      $("details-warn").hidden = data.detailsComplete !== false;
       $("notice").hidden = true;
       $("app").hidden = false;
       render();
@@ -132,7 +440,21 @@
     }
   }
 
-  ["q", "owner", "type"].forEach((id) => $(id).addEventListener("input", render));
+  $("q").addEventListener("input", filtersChanged);
+  $("owner").addEventListener("change", filtersChanged);
+  $("best").addEventListener("change", filtersChanged);
+  $("mech-q").addEventListener("input", renderMechOptions);
+  $("mech-clear").addEventListener("click", () => { selectedMechs.clear(); updateMechSummary(); renderMechOptions(); filtersChanged(); });
+  // Open the mechanics panel toward whichever side has room.
+  $("mech-picker").addEventListener("toggle", () => {
+    const picker = $("mech-picker"), panel = picker.querySelector(".panel");
+    panel.style.left = panel.style.right = "";
+    if (!picker.open || window.matchMedia("(max-width: 560px)").matches) return;
+    const r = panel.getBoundingClientRect();
+    if (r.right > document.documentElement.clientWidth - 8) { panel.style.left = "auto"; panel.style.right = "0"; }
+  });
+  document.addEventListener("click", (e) => { const p = $("mech-picker"); if (p.open && !p.contains(e.target)) p.open = false; });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("mech-picker").open = false; });
   load();
 </script>
 </body>
