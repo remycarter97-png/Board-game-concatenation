@@ -88,10 +88,6 @@
   .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 12px; }
   .fgroup { display: flex; align-items: center; gap: 8px; }
   .flabel { font-size: .78rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
-  .seg { display: inline-flex; background: var(--surface-2); border-radius: 12px; padding: 3px; gap: 2px; }
-  .seg button { border: 0; background: none; padding: 6px 12px; border-radius: 9px; font-size: .9rem; font-weight: 500; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; min-height: 34px; }
-  .seg button .sw { width: 8px; height: 8px; border-radius: 50%; }
-  .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
   .pchips { display: inline-flex; gap: 6px; }
   .pchip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; min-width: 38px; height: 34px; padding: 0 10px; font-weight: 600; font-size: .9rem; font-variant-numeric: tabular-nums; }
   .pchip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
@@ -251,8 +247,6 @@
     .drawer-foot { display: flex; gap: 10px; position: sticky; bottom: -20px; background: var(--surface); padding: 12px 0 20px; margin-top: auto; }
     .drawer-foot .btn { flex: 1; justify-content: center; }
     .fgroup { flex-direction: column; align-items: stretch; gap: 8px; }
-    .seg { display: grid; grid-template-columns: repeat(4, 1fr); }
-    .seg button { justify-content: center; padding: 8px 4px; }
     .pchips { display: grid; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); }
     .pchip { height: 40px; }
     .dd > button { display: none; }
@@ -292,7 +286,7 @@
   @media (max-width: 360px) { .grid { grid-template-columns: 1fr; } }
 
   /* ================= Cute board-game layer ================= */
-  .rate, .seg button[aria-pressed="true"], .pager button[aria-current="page"], .pchip .plus { color: #3d2a4f !important; }
+  .rate, .pager button[aria-current="page"], .pchip .plus { color: #3d2a4f !important; }
   :root {
     --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
     --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
@@ -333,10 +327,6 @@
   .search input:focus { border-color: var(--outline); box-shadow: var(--pop), 0 0 0 4px var(--yellow); }
   .filter-btn { border: var(--edge); border-radius: 18px; box-shadow: var(--pop); height: 56px; font-family: Fredoka, ui-rounded, sans-serif; font-weight: 600; }
   .flabel { font-family: Fredoka, ui-rounded, sans-serif; letter-spacing: .06em; color: var(--ink-2); }
-  .seg { background: var(--surface); border: var(--edge); border-radius: 16px; box-shadow: var(--pop-sm); padding: 3px; }
-  .seg button { font-weight: 700; border-radius: 11px; color: var(--ink-2); }
-  .seg button .sw { width: auto; height: auto; background: none !important; display: inline-flex; }
-  .seg button[aria-pressed="true"] { background: var(--yellow); color: var(--ink); box-shadow: inset 0 0 0 2px var(--outline); }
   .pchips { gap: 8px; }
   .pchip { position: relative; width: 40px; min-width: 40px; height: 40px; padding: 0; border: var(--edge); border-radius: 11px; background: var(--surface);
     box-shadow: var(--pop-sm); display: inline-grid; place-items: center; color: var(--ink); transition: transform .15s; }
@@ -460,6 +450,51 @@
   .pmeta svg { color: var(--star); }
   .pinfo .own { position: static; font-size: .72rem; }
 
+  /* View switch */
+  .viewseg { display: inline-flex; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); padding: 3px; gap: 2px; }
+  .viewseg button { border: 0; background: none; display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 10px; font-weight: 700; color: var(--ink-2); }
+  .viewseg button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+
+  /* Table view */
+  .tablewrap { background: var(--surface); border: var(--edge); border-radius: 20px; box-shadow: var(--pop); overflow-x: auto; }
+  .gtable { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .92rem; min-width: 1060px; }
+  .gtable th { position: sticky; top: 0; background: var(--surface-2); text-align: left; font: 600 .8rem/1.2 Fredoka, ui-rounded, sans-serif; letter-spacing: .03em;
+    text-transform: uppercase; color: var(--ink-2); padding: 10px 10px; border-bottom: 2.5px solid var(--outline); white-space: nowrap; }
+  .gtable th:first-child { border-top-left-radius: 17px; } .gtable th:last-child { border-top-right-radius: 17px; }
+  .thsort { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+  .thsort:hover, .thsort.on { color: var(--ink); }
+  .thsort:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
+  .thsort .arr { font-size: .75em; opacity: .55; } .thsort.on .arr { opacity: 1; color: var(--accent); }
+  .gtable td { padding: 7px 10px; border-bottom: 1.5px solid var(--line); vertical-align: middle; }
+  .gtable tbody tr.head-row:hover td { background: color-mix(in srgb, var(--yellow) 14%, var(--surface)); }
+  .gtable tr:last-child td { border-bottom: 0; }
+  .gtable .kid-row td { background: color-mix(in srgb, var(--surface-2) 55%, var(--surface)); font-size: .88rem; padding-top: 5px; padding-bottom: 5px; }
+  .c-img { width: 52px; } .c-num { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .c-mech { color: var(--ink-2); font-size: .85rem; min-width: 200px; }
+  .tthumb { --h: 30; width: 40px; height: 40px; border-radius: 8px; border: 2px solid var(--outline); display: flex; align-items: center; justify-content: center; overflow: hidden;
+    background: linear-gradient(135deg, hsl(var(--h) 90% 88%), hsl(calc(var(--h) + 35) 80% 77%)); }
+  .tthumb img { max-width: 100%; max-height: 100%; min-width: 0; min-height: 0; object-fit: contain; }
+  .tthumb > svg { width: 100%; height: 100%; }
+  .kid-row .tthumb { width: 30px; height: 30px; margin-left: 10px; border-width: 1.5px; border-radius: 6px; }
+  .c-name { min-width: 220px; }
+  .tname { all: unset; cursor: pointer; font-family: Fredoka, ui-rounded, sans-serif; font-weight: 600; font-size: 1rem; color: var(--ink); }
+  .tname:hover { color: var(--accent); text-decoration: underline; }
+  .tname:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
+  .tkid { color: var(--ink); font-weight: 700; text-decoration: none; } .tkid:hover { color: var(--accent); text-decoration: underline; }
+  .kidmark { color: var(--muted); margin-right: 4px; }
+  .ttype { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); border: 1.5px solid var(--line); border-radius: 6px; padding: 0 5px; white-space: nowrap; }
+  .tkids { all: unset; cursor: pointer; display: flex; align-items: center; gap: 4px; margin-top: 2px; font-size: .8rem; font-weight: 800; color: var(--accent); }
+  .tkids svg { transform: rotate(-90deg); transition: transform .15s; } .tkids[aria-expanded="true"] svg { transform: none; }
+  .tkids:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
+  .trate { display: inline-flex; align-items: center; gap: 3px; font-weight: 800; } .trate svg { color: var(--star); }
+  .tweight { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+  .dim { color: var(--muted); }
+  @media (max-width: 760px) {
+    .viewseg span { display: none; }
+    .viewseg button { padding: 0 8px; }
+    .tablewrap { border-radius: 16px; box-shadow: var(--pop-sm); }
+  }
+
   /* Real box art */
   .cover { --h: 30; background-color: hsl(var(--h) 90% 87%);
     background-image: radial-gradient(circle, rgb(255 255 255 / .55) 2px, transparent 2.4px), linear-gradient(135deg, hsl(var(--h) 90% 88%), hsl(calc(var(--h) + 35) 80% 77%));
@@ -539,10 +574,6 @@
     <div class="filters" id="filters" role="region" aria-label="Filters">
       <div class="drawer-head"><h2>Filters</h2><button class="iconbtn" id="close-filters" aria-label="Close filters">×</button></div>
       <div class="fgroup">
-        <span class="flabel" id="own-l">Owner</span>
-        <div class="seg" role="group" aria-labelledby="own-l" id="own-seg"></div>
-      </div>
-      <div class="fgroup">
         <span class="flabel" id="best-l">Best with</span>
         <div class="pchips" role="group" aria-labelledby="best-l" id="best-chips"></div>
       </div>
@@ -569,6 +600,10 @@
     <div class="resbar">
       <div id="rescount" aria-live="polite"></div>
       <div class="resright">
+        <div class="viewseg" role="group" aria-label="View">
+          <button data-view="cards" aria-pressed="true" title="Card view"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg><span>Cards</span></button>
+          <button data-view="table" aria-pressed="false" title="Table view"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>Table</span></button>
+        </div>
         <div class="sortbox">
           <label for="sort">Sort</label>
           <select id="sort">
@@ -586,6 +621,7 @@
       </div>
     </div>
     <div class="grid" id="grid"></div>
+    <div class="tablewrap" id="tablewrap" hidden></div>
     <div id="empty" hidden></div>
     <nav class="pager" id="pager" aria-label="Pages"></nav>
   </main>
@@ -674,9 +710,10 @@ function buildGroups(items) {
 
 /* ---------- State ---------- */
 const PER = [24, 36, 48];
-const state = { q: "", owner: "", best: null, mechs: new Set(), sort: "name", dir: 1,
+const state = { q: "", best: null, mechs: new Set(), sort: "name", dir: 1,
   page: Number(store.get("sessionStorage", "page", 1)) || 1,
   per: PER.includes(store.get("localStorage", "per-page", 24)) ? store.get("localStorage", "per-page", 24) : 24 };
+state.view = store.get("localStorage", "view", "cards") === "table" ? "table" : "cards";
 const DEFAULT_DIR = { name: 1, rating: -1, year: -1, players: -1, weight: 1 };
 let status = "loading"; // loading | ok | error
 
@@ -690,11 +727,6 @@ function visibleGroups() {
     if (state.best !== null && !(h.bestPlayers || []).some((b) => state.best === TEN ? b >= TEN : b === state.best)) continue;
     if (state.mechs.size && !(h.mechanics || []).some((m) => state.mechs.has(m))) continue;
     let kids = grp.kids;
-    if (state.owner) {
-      const headOk = h.ownedBy === state.owner;
-      kids = kids.filter((k) => k.ownedBy === state.owner);
-      if (!headOk && !kids.length) continue;
-    }
     if (q) {
       const hay = [h.name, ...(h.designers || []), ...(h.publishers || []), ...(h.mechanics || [])].join(" ").toLowerCase();
       const headHit = hay.includes(q);
@@ -750,11 +782,6 @@ function renderPodium() {
         <span class="own own-${g.ownedBy}">${ownIcon(g.ownedBy)}${g.ownedBy}</span></span>
     </button></li>`).join("")}</ol>`;
 }
-function renderOwnerSeg() {
-  const opts = [["", "All games"], ["Remy", "Remy"], ["Jonathan", "Jonathan"], ["Both", "Both"]];
-  const col = { Remy: "var(--remy)", Jonathan: "var(--jon)", Both: "var(--both)" };
-  $("own-seg").innerHTML = opts.map(([v, l]) => `<button data-owner="${v}" aria-pressed="${state.owner === v}">${v ? `<span class="sw" style="color:${col[v]}">${ownIcon(v)}</span>` : ""}${l}</button>`).join("");
-}
 function renderBest() {
   // Offer every best player count that appears on the shelf; 1-6 show as dice faces.
   const counts = new Set();
@@ -783,7 +810,6 @@ function renderSort() {
 function activeFilters() {
   const out = [];
   if (state.q) out.push({ search: true, label: `“${state.q}”`, clear: () => { state.q = ""; $("q").value = ""; } });
-  if (state.owner) out.push({ label: `Owner: ${state.owner}`, clear: () => { state.owner = ""; } });
   if (state.best !== null) out.push({ label: `Best with ${bestLabel(state.best)}`, clear: () => { state.best = null; } });
   [...state.mechs].sort().forEach((m) => out.push({ label: m, clear: () => state.mechs.delete(m) }));
   return out;
@@ -848,12 +874,12 @@ const SLEEPY = `<svg width="150" height="80" viewBox="0 0 150 80" aria-hidden="t
 let slowTimer;
 function renderGrid() {
   if (status === "loading") {
-    $("grid").hidden = false; $("empty").hidden = true; $("pager").innerHTML = "";
+    $("grid").hidden = false; $("tablewrap").hidden = true; $("empty").hidden = true; $("pager").innerHTML = "";
     $("grid").innerHTML = skeletons(12);
     return;
   }
   if (status === "error") {
-    $("grid").hidden = true; $("pager").innerHTML = ""; $("rescount").textContent = "";
+    $("grid").hidden = true; $("tablewrap").hidden = true; $("pager").innerHTML = ""; $("rescount").textContent = "";
     $("empty").hidden = false;
     $("empty").innerHTML = `<div class="empty">${SLEEPY}<h2>Couldn't reach BoardGameGeek</h2><p>Our collection didn't load this time. BGG may be busy, so give it a minute and try again.</p><button class="btn" id="retry">Try again</button></div>`;
     $("retry").onclick = load;
@@ -865,15 +891,54 @@ function renderGrid() {
   const from = (state.page - 1) * state.per;
   const rows = list.slice(from, from + state.per);
   $("rescount").innerHTML = list.length ? `Showing <b>${from + 1}–${from + rows.length}</b> of <b>${list.length}</b> game${list.length === 1 ? "" : "s"}` : "No games match";
-  $("grid").hidden = !list.length;
+  $("grid").hidden = !list.length || state.view !== "cards";
+  $("tablewrap").hidden = !list.length || state.view !== "table";
   $("empty").hidden = !!list.length;
   if (!list.length) {
     $("empty").innerHTML = `<div class="empty">${SLEEPY}<h2>No games here… yet!</h2><p>Nothing matches these filters. Try removing one, or start fresh.</p><button class="btn" id="empty-reset">Reset all filters</button></div>`;
     $("empty-reset").onclick = resetAll;
     $("pager").innerHTML = ""; return;
   }
-  $("grid").innerHTML = rows.map(card).join("");
+  if (state.view === "table") { $("grid").innerHTML = ""; renderTable(rows); }
+  else { $("tablewrap").innerHTML = ""; $("grid").innerHTML = rows.map(card).join(""); }
   renderPager(pages);
+}
+const SORTABLE = { name: "Name", rating: "Rating", players: "Players", weight: "Complexity", year: "Year" };
+function th(key, label, cls = "") {
+  if (!key) return `<th scope="col" class="${cls}">${label}</th>`;
+  const on = state.sort === key;
+  const aria = on ? ` aria-sort="${state.dir === 1 ? "ascending" : "descending"}"` : "";
+  return `<th scope="col" class="${cls}"${aria}><button class="thsort${on ? " on" : ""}" data-sorth="${key}" title="Sort by ${label.toLowerCase()}">${label}<span class="arr" aria-hidden="true">${on ? (state.dir === 1 ? "▲" : "▼") : "↕"}</span></button></th>`;
+}
+function tableRows({ head: g, kids }) {
+  const id = esc(g.id);
+  const mech = (g.mechanics || []);
+  const row = (x, kid) => `<tr class="${kid ? `kid-row kid-of-${id}` : "head-row"}"${kid ? " hidden" : ""}>
+    <td class="c-img"><span class="tthumb" style="--h:${hueOf(x)}">${x.thumbnail ? imgTag(x, x.thumbnail) : doodle(x)}</span></td>
+    <td class="c-name">${kid ? `<span class="kidmark" aria-hidden="true">↳</span><a class="tkid" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a> <span class="ttype">${x.type}</span>`
+      : `<button class="tname" data-open="${id}">${esc(x.name)}</button>${x.type !== "Base game" ? ` <span class="ttype">${x.type}</span>` : ""}
+        ${kids.length ? `<button class="tkids" data-trow="${id}" aria-expanded="false">${ICON.chev}${addonSummary(kids)}</button>` : ""}`}</td>
+    <td class="c-own"><span class="tiny own-${x.ownedBy}">${ownIcon(x.ownedBy)}${x.ownedBy}</span></td>
+    <td class="c-num">${x.rating ? `<span class="trate">${ICON.star}${x.rating.toFixed(1)}</span>` : "<span class=\"dim\">—</span>"}</td>
+    <td class="c-num">${x.rank ? `#${x.rank.toLocaleString()}` : "<span class=\"dim\">—</span>"}</td>
+    <td class="c-num">${kid ? "" : players(x) || "<span class=\"dim\">—</span>"}</td>
+    <td class="c-num">${kid ? "" : esc(bestShort(x)) || "<span class=\"dim\">—</span>"}</td>
+    <td class="c-num c-time">${kid ? "" : timeText(x) || "<span class=\"dim\">—</span>"}</td>
+    <td class="c-num">${kid ? "" : x.weight ? `<span class="tweight" title="${weightLabel(x.weight)}">${weightBar(x.weight)}${x.weight.toFixed(1)}</span>` : "<span class=\"dim\">—</span>"}</td>
+    <td class="c-num">${esc(x.year || "")}</td>
+    <td class="c-mech">${kid ? "" : mech.length ? `<span title="${esc(mech.join(", "))}">${esc(mech.slice(0, 3).join(", "))}${mech.length > 3 ? ` <span class="dim">+${mech.length - 3}</span>` : ""}</span>` : ""}</td>
+  </tr>`;
+  return row(g, false) + kids.map((k) => row(k, true)).join("");
+}
+function renderTable(rows) {
+  $("tablewrap").innerHTML = `<table class="gtable">
+    <caption class="sr">Games, ${state.page > 1 ? `page ${state.page}` : "first page"}. Select a game's name to see its details.</caption>
+    <thead><tr>${th("", '<span class="sr">Cover</span>', "c-img")}${th("name", "Name")}${th("", "Owner")}${th("rating", "Rating", "c-num")}${th("", "BGG rank", "c-num")}
+      ${th("players", "Players", "c-num")}${th("", "Best with", "c-num")}${th("", "Time", "c-num c-time")}${th("weight", "Complexity", "c-num")}${th("year", "Year", "c-num")}${th("", "Mechanics", "c-mech")}</tr></thead>
+    <tbody>${rows.map(tableRows).join("")}</tbody></table>`;
+}
+function renderView() {
+  document.querySelectorAll(".viewseg [data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === state.view)));
 }
 function renderPager(pages) {
   if (pages <= 1) { $("pager").innerHTML = ""; return; }
@@ -958,15 +1023,18 @@ function banner(kind, html) {
 /* ---------- Wiring ---------- */
 function setPage(p) { state.page = p; store.set("sessionStorage", "page", p); }
 function changed() { setPage(1); render(); }
-function render() { renderPodium(); renderOwnerSeg(); renderBest(); renderMechOpts(); renderSort(); renderActive(); renderGrid(); }
-function resetAll() { Object.assign(state, { q: "", owner: "", best: null, mechs: new Set() }); $("q").value = ""; $("mech-q").value = ""; changed(); }
+function render() { renderView(); renderPodium(); renderBest(); renderMechOpts(); renderSort(); renderActive(); renderGrid(); }
+function resetAll() { Object.assign(state, { q: "", best: null, mechs: new Set() }); $("q").value = ""; $("mech-q").value = ""; changed(); }
 
 let qt; $("q").addEventListener("input", (e) => { clearTimeout(qt); qt = setTimeout(() => { state.q = e.target.value.trim(); changed(); }, 150); });
 $("q-clear").onclick = () => { state.q = ""; $("q").value = ""; changed(); $("q").focus(); };
 document.addEventListener("click", (e) => {
   const t = e.target.closest("button, a");
   if (!t) { if (!$("mech-dd").contains(e.target)) closeMech(); return; }
-  if (t.dataset.owner !== undefined && t.closest("#own-seg")) { state.owner = state.owner === t.dataset.owner ? "" : t.dataset.owner; changed(); }
+  if (t.dataset.view) { state.view = t.dataset.view; store.set("localStorage", "view", state.view); renderView(); renderGrid(); }
+  else if (t.dataset.sorth) { const k = t.dataset.sorth; state.dir = state.sort === k ? -state.dir : DEFAULT_DIR[k]; state.sort = k; changed(); }
+  else if (t.dataset.trow) { const open = t.getAttribute("aria-expanded") !== "true"; t.setAttribute("aria-expanded", String(open));
+    document.querySelectorAll(".kid-of-" + CSS.escape(t.dataset.trow)).forEach((r) => r.hidden = !open); }
   else if (t.dataset.best) { const n = Number(t.dataset.best); state.best = state.best === n ? null : n; changed(); }
   else if (t.dataset.open) openDetail(t.dataset.open);
   else if (t.dataset.toggle) { const ul = $("add-" + t.dataset.toggle); const open = ul.hidden; ul.hidden = !open; t.setAttribute("aria-expanded", String(open)); }
@@ -989,7 +1057,7 @@ $("per").onchange = (e) => {
 function openDrawer() { $("filters").classList.add("open"); $("scrim").hidden = false; $("open-filters").setAttribute("aria-expanded", "true"); document.body.style.overflow = "hidden"; $("close-filters").focus(); }
 function closeDrawer() { $("filters").classList.remove("open"); $("scrim").hidden = true; $("open-filters").setAttribute("aria-expanded", "false"); document.body.style.overflow = ""; }
 $("open-filters").onclick = openDrawer; $("close-filters").onclick = closeDrawer; $("scrim").onclick = closeDrawer; $("drawer-done").onclick = closeDrawer;
-$("drawer-reset").onclick = () => { Object.assign(state, { owner: "", best: null, mechs: new Set() }); $("mech-q").value = ""; changed(); };
+$("drawer-reset").onclick = () => { Object.assign(state, { best: null, mechs: new Set() }); $("mech-q").value = ""; changed(); };
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (!$("modal").hidden) closeDetail(); else if ($("filters").classList.contains("open")) closeDrawer(); else closeMech(); } });
 new IntersectionObserver(([e]) => $("toolbar").classList.toggle("stuck", e.intersectionRatio < 1), { threshold: [1], rootMargin: "-1px 0px 0px 0px" }).observe($("toolbar"));
 const shortPh = matchMedia("(max-width: 760px)");
