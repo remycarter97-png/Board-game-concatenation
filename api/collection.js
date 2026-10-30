@@ -159,6 +159,8 @@ export function parseThings(xml) {
       rating: votes ? num(valueOf(body, "average")) : null,
       votes: votes ?? 0,
       weight: num(valueOf(body, "averageweight")),
+      // BGG's overall "Board Game Rank" (null when BGG lists it as "Not Ranked").
+      rank: num(attr((body.match(/<rank\s[^>]*name="boardgame"[^>]*>/) || [""])[0], "value")),
       ...lists,
       minPlayers: num(valueOf(body, "minplayers")),
       maxPlayers: num(valueOf(body, "maxplayers")),
@@ -245,6 +247,7 @@ export default async function handler(req, res) {
           minTime: d.minTime ?? null,
           maxTime: d.maxTime ?? null,
           rating: d.rating ?? null,
+          rank: d.rank ?? null,
           votes: d.votes ?? 0,
           weight: d.weight ?? null,
           mechanics: d.mechanics ?? [],

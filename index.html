@@ -61,18 +61,7 @@
   .sync .sep { color: var(--line); }
   @keyframes pulse { 50% { opacity: .35; } }
 
-  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 22px 0 0; }
-  .stat { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px;
     display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center; box-shadow: var(--shadow); transition: transform .15s, border-color .15s; }
-  .stat:hover { transform: translateY(-1px); border-color: var(--muted); }
-  .stat[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft), var(--shadow); }
-  .stat .ico { grid-row: span 2; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font-weight: 700; font-size: .9rem; }
-  .stat .n { font-family: Fredoka, ui-rounded, system-ui, sans-serif; font-size: 1.6rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
-  .stat .l { font-size: .82rem; color: var(--ink-2); line-height: 1.25; }
-  .stat.total .ico { background: var(--accent-soft); color: var(--accent); }
-  .stat.Remy .ico { background: var(--remy-soft); color: var(--remy); }
-  .stat.Jonathan .ico { background: var(--jon-soft); color: var(--jon); }
-  .stat.Both .ico { background: var(--both-soft); color: var(--both); }
 
   .banner { display: flex; gap: 12px; align-items: flex-start; margin-top: 16px; padding: 12px 16px; border-radius: 12px;
     background: var(--danger-soft); color: var(--ink); border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent); font-size: .92rem; }
@@ -264,7 +253,7 @@
     .fgroup { flex-direction: column; align-items: stretch; gap: 8px; }
     .seg { display: grid; grid-template-columns: repeat(4, 1fr); }
     .seg button { justify-content: center; padding: 8px 4px; }
-    .pchips { display: grid; grid-template-columns: repeat(5, 1fr); }
+    .pchips { display: grid; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); }
     .pchip { height: 40px; }
     .dd > button { display: none; }
     .dd .panel { position: static; width: 100%; max-width: none; box-shadow: none; padding: 0; border: 0; display: block !important; }
@@ -273,9 +262,6 @@
   @media (max-width: 760px) {
     .wrap { padding: 0 16px; }
     header.top { padding-top: 24px; }
-    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-    .stat { padding: 10px 12px; }
-    .stat .n { font-size: 1.35rem; }
     .sync .long { display: none; }
     .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .cbody { padding: 10px 11px 2px; }
@@ -306,7 +292,7 @@
   @media (max-width: 360px) { .grid { grid-template-columns: 1fr; } }
 
   /* ================= Cute board-game layer ================= */
-  .rate, .seg button[aria-pressed="true"], .pager button[aria-current="page"], .pchip .plus, .stat.total .ico { color: #3d2a4f !important; }
+  .rate, .seg button[aria-pressed="true"], .pager button[aria-current="page"], .pchip .plus { color: #3d2a4f !important; }
   :root {
     --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
     --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
@@ -340,15 +326,6 @@
   .sync { border: var(--edge); box-shadow: var(--pop-sm); font-weight: 600; background: var(--surface); }
   .sync .sep { color: var(--muted); }
 
-  .stat { border: var(--edge); border-radius: 18px; box-shadow: var(--pop); transition: transform .12s, box-shadow .12s; }
-  .stat:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--outline); border-color: var(--outline); }
-  .stat:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
-  .stat[aria-pressed="true"] { background: var(--yellow-soft); box-shadow: var(--pop); border-color: var(--outline); }
-  .stat .ico { width: 46px; height: 46px; border-radius: 14px; border: 2px solid var(--outline); }
-  .stat .ico svg { width: 30px; height: 30px; }
-  .stat.total .ico { background: var(--yellow); }
-  .stat .n { font-weight: 700; }
-  .stat .l { font-weight: 600; }
 
   .banner { border: var(--edge); box-shadow: var(--pop); border-radius: 16px; }
   .toolbar.stuck { border-bottom: 2.5px dashed var(--line); }
@@ -389,7 +366,7 @@
   .own { display: inline-flex; align-items: center; gap: 4px; border: 2px solid var(--outline); box-shadow: 2px 2px 0 var(--outline); font-weight: 800; padding: 2px 9px 2px 6px; }
   .own svg { width: 14px; height: 14px; }
   .rate { background: var(--yellow); color: var(--ink); border: 2px solid var(--outline); box-shadow: 2px 2px 0 var(--outline); font-weight: 800; }
-  .rate svg { color: var(--ink); }
+  .rate svg { color: #3d2a4f; }
   .cbody h3 { font-weight: 600; font-size: 1.15rem; }
   .cbody .yr { font-weight: 600; }
   .facts { gap: 6px; }
@@ -446,11 +423,42 @@
     .logo { width: 54px; height: 54px; }
     .brand { gap: 12px; }
     .grid { gap: 14px; }
-    .card, .stat { box-shadow: var(--pop-sm); }
+    .card, .pod { box-shadow: var(--pop-sm); }
     .facts span { padding: 1px 7px 1px 5px; }
     .sheet { box-shadow: none; border-width: 3px 0 0; }
     .own svg { width: 12px; height: 12px; }
   }
+
+  /* Best-with buttons beyond 6 players */
+  .pchips { flex-wrap: wrap; }
+  .pchip .pnum { font: 700 .95rem/1 Fredoka, ui-rounded, sans-serif; letter-spacing: -.02em; }
+  .pchip:has(.pnum) { width: auto; min-width: 40px; padding: 0 8px; }
+
+  /* Top of our shelf */
+  .podium { margin-top: 24px; }
+  .pod-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 14px; }
+  .pod-head h2 { font-family: Fredoka, ui-rounded, sans-serif; font-weight: 700; font-size: 1.35rem; margin: 0; display: flex; align-items: center; gap: 8px; }
+  .pod-head h2 svg { align-self: center; }
+  .pod-head span { color: var(--ink-2); font-weight: 600; font-size: .92rem; }
+  .pods { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+  .pod { all: unset; box-sizing: border-box; cursor: pointer; position: relative; width: 100%; height: 100%; display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px 14px 14px; border: var(--edge); border-radius: 20px; box-shadow: var(--pop); transition: transform .12s, box-shadow .12s;
+    background: color-mix(in srgb, var(--medal) 24%, var(--surface)); }
+  .pod:hover { transform: translate(-2px, -2px) rotate(-.6deg); box-shadow: 6px 6px 0 var(--outline); }
+  .pod:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .pod:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .pod-1 { --medal: #ffcc33; } .pod-2 { --medal: #c9d2e3; } .pod-3 { --medal: #f2a46b; }
+  .medal { position: absolute; top: -13px; left: -11px; width: 36px; height: 36px; border-radius: 50%; background: var(--medal); border: 2.5px solid var(--outline);
+    box-shadow: 2px 2px 0 var(--outline); display: grid; place-items: center; font: 700 1.05rem/1 Fredoka, ui-rounded, sans-serif; color: #3d2a4f; transform: rotate(-10deg); }
+  .pthumb { --h: 30; width: 84px; height: 84px; flex: none; border-radius: 14px; border: 2px solid var(--outline); overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 7px;
+    background: linear-gradient(135deg, hsl(var(--h) 90% 88%), hsl(calc(var(--h) + 35) 80% 77%)); }
+  .pthumb img { max-width: 100%; max-height: 100%; min-width: 0; min-height: 0; object-fit: contain; border-radius: 4px; }
+  .pthumb > svg { width: calc(100% + 14px); height: calc(100% + 14px); margin: -7px; }
+  .pinfo { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+  .pname { font-family: Fredoka, ui-rounded, sans-serif; font-weight: 600; font-size: 1.1rem; line-height: 1.2; overflow-wrap: anywhere; }
+  .pmeta { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: .86rem; color: var(--ink-2); }
+  .pmeta svg { color: var(--star); }
+  .pinfo .own { position: static; font-size: .72rem; }
 
   /* Real box art */
   .cover { --h: 30; background-color: hsl(var(--h) 90% 87%);
@@ -477,7 +485,10 @@
   a.xitem:hover { border-color: var(--outline); }
   .credits { color: var(--ink-2); font-size: .95rem; margin-top: 4px; }
   .credits b { color: var(--ink); font-weight: 700; }
+  @media (max-width: 1000px) and (min-width: 761px) { .pthumb { width: 64px; height: 64px; } .pod { gap: 10px; padding: 12px; } .pname { font-size: 1rem; } }
   @media (max-width: 760px) {
+    .pods { grid-template-columns: 1fr; gap: 16px; }
+    .pthumb { width: 64px; height: 64px; }
     .cover .art { padding: 36px 12px 12px; }
     .side .bigcover { width: 120px; min-height: 0; padding: 10px; flex: none; }
     .side .bigcover img { max-height: 160px; }
@@ -508,7 +519,7 @@
       </div>
     </div>
     <div class="banner" id="banner" hidden role="alert"></div>
-    <div class="stats" id="stats"></div>
+    <section class="podium" id="podium" aria-labelledby="pod-h" hidden></section>
   </header>
 
   <div class="toolbar" id="toolbar">
@@ -610,7 +621,7 @@ const meeple = (fill, size = 16) => `<svg width="${size}" height="${size}" viewB
 const ownIcon = (o) => o === "Both"
   ? `<svg width="20" height="14" viewBox="0 0 34 24" aria-hidden="true"><path d="${MEEPLE}" fill="currentColor"/><g transform="translate(10 0)"><path d="${MEEPLE}" fill="currentColor" stroke="var(--surface)" stroke-width="2"/></g></svg>`
   : `<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="${MEEPLE}" fill="currentColor"/></svg>`;
-const PIPS = { 1: [[.5,.5]], 2: [[.28,.28],[.72,.72]], 3: [[.25,.25],[.5,.5],[.75,.75]], 4: [[.28,.28],[.72,.28],[.28,.72],[.72,.72]], 5: [[.25,.25],[.75,.25],[.5,.5],[.25,.75],[.75,.75]] };
+const PIPS = { 1: [[.5,.5]], 2: [[.28,.28],[.72,.72]], 3: [[.25,.25],[.5,.5],[.75,.75]], 4: [[.28,.28],[.72,.28],[.28,.72],[.72,.72]], 5: [[.25,.25],[.75,.25],[.5,.5],[.25,.75],[.75,.75]], 6: [[.28,.22],[.72,.22],[.28,.5],[.72,.5],[.28,.78],[.72,.78]] };
 const pipSvg = (n, size = 24) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true">${PIPS[n].map(([x, y]) => `<circle cx="${x * 24}" cy="${y * 24}" r="2.7" fill="currentColor"/>`).join("")}</svg>`;
 const hueOf = (g) => (Number(String(g.id).replace(/\D/g, "")) * 47) % 360;
 
@@ -675,7 +686,7 @@ function visibleGroups() {
   const q = state.q.toLowerCase();
   for (const grp of groups) {
     const h = grp.head;
-    if (state.best !== null && !(h.bestPlayers || []).some((b) => state.best === 5 ? b >= 5 : b === state.best)) continue;
+    if (state.best !== null && !(h.bestPlayers || []).some((b) => state.best === TEN ? b >= TEN : b === state.best)) continue;
     if (state.mechs.size && !(h.mechanics || []).some((m) => state.mechs.has(m))) continue;
     let kids = grp.kids;
     if (state.owner) {
@@ -712,19 +723,30 @@ function sortGroups(list) {
 }
 
 /* ---------- Render: header & controls ---------- */
-function renderStats() {
-  const c = (o) => groups.filter((g) => g.head.ownedBy === o).length;
-  const addons = groups.reduce((n, g) => n + g.kids.length, 0);
-  const cards = [
-    { key: "", cls: "total", ico: `<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="15" width="24" height="12" rx="3" fill="var(--accent)" stroke="var(--outline)" stroke-width="2"/><rect x="6" y="6" width="20" height="10" rx="3" fill="var(--mint)" stroke="var(--outline)" stroke-width="2"/><path d="M10 21h12" stroke="var(--outline)" stroke-width="2" stroke-linecap="round"/></svg>`,
-      n: groups.length, l: `games · plus ${addons} expansions & accessories` },
-    { key: "Remy", cls: "Remy", ico: meeple("var(--remy)", 30), n: c("Remy"), l: "only Remy owns" },
-    { key: "Jonathan", cls: "Jonathan", ico: meeple("var(--jon)", 30), n: c("Jonathan"), l: "only Jonathan owns" },
-    { key: "Both", cls: "Both", ico: `<svg viewBox="0 0 36 28" width="34" height="28" aria-hidden="true"><g transform="translate(0 3)"><path d="${MEEPLE}" fill="var(--remy)" stroke="var(--outline)" stroke-width="1.6" stroke-linejoin="round"/></g><g transform="translate(11 2)"><path d="${MEEPLE}" fill="var(--jon)" stroke="var(--outline)" stroke-width="1.6" stroke-linejoin="round"/></g></svg>`,
-      n: c("Both"), l: "we both own" },
-  ];
-  $("stats").innerHTML = status === "ok" ? cards.map((s) => `<button class="stat ${s.cls}" data-owner="${s.key}" aria-pressed="${state.owner === s.key}" title="${s.key ? `Show ${s.key === "Both" ? "games we both own" : s.key + "'s games"}` : "Show everything"}">
-      <span class="ico" aria-hidden="true">${s.ico}</span><span class="n">${s.n}</span><span class="l">${s.l}</span></button>`).join("") : "";
+const TEN = 10; // the "10+" best-with button covers 10 or more players
+const bestLabel = (n) => n === TEN ? "10+" : String(n);
+
+// The three games on our shelf with the best BGG overall rank ("Board Game Rank").
+let podiumFor = null;
+function renderPodium() {
+  const box = $("podium");
+  if (status !== "ok") { box.hidden = true; podiumFor = null; return; }
+  if (podiumFor === groups) return; // only changes when the data does
+  podiumFor = groups;
+  const top = groups.map((g) => g.head).filter((g) => g.rank).sort((a, b) => a.rank - b.rank).slice(0, 3);
+  box.hidden = !top.length;
+  if (!top.length) return;
+  const trophy = `<svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 5h14v6a7 7 0 0 1-14 0Z" fill="var(--yellow)" stroke="var(--outline)" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M9 7H5v2a5 5 0 0 0 5 5M23 7h4v2a5 5 0 0 1-5 5" fill="none" stroke="var(--outline)" stroke-width="2.2" stroke-linecap="round"/><path d="M16 18v5" stroke="var(--outline)" stroke-width="2.2"/>
+    <rect x="10" y="23" width="12" height="5" rx="2" fill="var(--accent)" stroke="var(--outline)" stroke-width="2.2"/></svg>`;
+  box.innerHTML = `<div class="pod-head"><h2 id="pod-h">${trophy}Top of our shelf</h2><span>Our highest-ranked games on BoardGameGeek</span></div>
+    <ol class="pods">${top.map((g, i) => `<li><button class="pod pod-${i + 1}" data-open="${esc(g.id)}" aria-label="Number ${i + 1}: ${esc(g.name)}, BGG rank ${g.rank}. Open details">
+      <span class="medal" aria-hidden="true">${i + 1}</span>
+      <span class="pthumb" style="--h:${hueOf(g)}">${g.thumbnail ? imgTag(g, g.thumbnail) : doodle(g)}</span>
+      <span class="pinfo"><span class="pname">${esc(g.name)}</span>
+        <span class="pmeta">BGG rank #${g.rank.toLocaleString()}${g.rating ? ` · ${ICON.star} ${g.rating.toFixed(1)}` : ""}</span>
+        <span class="own own-${g.ownedBy}">${ownIcon(g.ownedBy)}${g.ownedBy}</span></span>
+    </button></li>`).join("")}</ol>`;
 }
 function renderOwnerSeg() {
   const opts = [["", "All games"], ["Remy", "Remy"], ["Jonathan", "Jonathan"], ["Both", "Both"]];
@@ -732,7 +754,13 @@ function renderOwnerSeg() {
   $("own-seg").innerHTML = opts.map(([v, l]) => `<button data-owner="${v}" aria-pressed="${state.owner === v}">${v ? `<span class="sw" style="color:${col[v]}">${ownIcon(v)}</span>` : ""}${l}</button>`).join("");
 }
 function renderBest() {
-  $("best-chips").innerHTML = [1,2,3,4,5].map((n) => `<button class="pchip" data-best="${n}" aria-pressed="${state.best === n}" aria-label="Best with ${n === 5 ? "5 or more" : n} player${n === 1 ? "" : "s"}" title="Best with ${n === 5 ? "5+" : n}">${pipSvg(n, 26)}${n === 5 ? '<span class="plus" aria-hidden="true">+</span>' : ""}</button>`).join("");
+  // Offer every best player count that appears on the shelf; 1-6 show as dice faces.
+  const counts = new Set();
+  for (const g of groups) for (const n of g.head.bestPlayers || []) counts.add(n >= TEN ? TEN : n);
+  if (!counts.size) [1, 2, 3, 4, 5, 6].forEach((n) => counts.add(n));
+  if (state.best !== null) counts.add(state.best);
+  $("best-chips").innerHTML = [...counts].sort((a, b) => a - b).map((n) => `<button class="pchip" data-best="${n}" aria-pressed="${state.best === n}"
+    aria-label="Best with ${n === TEN ? "10 or more" : n} player${n === 1 ? "" : "s"}" title="Best with ${bestLabel(n)}">${n <= 6 ? pipSvg(n, 26) : `<span class="pnum">${bestLabel(n)}</span>`}</button>`).join("");
 }
 function renderMechOpts() {
   const q = $("mech-q").value.trim().toLowerCase();
@@ -754,7 +782,7 @@ function activeFilters() {
   const out = [];
   if (state.q) out.push({ search: true, label: `“${state.q}”`, clear: () => { state.q = ""; $("q").value = ""; } });
   if (state.owner) out.push({ label: `Owner: ${state.owner}`, clear: () => { state.owner = ""; } });
-  if (state.best !== null) out.push({ label: `Best with ${state.best === 5 ? "5+" : state.best}`, clear: () => { state.best = null; } });
+  if (state.best !== null) out.push({ label: `Best with ${bestLabel(state.best)}`, clear: () => { state.best = null; } });
   [...state.mechs].sort().forEach((m) => out.push({ label: m, clear: () => state.mechs.delete(m) }));
   return out;
 }
@@ -928,7 +956,7 @@ function banner(kind, html) {
 /* ---------- Wiring ---------- */
 function setPage(p) { state.page = p; store.set("sessionStorage", "page", p); }
 function changed() { setPage(1); render(); }
-function render() { renderStats(); renderOwnerSeg(); renderBest(); renderMechOpts(); renderSort(); renderActive(); renderGrid(); }
+function render() { renderPodium(); renderOwnerSeg(); renderBest(); renderMechOpts(); renderSort(); renderActive(); renderGrid(); }
 function resetAll() { Object.assign(state, { q: "", owner: "", best: null, mechs: new Set() }); $("q").value = ""; $("mech-q").value = ""; changed(); }
 
 let qt; $("q").addEventListener("input", (e) => { clearTimeout(qt); qt = setTimeout(() => { state.q = e.target.value.trim(); changed(); }, 150); });
@@ -936,7 +964,7 @@ $("q-clear").onclick = () => { state.q = ""; $("q").value = ""; changed(); $("q"
 document.addEventListener("click", (e) => {
   const t = e.target.closest("button, a");
   if (!t) { if (!$("mech-dd").contains(e.target)) closeMech(); return; }
-  if (t.dataset.owner !== undefined && (t.closest("#own-seg") || t.closest("#stats"))) { state.owner = state.owner === t.dataset.owner ? "" : t.dataset.owner; changed(); }
+  if (t.dataset.owner !== undefined && t.closest("#own-seg")) { state.owner = state.owner === t.dataset.owner ? "" : t.dataset.owner; changed(); }
   else if (t.dataset.best) { const n = Number(t.dataset.best); state.best = state.best === n ? null : n; changed(); }
   else if (t.dataset.open) openDetail(t.dataset.open);
   else if (t.dataset.toggle) { const ul = $("add-" + t.dataset.toggle); const open = ul.hidden; ul.hidden = !open; t.setAttribute("aria-expanded", String(open)); }
