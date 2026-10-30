@@ -9,7 +9,7 @@ Combines the owned BoardGameGeek collections of **Asianofchaos** (Remy) and **ce
 - **Cute board-game design:** game cards with BGG box art, owner meeples (Remy, Jonathan, Both), BGG rating, best player count, playing time and weight, with light and dark modes.
 - **Top of our shelf:** our three games with the best BGG overall rank, plus a sync status showing when the data was last refreshed from BGG.
 - **Nested add-ons:** expansions and accessories sit under the base game they belong to, with their own owner shown when it differs.
-- **Search and filters:** search by title, mechanic, designer or publisher; filter by owner, BGG's "best with" player count (every count on the shelf, up to 10+) and mechanics (any selected); sort by name, rating, year or player count. Active filters show as removable chips.
+- **Search and filters:** search by title, mechanic, designer or publisher; filter by owner, BGG's "best with" player count (every count on the shelf, up to 10+) and mechanics (any selected); sort by name, rating, year, player count or complexity. Active filters show as removable chips.
 - **Game details:** cover, rating, description, players, best count, playing time, weight, mechanics, categories, designers, publishers and add-ons, with a link to BGG.
 - **Pagination:** 24, 36 or 48 games per page (remembered on the device); filters stay applied while paging. On tablets and phones the filters open in a drawer.
 

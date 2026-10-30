@@ -576,6 +576,7 @@
             <option value="rating">BGG rating</option>
             <option value="year">Year published</option>
             <option value="players">Player count</option>
+            <option value="weight">Complexity</option>
           </select>
           <button class="iconbtn" id="dir" aria-label="Sort direction"></button>
         </div>
@@ -676,7 +677,7 @@ const PER = [24, 36, 48];
 const state = { q: "", owner: "", best: null, mechs: new Set(), sort: "name", dir: 1,
   page: Number(store.get("sessionStorage", "page", 1)) || 1,
   per: PER.includes(store.get("localStorage", "per-page", 24)) ? store.get("localStorage", "per-page", 24) : 24 };
-const DEFAULT_DIR = { name: 1, rating: -1, year: -1, players: -1 };
+const DEFAULT_DIR = { name: 1, rating: -1, year: -1, players: -1, weight: 1 };
 let status = "loading"; // loading | ok | error
 
 // Filters check the base game; its expansions and accessories follow it. Search and the owner
@@ -711,6 +712,7 @@ function sortGroups(list) {
     name: (g) => g.name,
     rating: (g) => g.rating,
     year: (g) => Number(g.year) || null,
+    weight: (g) => g.weight,
     players: (g) => g.bestPlayers?.length ? Math.max(...g.bestPlayers) * 100 + (g.maxPlayers || 0) : (g.maxPlayers || null),
   }[state.sort];
   return [...list].sort((A, B) => {
