@@ -457,26 +457,26 @@
 
   /* Table view */
   .tablewrap { background: var(--surface); border: var(--edge); border-radius: 20px; box-shadow: var(--pop); overflow-x: auto; }
-  .gtable { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .92rem; min-width: 1060px; }
+  .gtable { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .9rem; min-width: 1080px; }
   .gtable th { position: sticky; top: 0; background: var(--surface-2); text-align: left; font: 600 .8rem/1.2 Fredoka, ui-rounded, sans-serif; letter-spacing: .03em;
-    text-transform: uppercase; color: var(--ink-2); padding: 10px 10px; border-bottom: 2.5px solid var(--outline); white-space: nowrap; }
+    text-transform: uppercase; color: var(--ink-2); padding: 10px 8px; border-bottom: 2.5px solid var(--outline); white-space: nowrap; }
   .gtable th:first-child { border-top-left-radius: 17px; } .gtable th:last-child { border-top-right-radius: 17px; }
   .thsort { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
   .thsort:hover, .thsort.on { color: var(--ink); }
   .thsort:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
   .thsort .arr { font-size: .75em; opacity: .55; } .thsort.on .arr { opacity: 1; color: var(--accent); }
-  .gtable td { padding: 7px 10px; border-bottom: 1.5px solid var(--line); vertical-align: middle; }
+  .gtable td { padding: 7px 8px; border-bottom: 1.5px solid var(--line); vertical-align: middle; }
   .gtable tbody tr.head-row:hover td { background: color-mix(in srgb, var(--yellow) 14%, var(--surface)); }
   .gtable tr:last-child td { border-bottom: 0; }
   .gtable .kid-row td { background: color-mix(in srgb, var(--surface-2) 55%, var(--surface)); font-size: .88rem; padding-top: 5px; padding-bottom: 5px; }
   .c-img { width: 52px; } .c-num { white-space: nowrap; font-variant-numeric: tabular-nums; }
-  .c-mech { color: var(--ink-2); font-size: .85rem; min-width: 200px; }
+  .c-mech { color: var(--ink-2); font-size: .82rem; min-width: 150px; }
   .tthumb { --h: 30; width: 40px; height: 40px; border-radius: 8px; border: 2px solid var(--outline); display: flex; align-items: center; justify-content: center; overflow: hidden;
     background: linear-gradient(135deg, hsl(var(--h) 90% 88%), hsl(calc(var(--h) + 35) 80% 77%)); }
   .tthumb img { max-width: 100%; max-height: 100%; min-width: 0; min-height: 0; object-fit: contain; }
   .tthumb > svg { width: 100%; height: 100%; }
   .kid-row .tthumb { width: 30px; height: 30px; margin-left: 10px; border-width: 1.5px; border-radius: 6px; }
-  .c-name { min-width: 220px; }
+  .c-name { min-width: 180px; }
   .tname { all: unset; cursor: pointer; font-family: Fredoka, ui-rounded, sans-serif; font-weight: 600; font-size: 1rem; color: var(--ink); }
   .tname:hover { color: var(--accent); text-decoration: underline; }
   .tname:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
@@ -489,6 +489,17 @@
   .trate { display: inline-flex; align-items: center; gap: 3px; font-weight: 800; } .trate svg { color: var(--star); }
   .tweight { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
   .dim { color: var(--muted); }
+  .gtable .frow td { background: var(--surface-2); padding: 6px 4px 8px; border-bottom: 2.5px solid var(--outline); }
+  .gtable .frow td.c-img { text-align: center; color: var(--muted); }
+  .colf { width: 100%; min-width: 0; height: 32px; border: 2px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink);
+    font: 600 .82rem Nunito, ui-rounded, sans-serif; padding: 0 6px; }
+  input.colf { padding: 0 8px; }
+  .colf:focus { outline: none; border-color: var(--outline); box-shadow: 0 0 0 3px var(--yellow); }
+  .colf.set { border-color: var(--outline); background: var(--yellow-soft); }
+  .gtable .frow td:nth-child(2) { min-width: 170px; } .gtable .frow td:nth-child(10) { min-width: 130px; }
+  .gtable select.colf { min-width: 74px; }
+  .tempty { text-align: center; padding: 28px 16px !important; color: var(--ink-2); }
+  .tempty svg { display: block; margin: 0 auto 10px; }
   @media (max-width: 760px) {
     .viewseg span { display: none; }
     .viewseg button { padding: 0 8px; }
@@ -651,6 +662,7 @@ const ICON = {
   ext: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
   up: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 14l5-5 5 5"/></svg>',
   down: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 10l5 5 5-5"/></svg>',
+  filter: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16l-6 7.5V18l-4 2v-7.5Z"/></svg>',
   warn: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none;margin-top:1px"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>',
 };
 const MEEPLE = "M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z";
@@ -714,8 +726,32 @@ const state = { q: "", best: null, mechs: new Set(), sort: "name", dir: 1,
   page: Number(store.get("sessionStorage", "page", 1)) || 1,
   per: PER.includes(store.get("localStorage", "per-page", 24)) ? store.get("localStorage", "per-page", 24) : 24 };
 state.view = store.get("localStorage", "view", "cards") === "table" ? "table" : "cards";
+// Per-column filters from the table's filter row. They also apply in card view and show as chips.
+const COLF_EMPTY = { name: "", rating: "", rank: "", players: "", time: "", weight: "", year: "", mech: "", owner: "" };
+state.col = { ...COLF_EMPTY };
 const DEFAULT_DIR = { name: 1, rating: -1, year: -1, players: -1, weight: 1 };
 let status = "loading"; // loading | ok | error
+
+const WEIGHT_BANDS = {
+  light: { label: "Light (under 2)", test: (w) => w < 2 }, medium: { label: "Medium (2–3)", test: (w) => w >= 2 && w < 3 },
+  mheavy: { label: "Medium-heavy (3–3.8)", test: (w) => w >= 3 && w < 3.8 }, heavy: { label: "Heavy (3.8+)", test: (w) => w >= 3.8 },
+};
+const COLF_OPTS = {
+  rating: [["", "Any"], ["6", "6+"], ["7", "7+"], ["7.5", "7.5+"], ["8", "8+"]],
+  rank: [["", "Any"], ["100", "Top 100"], ["500", "Top 500"], ["1000", "Top 1,000"], ["5000", "Top 5,000"]],
+  players: [["", "Any"], ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => [String(n), `Plays ${n}`]), ["10", "Plays 10+"]],
+  time: [["", "Any"], ["30", "≤ 30 min"], ["60", "≤ 60 min"], ["90", "≤ 90 min"], ["120", "≤ 2 hrs"], ["long", "Over 2 hrs"]],
+  weight: [["", "Any"], ...Object.entries(WEIGHT_BANDS).map(([k, v]) => [k, v.label])],
+  year: [["", "Any"], ["2020", "2020s"], ["2010", "2010s"], ["2000", "2000s"], ["1990", "1990s"], ["old", "Before 1990"]],
+  owner: [["", "Anyone"], ["Remy", "Remy"], ["Jonathan", "Jonathan"], ["Both", "Both"]],
+};
+const COLF_NAMES = { name: "Name", rating: "Rating", rank: "BGG rank", players: "Players", time: "Time", weight: "Complexity", year: "Year", mech: "Mechanic", owner: "Owner" };
+const colfLabel = (k, v) => {
+  if (k === "name" || k === "mech") return `${COLF_NAMES[k]}: “${v}”`;
+  const opt = (COLF_OPTS[k] || []).find(([x]) => x === v);
+  const txt = opt ? opt[1] : v;
+  return k === "rating" ? `Rating ${txt}` : k === "owner" ? `Owner: ${txt}` : k === "time" && v !== "long" ? `Time ${txt}` : txt;
+};
 
 // Filters check the base game; its expansions and accessories follow it. Search and the owner
 // filter also look at nested items, so a game shows if something under it matches.
@@ -727,6 +763,29 @@ function visibleGroups() {
     if (state.best !== null && !(h.bestPlayers || []).some((b) => state.best === TEN ? b >= TEN : b === state.best)) continue;
     if (state.mechs.size && !(h.mechanics || []).some((m) => state.mechs.has(m))) continue;
     let kids = grp.kids;
+    const c = state.col;
+    if (c.rating && !(h.rating >= Number(c.rating))) continue;
+    if (c.rank && !(h.rank && h.rank <= Number(c.rank))) continue;
+    if (c.players) { const n = Number(c.players);
+      if (!(h.minPlayers && (n === TEN ? (h.maxPlayers || h.minPlayers) >= TEN : h.minPlayers <= n && n <= (h.maxPlayers || h.minPlayers)))) continue; }
+    if (c.time) { const t = h.maxTime || h.playTime || h.minTime;
+      if (!t || (c.time === "long" ? t <= 120 : t > Number(c.time))) continue; }
+    if (c.weight && !(h.weight && WEIGHT_BANDS[c.weight].test(h.weight))) continue;
+    if (c.year) { const y = Number(h.year);
+      if (!y || (c.year === "old" ? y >= 1990 : (y < Number(c.year) || y >= Number(c.year) + 10))) continue; }
+    if (c.mech && !(h.mechanics || []).some((m) => m.toLowerCase().includes(c.mech.toLowerCase()))) continue;
+    if (c.owner) {
+      const headOk = h.ownedBy === c.owner;
+      kids = kids.filter((k) => k.ownedBy === c.owner);
+      if (!headOk && !kids.length) continue;
+    }
+    if (c.name) {
+      const n = c.name.toLowerCase();
+      const headHit = h.name.toLowerCase().includes(n);
+      const kidHits = kids.filter((k) => k.name.toLowerCase().includes(n));
+      if (!headHit && !kidHits.length) continue;
+      if (!headHit) kids = kidHits;
+    }
     if (q) {
       const hay = [h.name, ...(h.designers || []), ...(h.publishers || []), ...(h.mechanics || [])].join(" ").toLowerCase();
       const headHit = hay.includes(q);
@@ -812,6 +871,7 @@ function activeFilters() {
   if (state.q) out.push({ search: true, label: `“${state.q}”`, clear: () => { state.q = ""; $("q").value = ""; } });
   if (state.best !== null) out.push({ label: `Best with ${bestLabel(state.best)}`, clear: () => { state.best = null; } });
   [...state.mechs].sort().forEach((m) => out.push({ label: m, clear: () => state.mechs.delete(m) }));
+  for (const [k, v] of Object.entries(state.col)) if (v) out.push({ col: true, label: colfLabel(k, v), clear: () => { state.col[k] = ""; } });
   return out;
 }
 function renderActive() {
@@ -891,9 +951,11 @@ function renderGrid() {
   const from = (state.page - 1) * state.per;
   const rows = list.slice(from, from + state.per);
   $("rescount").innerHTML = list.length ? `Showing <b>${from + 1}–${from + rows.length}</b> of <b>${list.length}</b> game${list.length === 1 ? "" : "s"}` : "No games match";
-  $("grid").hidden = !list.length || state.view !== "cards";
-  $("tablewrap").hidden = !list.length || state.view !== "table";
-  $("empty").hidden = !!list.length;
+  const table = state.view === "table";
+  $("grid").hidden = !list.length || table;
+  $("tablewrap").hidden = !table;
+  $("empty").hidden = !!list.length || table;
+  if (!list.length && table) { $("grid").innerHTML = ""; renderTable([]); $("pager").innerHTML = ""; return; }
   if (!list.length) {
     $("empty").innerHTML = `<div class="empty">${SLEEPY}<h2>No games here… yet!</h2><p>Nothing matches these filters. Try removing one, or start fresh.</p><button class="btn" id="empty-reset">Reset all filters</button></div>`;
     $("empty-reset").onclick = resetAll;
@@ -918,7 +980,6 @@ function tableRows({ head: g, kids }) {
     <td class="c-name">${kid ? `<span class="kidmark" aria-hidden="true">↳</span><a class="tkid" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a> <span class="ttype">${x.type}</span>`
       : `<button class="tname" data-open="${id}">${esc(x.name)}</button>${x.type !== "Base game" ? ` <span class="ttype">${x.type}</span>` : ""}
         ${kids.length ? `<button class="tkids" data-trow="${id}" aria-expanded="false">${ICON.chev}${addonSummary(kids)}</button>` : ""}`}</td>
-    <td class="c-own"><span class="tiny own-${x.ownedBy}">${ownIcon(x.ownedBy)}${x.ownedBy}</span></td>
     <td class="c-num">${x.rating ? `<span class="trate">${ICON.star}${x.rating.toFixed(1)}</span>` : "<span class=\"dim\">—</span>"}</td>
     <td class="c-num">${x.rank ? `#${x.rank.toLocaleString()}` : "<span class=\"dim\">—</span>"}</td>
     <td class="c-num">${kid ? "" : players(x) || "<span class=\"dim\">—</span>"}</td>
@@ -926,16 +987,36 @@ function tableRows({ head: g, kids }) {
     <td class="c-num c-time">${kid ? "" : timeText(x) || "<span class=\"dim\">—</span>"}</td>
     <td class="c-num">${kid ? "" : x.weight ? `<span class="tweight" title="${weightLabel(x.weight)}">${weightBar(x.weight)}${x.weight.toFixed(1)}</span>` : "<span class=\"dim\">—</span>"}</td>
     <td class="c-num">${esc(x.year || "")}</td>
-    <td class="c-mech">${kid ? "" : mech.length ? `<span title="${esc(mech.join(", "))}">${esc(mech.slice(0, 3).join(", "))}${mech.length > 3 ? ` <span class="dim">+${mech.length - 3}</span>` : ""}</span>` : ""}</td>
+    <td class="c-mech">${kid ? "" : mech.length ? `<span title="${esc(mech.join(", "))}">${esc(mech.slice(0, 2).join(", "))}${mech.length > 2 ? ` <span class="dim">+${mech.length - 2}</span>` : ""}</span>` : ""}</td>
+    <td class="c-own"><span class="tiny own-${x.ownedBy}">${ownIcon(x.ownedBy)}${x.ownedBy}</span></td>
   </tr>`;
   return row(g, false) + kids.map((k) => row(k, true)).join("");
 }
+function colfCell(k, cls = "") {
+  const label = `Filter ${COLF_NAMES[k].toLowerCase()}`;
+  const v = state.col[k];
+  if (k === "name" || k === "mech") return `<td class="${cls}"><input class="colf${v ? " set" : ""}" data-colf="${k}" type="search" value="${esc(v)}" placeholder="${k === "name" ? "Filter names" : "Filter mechanics"}" aria-label="${label}" autocomplete="off"></td>`;
+  return `<td class="${cls}"><select class="colf${v ? " set" : ""}" data-colf="${k}" aria-label="${label}">${COLF_OPTS[k].map(([x, l]) => `<option value="${x}"${x === v ? " selected" : ""}>${l}</option>`).join("")}</select></td>`;
+}
+function bestCell() {
+  const counts = new Set();
+  for (const g of groups) for (const n of g.head.bestPlayers || []) counts.add(n >= TEN ? TEN : n);
+  return `<td class="c-num"><select class="colf${state.best !== null ? " set" : ""}" data-colf="best" aria-label="Filter best player count"><option value="">Any</option>${[...counts].sort((a, b) => a - b)
+    .map((n) => `<option value="${n}"${state.best === n ? " selected" : ""}>Best ${bestLabel(n)}</option>`).join("")}</select></td>`;
+}
 function renderTable(rows) {
+  // Keep typing focus in a text filter across re-renders.
+  const ae = document.activeElement, keep = ae?.dataset?.colf ? { k: ae.dataset.colf, s: ae.selectionStart, e: ae.selectionEnd } : null;
   $("tablewrap").innerHTML = `<table class="gtable">
-    <caption class="sr">Games, ${state.page > 1 ? `page ${state.page}` : "first page"}. Select a game's name to see its details.</caption>
-    <thead><tr>${th("", '<span class="sr">Cover</span>', "c-img")}${th("name", "Name")}${th("", "Owner")}${th("rating", "Rating", "c-num")}${th("", "BGG rank", "c-num")}
-      ${th("players", "Players", "c-num")}${th("", "Best with", "c-num")}${th("", "Time", "c-num c-time")}${th("weight", "Complexity", "c-num")}${th("year", "Year", "c-num")}${th("", "Mechanics", "c-mech")}</tr></thead>
-    <tbody>${rows.map(tableRows).join("")}</tbody></table>`;
+    <caption class="sr">Games, ${state.page > 1 ? `page ${state.page}` : "first page"}. Use the second header row to filter each column. Select a game's name to see its details.</caption>
+    <thead><tr>${th("", '<span class="sr">Cover</span>', "c-img")}${th("name", "Name")}${th("rating", "Rating", "c-num")}${th("", "BGG rank", "c-num")}
+      ${th("players", "Players", "c-num")}${th("", "Best with", "c-num")}${th("", "Time", "c-num c-time")}${th("weight", "Complexity", "c-num")}${th("year", "Year", "c-num")}${th("", "Mechanics", "c-mech")}${th("", "Owner")}</tr>
+      <tr class="frow"><td class="c-img"><span class="sr">No filter</span>${ICON.filter}</td>${colfCell("name")}${colfCell("rating")}${colfCell("rank")}${colfCell("players")}${bestCell()}${colfCell("time")}${colfCell("weight")}${colfCell("year")}${colfCell("mech")}${colfCell("owner")}</tr></thead>
+    <tbody>${rows.length ? rows.map(tableRows).join("") : `<tr><td colspan="11" class="tempty">${SLEEPY}<div><b>No games match these filters.</b> Change a filter above, or <button class="linkbtn" data-reset="1">reset all filters</button>.</div></td></tr>`}</tbody></table>`;
+  if (keep) {
+    const el = $("tablewrap").querySelector(`[data-colf="${keep.k}"]`);
+    if (el) { el.focus({ preventScroll: true }); if (el.setSelectionRange && keep.s != null) try { el.setSelectionRange(keep.s, keep.e); } catch {} }
+  }
 }
 function renderView() {
   document.querySelectorAll(".viewseg [data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === state.view)));
@@ -1024,14 +1105,15 @@ function banner(kind, html) {
 function setPage(p) { state.page = p; store.set("sessionStorage", "page", p); }
 function changed() { setPage(1); render(); }
 function render() { renderView(); renderPodium(); renderBest(); renderMechOpts(); renderSort(); renderActive(); renderGrid(); }
-function resetAll() { Object.assign(state, { q: "", best: null, mechs: new Set() }); $("q").value = ""; $("mech-q").value = ""; changed(); }
+function resetAll() { Object.assign(state, { q: "", best: null, mechs: new Set(), col: { ...COLF_EMPTY } }); $("q").value = ""; $("mech-q").value = ""; changed(); }
 
 let qt; $("q").addEventListener("input", (e) => { clearTimeout(qt); qt = setTimeout(() => { state.q = e.target.value.trim(); changed(); }, 150); });
 $("q-clear").onclick = () => { state.q = ""; $("q").value = ""; changed(); $("q").focus(); };
 document.addEventListener("click", (e) => {
   const t = e.target.closest("button, a");
   if (!t) { if (!$("mech-dd").contains(e.target)) closeMech(); return; }
-  if (t.dataset.view) { state.view = t.dataset.view; store.set("localStorage", "view", state.view); renderView(); renderGrid(); }
+  if (t.dataset.reset) resetAll();
+  else if (t.dataset.view) { state.view = t.dataset.view; store.set("localStorage", "view", state.view); renderView(); renderGrid(); }
   else if (t.dataset.sorth) { const k = t.dataset.sorth; state.dir = state.sort === k ? -state.dir : DEFAULT_DIR[k]; state.sort = k; changed(); }
   else if (t.dataset.trow) { const open = t.getAttribute("aria-expanded") !== "true"; t.setAttribute("aria-expanded", String(open));
     document.querySelectorAll(".kid-of-" + CSS.escape(t.dataset.trow)).forEach((r) => r.hidden = !open); }
@@ -1046,6 +1128,19 @@ $("mech-btn").onclick = (e) => { e.stopPropagation(); const open = $("mech-panel
 $("mech-q").oninput = renderMechOpts;
 $("mech-opts").addEventListener("change", (e) => { const v = e.target.value; e.target.checked ? state.mechs.add(v) : state.mechs.delete(v); setPage(1); renderMechOpts(); renderActive(); renderGrid(); });
 $("mech-clear").onclick = () => { state.mechs.clear(); changed(); };
+// Column filters in the table
+let cft;
+$("tablewrap").addEventListener("input", (e) => {
+  const el = e.target.closest("[data-colf]"); if (!el || el.tagName !== "INPUT") return;
+  clearTimeout(cft); cft = setTimeout(() => { state.col[el.dataset.colf] = el.value.trim(); setPage(1); renderMechOpts(); renderBest(); renderActive(); renderGrid(); }, 180);
+});
+$("tablewrap").addEventListener("change", (e) => {
+  const el = e.target.closest("select[data-colf]"); if (!el) return;
+  if (el.dataset.colf === "best") state.best = el.value === "" ? null : Number(el.value);
+  else state.col[el.dataset.colf] = el.value;
+  changed();
+  $("tablewrap").querySelector(`[data-colf="${el.dataset.colf}"]`)?.focus({ preventScroll: true });
+});
 $("sort").onchange = (e) => { state.sort = e.target.value; state.dir = DEFAULT_DIR[state.sort]; changed(); };
 $("dir").onclick = () => { state.dir *= -1; changed(); };
 $("per").onchange = (e) => {
@@ -1057,7 +1152,7 @@ $("per").onchange = (e) => {
 function openDrawer() { $("filters").classList.add("open"); $("scrim").hidden = false; $("open-filters").setAttribute("aria-expanded", "true"); document.body.style.overflow = "hidden"; $("close-filters").focus(); }
 function closeDrawer() { $("filters").classList.remove("open"); $("scrim").hidden = true; $("open-filters").setAttribute("aria-expanded", "false"); document.body.style.overflow = ""; }
 $("open-filters").onclick = openDrawer; $("close-filters").onclick = closeDrawer; $("scrim").onclick = closeDrawer; $("drawer-done").onclick = closeDrawer;
-$("drawer-reset").onclick = () => { Object.assign(state, { best: null, mechs: new Set() }); $("mech-q").value = ""; changed(); };
+$("drawer-reset").onclick = () => { Object.assign(state, { best: null, mechs: new Set(), col: { ...COLF_EMPTY } }); $("mech-q").value = ""; changed(); };
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (!$("modal").hidden) closeDetail(); else if ($("filters").classList.contains("open")) closeDrawer(); else closeMech(); } });
 new IntersectionObserver(([e]) => $("toolbar").classList.toggle("stuck", e.intersectionRatio < 1), { threshold: [1], rootMargin: "-1px 0px 0px 0px" }).observe($("toolbar"));
 const shortPh = matchMedia("(max-width: 760px)");

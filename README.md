@@ -11,6 +11,7 @@ Combines the owned BoardGameGeek collections of **Asianofchaos** (Remy) and **ce
 - **Nested add-ons:** expansions and accessories sit under the base game they belong to, with their own owner shown when it differs.
 - **Search and filters:** search by title, mechanic, designer or publisher; filter by BGG's "best with" player count (every count on the shelf, up to 10+) and mechanics (any selected); sort by name, rating, year, player count or complexity. Active filters show as removable chips.
 - **Cards or table:** switch between box-art cards and a sortable table (click a column header to sort; expand a game's row to see its add-ons). The choice is remembered on the device.
+- **Column filters:** the table has a filter under every column (name, rating, BGG rank, players, best with, time, complexity, year, mechanics, owner). They combine with each other and with search, show as chips, and stay applied in card view.
 - **Game details:** cover, rating, description, players, best count, playing time, weight, mechanics, categories, designers, publishers and add-ons, with a link to BGG.
 - **Pagination:** 24, 36 or 48 games per page (remembered on the device); filters stay applied while paging. On tablets and phones the filters open in a drawer.
 
