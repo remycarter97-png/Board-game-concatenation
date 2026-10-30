@@ -450,6 +450,20 @@
   .pmeta svg { color: var(--star); }
   .pinfo .own { position: static; font-size: .72rem; }
 
+  /* Export */
+  .export { position: relative; }
+  .exportbtn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border: var(--edge); border-radius: 12px; background: var(--surface);
+    box-shadow: var(--pop-sm); font-weight: 700; color: var(--ink); transition: transform .12s, box-shadow .12s; }
+  .exportbtn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--outline); }
+  .exportbtn[aria-expanded="true"] { background: var(--yellow-soft); }
+  .exportbtn[disabled] { opacity: .6; cursor: progress; }
+  .exportmenu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; width: 250px; background: var(--surface); border: var(--edge); border-radius: 16px;
+    box-shadow: var(--pop); padding: 6px; display: flex; flex-direction: column; gap: 2px; }
+  .exportmenu button { all: unset; box-sizing: border-box; cursor: pointer; padding: 9px 10px; border-radius: 10px; font-weight: 700; display: flex; justify-content: space-between; gap: 8px; }
+  .exportmenu button:hover, .exportmenu button:focus-visible { background: var(--yellow-soft); }
+  .exportmenu button .n { color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .exportnote { margin: 4px 10px 6px; font-size: .78rem; color: var(--muted); font-weight: 600; }
+
   /* View switch */
   .viewseg { display: inline-flex; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); padding: 3px; gap: 2px; }
   .viewseg button { border: 0; background: none; display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 10px; font-weight: 700; color: var(--ink-2); }
@@ -501,7 +515,9 @@
   .tempty { text-align: center; padding: 28px 16px !important; color: var(--ink-2); }
   .tempty svg { display: block; margin: 0 auto 10px; }
   @media (max-width: 760px) {
-    .viewseg span { display: none; }
+    .viewseg span, .exportbtn span { display: none; }
+    .exportbtn { padding: 0 9px; height: 38px; }
+    .resright .export { order: -1; }
     .viewseg button { padding: 0 8px; }
     .tablewrap { border-radius: 16px; box-shadow: var(--pop-sm); }
   }
@@ -611,6 +627,16 @@
     <div class="resbar">
       <div id="rescount" aria-live="polite"></div>
       <div class="resright">
+        <div class="export" id="export">
+          <button class="exportbtn" id="export-btn" aria-haspopup="true" aria-expanded="false" title="Export to Excel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"/></svg><span>Export</span>
+          </button>
+          <div class="exportmenu" id="export-menu" role="menu" hidden>
+            <button role="menuitem" data-export="view" id="export-view">These games</button>
+            <button role="menuitem" data-export="all" id="export-all">Whole collection</button>
+            <p class="exportnote">Excel file (.xlsx) with add-ons as their own rows</p>
+          </div>
+        </div>
         <div class="viewseg" role="group" aria-label="View">
           <button data-view="cards" aria-pressed="true" title="Card view"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg><span>Cards</span></button>
           <button data-view="table" aria-pressed="false" title="Table view"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>Table</span></button>
@@ -731,6 +757,7 @@ const COLF_EMPTY = { name: "", rating: "", rank: "", players: "", time: "", weig
 state.col = { ...COLF_EMPTY };
 const DEFAULT_DIR = { name: 1, rating: -1, year: -1, players: -1, weight: 1 };
 let status = "loading"; // loading | ok | error
+let lastUpdatedAt = null;
 
 const WEIGHT_BANDS = {
   light: { label: "Light (under 2)", test: (w) => w < 2 }, medium: { label: "Medium (2–3)", test: (w) => w >= 2 && w < 3 },
@@ -1087,6 +1114,103 @@ function openDetail(id) {
 }
 function closeDetail() { $("modal").hidden = true; $("modal").innerHTML = ""; document.body.style.overflow = ""; lastFocus?.focus?.(); }
 
+/* ---------- Export to Excel ---------- */
+const EXCELJS_URL = "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js";
+let excelLoading = null;
+function loadExcelJS() {
+  if (window.ExcelJS) return Promise.resolve(window.ExcelJS);
+  return excelLoading ||= new Promise((ok, fail) => {
+    const sc = document.createElement("script");
+    sc.src = EXCELJS_URL; sc.async = true;
+    sc.onload = () => window.ExcelJS ? ok(window.ExcelJS) : fail(new Error("ExcelJS missing"));
+    sc.onerror = () => { excelLoading = null; fail(new Error("Couldn't load the Excel library")); };
+    document.head.append(sc);
+  });
+}
+function renderExportMenu() {
+  const shown = visibleGroups(), all = groups;
+  const count = (list) => list.reduce((n, g) => n + 1 + g.kids.length, 0);
+  const filtered = activeFilters().length > 0;
+  $("export-view").innerHTML = `${filtered ? "These games" : "All games, as sorted"}<span class="n">${shown.length}</span>`;
+  $("export-all").innerHTML = `Whole collection<span class="n">${all.length}</span>`;
+  $("export-all").hidden = !filtered;
+  $("export-view").title = `${shown.length} games plus ${count(shown) - shown.length} add-ons, in the current sort order`;
+}
+async function exportXlsx(which) {
+  const btn = $("export-btn");
+  closeExport();
+  btn.disabled = true; const label = btn.querySelector("span").textContent; btn.querySelector("span").textContent = "Exporting…";
+  try {
+    const ExcelJS = await loadExcelJS();
+    const list = which === "all" ? [...groups].sort((a, b) => a.head.name.localeCompare(b.head.name)) : sortGroups(visibleGroups());
+    const wb = new ExcelJS.Workbook();
+    wb.creator = "Our Game Shelf"; wb.created = new Date();
+    const ws = wb.addWorksheet("Games", { views: [{ state: "frozen", ySplit: 1, xSplit: 1 }] });
+    const cols = [
+      ["Name", 38], ["Type", 11], ["Part of", 30], ["Owner", 10], ["BGG rating", 10], ["Rating votes", 11], ["BGG rank", 9],
+      ["Min players", 10], ["Max players", 10], ["Best with", 12], ["Playing time (min)", 12], ["Min time (min)", 11], ["Max time (min)", 11],
+      ["Complexity (1-5)", 12], ["Year", 7], ["Mechanics", 50], ["Categories", 32], ["Designers", 28], ["Publishers", 34], ["BGG link", 42],
+    ];
+    ws.columns = cols.map(([header, width]) => ({ header, width }));
+    const n = (v) => (v === null || v === undefined || v === "" ? null : Number(v));
+    const add = (g, parent) => {
+      const r = ws.addRow([
+        g.name, g.type, parent ? parent.name : "", g.ownedBy, g.rating != null ? Math.round(g.rating * 100) / 100 : null, g.votes || null, n(g.rank),
+        n(g.minPlayers), n(g.maxPlayers), bestShort(g) || "", n(g.playTime), n(g.minTime), n(g.maxTime),
+        g.weight != null ? Math.round(g.weight * 100) / 100 : null, n(g.year),
+        (g.mechanics || []).join(", "), (g.categories || []).join(", "), (g.designers || []).join(", "), (g.publishers || []).join(", "),
+        g.url ? { text: g.url, hyperlink: g.url } : "",
+      ]);
+      if (parent) r.getCell(1).alignment = { indent: 2 };
+      if (g.url) r.getCell(20).font = { color: { argb: "FF2F5D9E" }, underline: true };
+      return r;
+    };
+    for (const grp of list) { add(grp.head, null); for (const k of grp.kids) add(k, grp.head); }
+    const head = ws.getRow(1);
+    head.font = { bold: true, color: { argb: "FF3D2A4F" } };
+    head.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFD45C" } };
+    head.alignment = { vertical: "middle", wrapText: true };
+    head.height = 30;
+    ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: cols.length } };
+    ws.getColumn(5).numFmt = "0.0"; ws.getColumn(14).numFmt = "0.00"; ws.getColumn(6).numFmt = "#,##0"; ws.getColumn(7).numFmt = "#,##0";
+
+    const about = wb.addWorksheet("About");
+    about.columns = [{ width: 24 }, { width: 70 }];
+    const filters = activeFilters().map((f) => f.label).join(", ");
+    [["Our Game Shelf", "https://ourgameshelf.com"], ["Exported", new Date().toLocaleString()],
+     ["Contents", which === "all" ? "Whole collection" : filters ? `Games matching: ${filters}` : "All games"],
+     ["Games", list.length], ["Expansions & accessories", list.reduce((s, g) => s + g.kids.length, 0)],
+     ["Data synced from BGG", lastUpdatedAt ? new Date(lastUpdatedAt).toLocaleString() : ""],
+     ["Source", "Game data from BoardGameGeek (boardgamegeek.com), shown as provided. Powered by BGG."]]
+      .forEach(([k, v]) => { const r = about.addRow([k, v]); r.getCell(1).font = { bold: true }; });
+
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const day = new Date().toLocaleDateString("en-CA");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `our-game-shelf-${which === "all" || !activeFilters().length ? "" : "filtered-"}${day}.xlsx`;
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  } catch (err) {
+    banner("error", `<b>The export didn't work.</b> ${esc(err.message)}. Please try again.`);
+  } finally {
+    btn.disabled = false; btn.querySelector("span").textContent = label;
+  }
+}
+function closeExport() { $("export-menu").hidden = true; $("export-btn").setAttribute("aria-expanded", "false"); }
+$("export-btn").onclick = (e) => {
+  e.stopPropagation();
+  if (status !== "ok") return;
+  const open = $("export-menu").hidden;
+  if (open) { renderExportMenu(); loadExcelJS().catch(() => {}); }
+  $("export-menu").hidden = !open; $("export-btn").setAttribute("aria-expanded", String(open));
+  if (open) $("export-view").focus();
+};
+$("export-menu").addEventListener("click", (e) => { const b = e.target.closest("[data-export]"); if (b) exportXlsx(b.dataset.export); });
+document.addEventListener("click", (e) => { if (!$("export").contains(e.target)) closeExport(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeExport(); });
+
 /* ---------- Sync status ---------- */
 function setSync(kind, updatedAt, nextAt) {
   $("sync").dataset.state = kind === "ok" ? "ok" : kind === "error" || kind === "stale" ? "error" : "syncing";
@@ -1180,6 +1304,7 @@ async function load() {
     for (const grp of groups) for (const m of grp.head.mechanics || []) counts.set(m, (counts.get(m) || 0) + 1);
     mechCounts = [...counts].sort((a, b) => a[0].localeCompare(b[0]));
     status = "ok";
+    lastUpdatedAt = data.updatedAt;
     setSync(data.lastSyncError ? "stale" : "ok", data.updatedAt, data.nextSyncAt);
     if (data.lastSyncError) banner("info", `<b>Today's refresh from BoardGameGeek didn't work.</b> You're seeing the collection as of ${esc(fmtTime(new Date(data.updatedAt)))}. It'll try again at the next sync.`);
     else if (data.detailsComplete === false) banner("info", "<b>Some game details didn't load from BoardGameGeek.</b> A few games may be missing ratings, player counts or mechanics. They'll fill in on the next sync.");
