@@ -4,461 +4,999 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Our Game Shelf</title>
-<meta name="description" content="A personal page listing the board games, expansions and accessories we own.">
+<meta name="description" content="Our board game collection, all in one place.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
+
   :root {
-    --bg: #f7f4ee; --card: #ffffff; --ink: #1f1d1a; --muted: #6b665e; --line: #e4ded3; --soft: #efe9df;
-    --accent: #3f5bd8; --accent-ink: #ffffff; --remy: #c2410c; --jon: #0f766e; --both: #6d28d9;
+    --bg: #f6f1e7; --surface: #fffdf8; --surface-2: #f0e9db; --ink: #241f19; --ink-2: #5f564b; --muted: #8a8073;
+    --line: #e3d9c6; --accent: #2f5d50; --accent-ink: #ffffff; --accent-soft: #dcebe4;
+    --remy: #c2541b; --remy-soft: #fbe3d4; --jon: #1f6f8b; --jon-soft: #d8ecf3; --both: #7a4bb0; --both-soft: #ece2f7;
+    --star: #c98a00; --danger: #b42318; --danger-soft: #fde8e6; --ok: #2f7d4f;
+    --shadow: 0 1px 2px rgb(60 40 10 / .06), 0 6px 18px rgb(60 40 10 / .06);
+    --shadow-hover: 0 2px 4px rgb(60 40 10 / .08), 0 14px 30px rgb(60 40 10 / .14);
+    --radius: 16px;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #16150f; --card: #211f19; --ink: #f2eee6; --muted: #a39d92; --line: #36332b; --soft: #2a2720;
-      --accent: #8ea2ff; --accent-ink: #11131f; --remy: #fb923c; --jon: #2dd4bf; --both: #c4b5fd; }
+    :root:not([data-theme="light"]) {
+      --bg: #17140f; --surface: #211d17; --surface-2: #2b261e; --ink: #f3ede2; --ink-2: #c9bfb0; --muted: #9a8f80;
+      --line: #3a3328; --accent: #7cc4ad; --accent-ink: #10201b; --accent-soft: #23362f;
+      --remy: #f29a63; --remy-soft: #3c261a; --jon: #6cc0dd; --jon-soft: #18323c; --both: #c3a3ec; --both-soft: #30253e;
+      --star: #f2c14e; --danger: #ff8a80; --danger-soft: #3a1d1a; --ok: #7fd3a0;
+      --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 6px 18px rgb(0 0 0 / .25);
+      --shadow-hover: 0 2px 4px rgb(0 0 0 / .35), 0 14px 30px rgb(0 0 0 / .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17140f; --surface: #211d17; --surface-2: #2b261e; --ink: #f3ede2; --ink-2: #c9bfb0; --muted: #9a8f80;
+    --line: #3a3328; --accent: #7cc4ad; --accent-ink: #10201b; --accent-soft: #23362f;
+    --remy: #f29a63; --remy-soft: #3c261a; --jon: #6cc0dd; --jon-soft: #18323c; --both: #c3a3ec; --both-soft: #30253e;
+    --star: #f2c14e; --danger: #ff8a80; --danger-soft: #3a1d1a; --ok: #7fd3a0;
+    --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 6px 18px rgb(0 0 0 / .25);
+    --shadow-hover: 0 2px 4px rgb(0 0 0 / .35), 0 14px 30px rgb(0 0 0 / .4);
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink);
-    font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
-  main { max-width: 920px; margin: 0 auto; padding: 32px 16px 48px; }
-  h1 { font-size: 2rem; margin: 0 0 4px; letter-spacing: -0.02em; }
-  .sub { color: var(--muted); margin: 0 0 24px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
-  .notice h2 { margin: 0 0 8px; font-size: 1.15rem; }
-  .notice p { margin: 0 0 8px; }
-  button, input, select { font: inherit; color: var(--ink); }
-  .field { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); min-height: 42px; }
-  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-  #q { flex: 1 1 240px; min-width: 0; }
-  .controls select { flex: 0 1 auto; max-width: 100%; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 Nunito, ui-rounded, ui-sans-serif, system-ui, sans-serif; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-  /* Mechanics picker */
-  .picker { position: relative; }
-  .picker > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-  .picker > summary::-webkit-details-marker { display: none; }
-  .picker > summary::after { content: "▾"; color: var(--muted); font-size: 0.8em; }
-  .picker[open] > summary { border-color: var(--accent); }
-  .picker .panel { position: absolute; z-index: 10; top: calc(100% + 6px); left: 0; width: min(340px, calc(100vw - 32px));
-    background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 32px rgb(0 0 0 / 0.18); padding: 10px; }
-  .picker .panel input[type=search] { width: 100%; margin-bottom: 8px; }
-  .picker .opts { max-height: 300px; overflow: auto; }
-  .picker label { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-radius: 6px; cursor: pointer; }
-  .picker label:hover { background: var(--soft); }
-  .picker label span.n { margin-left: auto; color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
-  .picker .foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-top: 8px; margin-top: 6px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; }
-  .linkbtn { background: none; border: 0; padding: 4px; color: var(--accent); cursor: pointer; font-size: 0.9rem; }
+  /* Header */
+  header.top { padding: 36px 0 8px; }
+  .titlebar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  h1 { font-family: Fredoka, ui-rounded, system-ui, sans-serif; font-weight: 700; font-size: clamp(2rem, 4vw, 2.9rem); line-height: 1.05; margin: 0; letter-spacing: -0.01em; }
+  .tagline { margin: 6px 0 0; color: var(--ink-2); font-size: 1.05rem; }
+  .sync { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .85rem; color: var(--ink-2);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px 6px 10px; }
+  .sync .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 22%, transparent); flex: none; }
+  .sync[data-state="syncing"] .dot { background: var(--star); animation: pulse 1.2s infinite; }
+  .sync[data-state="error"] .dot { background: var(--danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 22%, transparent); }
+  .sync strong { color: var(--ink); font-weight: 600; }
+  .sync .sep { color: var(--line); }
+  @keyframes pulse { 50% { opacity: .35; } }
+
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 22px 0 0; }
+  .stat { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px;
+    display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center; box-shadow: var(--shadow); transition: transform .15s, border-color .15s; }
+  .stat:hover { transform: translateY(-1px); border-color: var(--muted); }
+  .stat[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft), var(--shadow); }
+  .stat .ico { grid-row: span 2; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font-weight: 700; font-size: .9rem; }
+  .stat .n { font-family: Fredoka, ui-rounded, system-ui, sans-serif; font-size: 1.6rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .stat .l { font-size: .82rem; color: var(--ink-2); line-height: 1.25; }
+  .stat.total .ico { background: var(--accent-soft); color: var(--accent); }
+  .stat.Remy .ico { background: var(--remy-soft); color: var(--remy); }
+  .stat.Jonathan .ico { background: var(--jon-soft); color: var(--jon); }
+  .stat.Both .ico { background: var(--both-soft); color: var(--both); }
+
+  .banner { display: flex; gap: 12px; align-items: flex-start; margin-top: 16px; padding: 12px 16px; border-radius: 12px;
+    background: var(--danger-soft); color: var(--ink); border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent); font-size: .92rem; }
+  .banner b { color: var(--danger); }
+  .banner .x { margin-left: auto; background: none; border: 0; color: var(--ink-2); font-size: 1.2rem; line-height: 1; padding: 0 4px; }
+
+  /* Toolbar */
+  .toolbar { position: sticky; top: 0; z-index: 20; background: var(--bg);
+    margin-top: 18px; padding: 12px 0; border-bottom: 1px solid transparent; }
+  .toolbar.stuck { border-bottom-color: var(--line); }
+  .toolbar:has(.filters.open) { z-index: 46; }
+  .searchrow { display: flex; gap: 10px; }
+  .search { flex: 1; position: relative; }
+  .search svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+  .search input { width: 100%; height: 52px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); padding: 0 44px 0 46px;
+    font-size: 1.02rem; box-shadow: var(--shadow); }
+  .search input::placeholder { color: var(--muted); }
+  .search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .search .clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: 0; background: var(--surface-2); color: var(--ink-2);
+    width: 28px; height: 28px; border-radius: 50%; }
+  .filter-btn { display: none; align-items: center; gap: 8px; height: 52px; padding: 0 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); font-weight: 600; box-shadow: var(--shadow); }
+  .filter-btn .badge { background: var(--accent); color: var(--accent-ink); border-radius: 999px; font-size: .75rem; min-width: 20px; height: 20px; display: inline-grid; place-items: center; padding: 0 6px; }
+
+  .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 12px; }
+  .fgroup { display: flex; align-items: center; gap: 8px; }
+  .flabel { font-size: .78rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+  .seg { display: inline-flex; background: var(--surface-2); border-radius: 12px; padding: 3px; gap: 2px; }
+  .seg button { border: 0; background: none; padding: 6px 12px; border-radius: 9px; font-size: .9rem; font-weight: 500; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; min-height: 34px; }
+  .seg button .sw { width: 8px; height: 8px; border-radius: 50%; }
+  .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
+  .pchips { display: inline-flex; gap: 6px; }
+  .pchip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; min-width: 38px; height: 34px; padding: 0 10px; font-weight: 600; font-size: .9rem; font-variant-numeric: tabular-nums; }
+  .pchip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+  .dd { position: relative; }
+  .dd > button { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font-weight: 500; }
+  .dd > button[aria-expanded="true"] { border-color: var(--accent); }
+  .dd .count { background: var(--accent); color: var(--accent-ink); border-radius: 999px; font-size: .72rem; padding: 0 6px; min-width: 18px; text-align: center; }
+  .dd .panel { position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; width: 320px; max-width: calc(100vw - 32px); background: var(--surface);
+    border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-hover); padding: 10px; }
+  .dd .panel input[type=search] { width: 100%; height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); padding: 0 12px; margin-bottom: 6px; }
+  .opts { max-height: 280px; overflow: auto; }
+  .opt { display: flex; align-items: center; gap: 10px; padding: 7px 6px; border-radius: 8px; cursor: pointer; font-size: .93rem; }
+  .opt:hover { background: var(--surface-2); }
+  .opt input { accent-color: var(--accent); width: 16px; height: 16px; }
+  .opt .n { margin-left: auto; color: var(--muted); font-size: .82rem; font-variant-numeric: tabular-nums; }
+  .panel-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); margin-top: 6px; padding-top: 8px; font-size: .82rem; color: var(--muted); }
+
+  .resright { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+  .sortbox { display: inline-flex; align-items: center; gap: 8px; }
+  .sortbox select { height: 34px !important; }
+  .sortbox .iconbtn { width: 34px; height: 34px; border-radius: 9px; }
+  .sortbox select { height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); padding: 0 10px; }
+  .iconbtn { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); display: inline-grid; place-items: center; color: var(--ink-2); }
+  .linkbtn { border: 0; background: none; color: var(--accent); font-weight: 600; padding: 4px 2px; font-size: .9rem; }
   .linkbtn:hover { text-decoration: underline; }
 
-  @media (max-width: 560px) {
-    .controls { position: relative; }
-    .controls > select, .controls > .picker { flex: 1 1 calc(50% - 4px); min-width: 0; }
-    .controls > .picker > summary { width: 100%; }
-    .picker { position: static; }
-    .picker .panel { left: 0; right: 0; width: auto; }
+  .active { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 11px; border-radius: 999px; background: var(--accent-soft);
+    color: var(--ink); font-size: .85rem; font-weight: 500; }
+  .chip button { border: 0; background: none; width: 22px; height: 22px; border-radius: 50%; color: var(--ink-2); line-height: 1; }
+  .chip button:hover { background: color-mix(in srgb, var(--accent) 20%, transparent); }
+
+  /* Drawer header/footer only show on small screens */
+  .drawer-head, .drawer-foot { display: none; }
+  .scrim { position: fixed; inset: 0; background: rgb(0 0 0 / .4); z-index: 40; }
+
+  /* Results */
+  .resbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin: 18px 0 14px; color: var(--ink-2); font-size: .92rem; }
+  .resbar b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .perpage { display: inline-flex; align-items: center; gap: 8px; }
+  .perpage select { height: 34px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); padding: 0 8px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 20px; align-items: start; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow);
+    transition: transform .18s ease, box-shadow .18s ease; display: flex; flex-direction: column; }
+  .card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+  .card .open { all: unset; cursor: pointer; display: block; }
+  .card .open:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--radius); }
+  .cover { position: relative; aspect-ratio: 1 / 1; background: var(--surface-2); overflow: hidden; }
+  .cover svg { display: block; width: 100%; height: 100%; transition: transform .35s ease; }
+  .card:hover .cover svg { transform: scale(1.03); }
+  .own { position: absolute; top: 10px; left: 10px; font-size: .75rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; letter-spacing: .01em; box-shadow: 0 1px 4px rgb(0 0 0 / .18); }
+  .own-Remy { background: var(--remy-soft); color: var(--remy); }
+  .own-Jonathan { background: var(--jon-soft); color: var(--jon); }
+  .own-Both { background: var(--both-soft); color: var(--both); }
+  .rate { position: absolute; top: 10px; right: 10px; display: inline-flex; align-items: center; gap: 4px; background: rgb(20 16 10 / .72); color: #fff;
+    font-size: .78rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+  .rate svg { color: #f7c948; }
+  .cbody { padding: 12px 14px 4px; }
+  .cbody h3 { font-family: Fredoka, ui-rounded, system-ui, sans-serif; font-weight: 700; font-size: 1.08rem; line-height: 1.2; margin: 0; }
+  .cbody .yr { color: var(--muted); font-size: .82rem; margin-top: 2px; }
+  .facts { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 10px; font-size: .84rem; color: var(--ink-2); }
+  .facts span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .facts svg { color: var(--muted); flex: none; }
+  .facts .best { color: var(--ink); font-weight: 600; }
+  .weight { display: inline-flex; gap: 2px; }
+  .weight i { width: 6px; height: 10px; border-radius: 2px; background: var(--line); display: block; }
+  .weight i.on { background: var(--accent); }
+  .addons { border-top: 1px dashed var(--line); margin: 10px 14px 0; padding: 8px 0 10px; }
+  .addons > button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: .84rem; font-weight: 600; color: var(--accent); width: 100%; }
+  .addons > button:focus-visible { outline: 2px solid var(--accent); border-radius: 6px; }
+  .addons > button svg { transition: transform .2s; margin-left: auto; }
+  .addons > button[aria-expanded="true"] svg { transform: rotate(180deg); }
+  .addons ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+  .addon { display: flex; align-items: center; gap: 8px; font-size: .85rem; }
+  .addon .mini { width: 30px; height: 30px; border-radius: 6px; overflow: hidden; flex: none; }
+  .addon .mini svg { width: 100%; height: 100%; display: block; }
+  .addon .nm { flex: 1; min-width: 0; line-height: 1.25; }
+  .addon .ty { display: block; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
+  .tiny { font-size: .7rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; flex: none; }
+  .nocard { height: 12px; }
+
+  /* Skeletons */
+  .sk { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .sk .b { background: linear-gradient(90deg, var(--surface-2) 0%, color-mix(in srgb, var(--surface-2) 40%, var(--surface)) 50%, var(--surface-2) 100%);
+    background-size: 200% 100%; animation: shimmer 1.3s linear infinite; border-radius: 6px; }
+  .sk .img { aspect-ratio: 1/1; border-radius: 0; }
+  .sk .pad { padding: 14px; display: grid; gap: 8px; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+
+  .empty { text-align: center; padding: 56px 20px; background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius); }
+  .empty h2 { font-family: Fredoka, ui-rounded, system-ui, sans-serif; margin: 12px 0 6px; font-size: 1.4rem; }
+  .empty p { color: var(--ink-2); margin: 0 0 18px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 18px; border-radius: 12px; border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 600; text-decoration: none; }
+  .btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+
+  /* Pagination */
+  .pager { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 30px 0 10px; flex-wrap: wrap; }
+  .pager button { min-width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-weight: 600; font-variant-numeric: tabular-nums; padding: 0 12px; }
+  .pager button[aria-current="page"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .pager button:disabled { opacity: .4; cursor: default; }
+  .pager .gap { color: var(--muted); padding: 0 4px; }
+  .pager .of { display: none; color: var(--ink-2); padding: 0 8px; }
+
+  /* Detail */
+  .modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 24px; background: rgb(15 10 5 / .55); backdrop-filter: blur(3px); }
+  .sheet { position: relative; width: min(980px, 100%); max-height: calc(100vh - 48px); overflow: auto; background: var(--surface); border-radius: 22px; box-shadow: 0 30px 80px rgb(0 0 0 / .35);
+    display: grid; grid-template-columns: 360px 1fr; animation: rise .22s ease; }
+  @keyframes rise { from { transform: translateY(12px); opacity: 0; } }
+  .sheet .close { position: absolute; top: 14px; right: 14px; z-index: 2; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; }
+  .side { padding: 24px; background: var(--surface-2); display: flex; flex-direction: column; gap: 14px; }
+  .side .bigcover { border-radius: 14px; overflow: hidden; box-shadow: var(--shadow-hover); aspect-ratio: 4/5; }
+  .side .bigcover svg { width: 100%; height: 100%; display: block; }
+  .side .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .bigrate { display: flex; align-items: baseline; gap: 6px; }
+  .bigrate .v { font-family: Fredoka, ui-rounded, system-ui, sans-serif; font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .bigrate small { color: var(--muted); }
+  .main { padding: 28px 30px 30px; min-width: 0; }
+  .main h2 { font-family: Fredoka, ui-rounded, system-ui, sans-serif; font-size: clamp(1.6rem, 3vw, 2.2rem); line-height: 1.1; margin: 0 40px 6px 0; }
+  .byline { color: var(--ink-2); font-size: .95rem; }
+  .byline b { color: var(--ink); font-weight: 600; }
+  .kv { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 20px 0; }
+  .kv div { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .kv dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 700; }
+  .kv dd { margin: 2px 0 0; font-weight: 700; font-size: 1.02rem; }
+  .desc { color: var(--ink-2); line-height: 1.65; margin: 0 0 20px; }
+  .sec { margin-top: 18px; }
+  .sec h4 { margin: 0 0 8px; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 4px 11px; font-size: .86rem; }
+  button.tag:hover { border-color: var(--accent); color: var(--accent); }
+  .xlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+  .xitem { display: flex; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 8px; background: var(--bg); }
+  .xitem .mini { width: 48px; height: 48px; border-radius: 8px; overflow: hidden; flex: none; }
+  .xitem .mini svg { width: 100%; height: 100%; display: block; }
+  .xitem .nm { font-weight: 600; font-size: .9rem; line-height: 1.25; }
+  .xitem .ty { font-size: .75rem; color: var(--muted); }
+  .diff { font-size: .72rem; color: var(--ink-2); }
+
+  footer { margin: 48px 0 0; padding: 26px 0 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: .88rem;
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
+  .bgg { display: inline-block; background: #fff; border-radius: 10px; padding: 6px 10px; line-height: 0; }
+  .bgg img { width: 200px; height: auto; }
+
+
+  /* Tablet: filters move into a drawer */
+  @media (max-width: 1000px) {
+    .filter-btn { display: inline-flex; }
+    .filters { position: fixed; z-index: 45; top: 0; right: 0; bottom: 0; width: min(380px, 100%); margin: 0; background: var(--surface);
+      flex-direction: column; align-items: stretch; flex-wrap: nowrap; gap: 22px; padding: 0 20px 20px; overflow: auto;
+      box-shadow: -20px 0 40px rgb(0 0 0 / .2); display: none; }
+    .filters.open { display: flex; animation: slidein .25s ease; }
+    @keyframes slidein { from { transform: translateX(100%); } }
+    .drawer-head { display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--surface); padding: 18px 0 10px; z-index: 1; }
+    .drawer-head h2 { font-family: Fredoka, ui-rounded, system-ui, sans-serif; margin: 0; font-size: 1.4rem; }
+    .drawer-foot { display: flex; gap: 10px; position: sticky; bottom: -20px; background: var(--surface); padding: 12px 0 20px; margin-top: auto; }
+    .drawer-foot .btn { flex: 1; justify-content: center; }
+    .fgroup { flex-direction: column; align-items: stretch; gap: 8px; }
+    .seg { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .seg button { justify-content: center; padding: 8px 4px; }
+    .pchips { display: grid; grid-template-columns: repeat(5, 1fr); }
+    .pchip { height: 40px; }
+    .dd > button { display: none; }
+    .dd .panel { position: static; width: 100%; max-width: none; box-shadow: none; padding: 0; border: 0; display: block !important; }
+    .dd .opts { max-height: 260px; border: 1px solid var(--line); border-radius: 12px; padding: 4px; }
   }
-
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 14px; }
-  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px 2px 10px; border-radius: 999px;
-    background: var(--soft); border: 1px solid var(--line); font-size: 0.85rem; }
-  .chip button { background: none; border: 0; cursor: pointer; color: var(--muted); width: 22px; height: 22px; border-radius: 50%; line-height: 1; }
-  .chip button:hover { background: var(--line); color: var(--ink); }
-
-  /* Pagination (same pattern as Shelf to Stacks) */
-  .pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; font-size: 0.9rem; margin: 6px 0 12px; }
-  .pager .left { display: flex; align-items: center; gap: 12px; color: var(--muted); }
-  .pager .count { font-variant-numeric: tabular-nums; }
-  .pager .left label { display: flex; align-items: center; gap: 6px; }
-  .pager .left select { padding: 6px 8px; min-height: 40px; }
-  .pager .pages { display: flex; align-items: center; gap: 4px; }
-  .pager .nav { min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); cursor: pointer; }
-  .pager .nav:disabled { opacity: 0.45; cursor: default; }
-  .pager .num { min-height: 40px; min-width: 40px; padding: 0 8px; border: 0; border-radius: 8px; background: none; color: var(--muted);
-    cursor: pointer; font-variant-numeric: tabular-nums; }
-  .pager .num:hover { background: var(--soft); color: var(--ink); }
-  .pager .num[aria-current=page] { background: var(--accent); color: var(--accent-ink); border-radius: 999px; font-weight: 600; }
-  .pager .gap { color: var(--muted); padding: 0 2px; }
-  .pager .of { display: none; color: var(--muted); padding: 0 4px; font-variant-numeric: tabular-nums; }
-  @media (max-width: 560px) {
-    .pager .num:not([aria-current=page]), .pager .gap { display: none; }
+  @media (max-width: 760px) {
+    .wrap { padding: 0 16px; }
+    header.top { padding-top: 24px; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .stat { padding: 10px 12px; }
+    .stat .n { font-size: 1.35rem; }
+    .sync .long { display: none; }
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .cbody { padding: 10px 11px 2px; }
+    .cbody h3 { font-size: .98rem; }
+    .facts { gap: 4px 10px; font-size: .78rem; }
+    .facts .w { display: none; }
+    .addons { margin: 8px 11px 0; }
+    .own { top: 8px; left: 8px; font-size: .7rem; padding: 2px 8px; }
+    .rate { top: 8px; right: 8px; font-size: .72rem; padding: 2px 7px; }
+    .modal { padding: 0; place-items: end stretch; }
+    .sheet { grid-template-columns: 1fr; max-height: 94vh; border-radius: 22px 22px 0 0; width: 100%; }
+    .side { flex-direction: row; flex-wrap: wrap; align-items: center; padding: 18px; gap: 12px 14px; }
+    .side .bigcover { width: 110px; flex: none; }
+    .side .meta { flex: 1; min-width: 150px; display: flex; flex-direction: column; gap: 8px; }
+    .main { padding: 20px 18px 28px; }
+    .main h2 { margin-right: 0; }
+    .kv { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pager .num, .pager .gap { display: none; }
     .pager .of { display: inline; }
+    .resbar { margin: 14px 0 12px; }
+    .resright { width: 100%; flex-wrap: nowrap; gap: 8px; }
+    .sortbox { flex: 1; min-width: 0; }
+    .sortbox label { display: none; }
+    .sortbox select { flex: 1; min-width: 0; }
+    .perpage { font-size: 0; gap: 0; }
+    .perpage select { font-size: .92rem; height: 34px; }
+  }
+  @media (max-width: 360px) { .grid { grid-template-columns: 1fr; } }
+
+  /* ================= Cute board-game layer ================= */
+  .rate, .seg button[aria-pressed="true"], .pager button[aria-current="page"], .pchip .plus, .stat.total .ico { color: #3d2a4f !important; }
+  :root {
+    --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
+    --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
+    --remy: #ec6f24; --remy-soft: #ffe2cc; --jon: #2385d1; --jon-soft: #d6ecff; --both: #8656ec; --both-soft: #ebe1ff;
+    --yellow: #ffd45c; --yellow-soft: #fff1c2; --mint: #8be0bd; --mint-soft: #ddf6ea; --pink: #ff9dc1;
+    --star: #f4a900; --ok: #24a26b; --danger: #e5484d; --danger-soft: #ffe3e2;
+    --edge: 2.5px solid var(--outline); --pop: 4px 4px 0 var(--outline); --pop-sm: 3px 3px 0 var(--outline); --pop-hover: 7px 7px 0 var(--outline);
+    --shadow: var(--pop); --shadow-hover: var(--pop-hover); --radius: 22px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+      --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+      --remy: #ffa064; --remy-soft: #4b2e1c; --jon: #6ab9f2; --jon-soft: #1b3550; --both: #b89bff; --both-soft: #36295a;
+      --yellow: #ffd45c; --yellow-soft: #4a3d1e; --mint: #6fd3ac; --mint-soft: #1f3d33; --star: #ffd45c; --ok: #6fd3ac; --hl: #6b44c9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+    --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+    --remy: #ffa064; --remy-soft: #4b2e1c; --jon: #6ab9f2; --jon-soft: #1b3550; --both: #b89bff; --both-soft: #36295a;
+    --yellow: #ffd45c; --yellow-soft: #4a3d1e; --mint: #6fd3ac; --mint-soft: #1f3d33; --star: #ffd45c; --ok: #6fd3ac; --hl: #6b44c9;
+  }
+  body { background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
+  .brand { display: flex; align-items: center; gap: 16px; }
+  .logo { width: 72px; height: 72px; flex: none; transform: rotate(-5deg); filter: drop-shadow(4px 4px 0 var(--outline)); transition: transform .3s; }
+  .logo:hover { transform: rotate(4deg) scale(1.05); }
+  h1 { font-weight: 700; letter-spacing: -0.01em; }
+  h1 .hl { background: linear-gradient(transparent 62%, var(--hl, var(--yellow)) 62% 92%, transparent 92%); padding: 0 2px; }
+  .tagline { font-weight: 600; }
+  .sync { border: var(--edge); box-shadow: var(--pop-sm); font-weight: 600; background: var(--surface); }
+  .sync .sep { color: var(--muted); }
+
+  .stat { border: var(--edge); border-radius: 18px; box-shadow: var(--pop); transition: transform .12s, box-shadow .12s; }
+  .stat:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--outline); border-color: var(--outline); }
+  .stat:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .stat[aria-pressed="true"] { background: var(--yellow-soft); box-shadow: var(--pop); border-color: var(--outline); }
+  .stat .ico { width: 46px; height: 46px; border-radius: 14px; border: 2px solid var(--outline); }
+  .stat .ico svg { width: 30px; height: 30px; }
+  .stat.total .ico { background: var(--yellow); }
+  .stat .n { font-weight: 700; }
+  .stat .l { font-weight: 600; }
+
+  .banner { border: var(--edge); box-shadow: var(--pop); border-radius: 16px; }
+  .toolbar.stuck { border-bottom: 2.5px dashed var(--line); }
+  .search input { border: var(--edge); border-radius: 18px; box-shadow: var(--pop); height: 56px; font-weight: 600; }
+  .search input:focus { border-color: var(--outline); box-shadow: var(--pop), 0 0 0 4px var(--yellow); }
+  .filter-btn { border: var(--edge); border-radius: 18px; box-shadow: var(--pop); height: 56px; font-family: Fredoka, ui-rounded, sans-serif; font-weight: 600; }
+  .flabel { font-family: Fredoka, ui-rounded, sans-serif; letter-spacing: .06em; color: var(--ink-2); }
+  .seg { background: var(--surface); border: var(--edge); border-radius: 16px; box-shadow: var(--pop-sm); padding: 3px; }
+  .seg button { font-weight: 700; border-radius: 11px; color: var(--ink-2); }
+  .seg button .sw { width: auto; height: auto; background: none !important; display: inline-flex; }
+  .seg button[aria-pressed="true"] { background: var(--yellow); color: var(--ink); box-shadow: inset 0 0 0 2px var(--outline); }
+  .pchips { gap: 8px; }
+  .pchip { position: relative; width: 40px; min-width: 40px; height: 40px; padding: 0; border: var(--edge); border-radius: 11px; background: var(--surface);
+    box-shadow: var(--pop-sm); display: inline-grid; place-items: center; color: var(--ink); transition: transform .15s; }
+  .pchip:hover { transform: rotate(-8deg); }
+  .pchip[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--outline); transform: rotate(-8deg); }
+  .pchip .plus { position: absolute; top: -9px; right: -9px; width: 20px; height: 20px; border-radius: 50%; background: var(--yellow); color: var(--ink);
+    border: 2px solid var(--outline); font: 800 .8rem/16px Nunito, sans-serif; }
+  .dd > button { border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); height: 40px; font-weight: 700; }
+  .dd > button[aria-expanded="true"] { border-color: var(--outline); background: var(--yellow-soft); }
+  .dd .count { background: var(--accent); color: #fff; border: 2px solid var(--outline); font-weight: 800; }
+  .dd .panel { border: var(--edge); border-radius: 18px; box-shadow: var(--pop); }
+  .dd .panel input[type=search] { border: 2px solid var(--line); border-radius: 12px; font-weight: 600; }
+  .opt { font-weight: 600; }
+  .opt input { accent-color: var(--accent); }
+  .chip { background: var(--yellow-soft); border: 2px solid var(--outline); font-weight: 700; padding: 2px 4px 2px 11px; }
+  .linkbtn { color: var(--accent); font-weight: 800; }
+  .sortbox select, .perpage select, .iconbtn { border: var(--edge) !important; border-radius: 12px; box-shadow: var(--pop-sm); font-weight: 700; background: var(--surface); }
+  .resbar { font-weight: 600; }
+
+  .grid { gap: 24px; }
+  .card { border: var(--edge); border-radius: var(--radius); box-shadow: var(--pop); transition: transform .16s ease, box-shadow .16s ease; }
+  .card:nth-child(odd):hover { transform: translate(-3px, -3px) rotate(-.8deg); box-shadow: var(--pop-hover); }
+  .card:nth-child(even):hover { transform: translate(-3px, -3px) rotate(.8deg); box-shadow: var(--pop-hover); }
+  .card:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .cover { border-bottom: var(--edge); }
+  .card:hover .cover svg { transform: scale(1.04); }
+  .own { display: inline-flex; align-items: center; gap: 4px; border: 2px solid var(--outline); box-shadow: 2px 2px 0 var(--outline); font-weight: 800; padding: 2px 9px 2px 6px; }
+  .own svg { width: 14px; height: 14px; }
+  .rate { background: var(--yellow); color: var(--ink); border: 2px solid var(--outline); box-shadow: 2px 2px 0 var(--outline); font-weight: 800; }
+  .rate svg { color: var(--ink); }
+  .cbody h3 { font-weight: 600; font-size: 1.15rem; }
+  .cbody .yr { font-weight: 600; }
+  .facts { gap: 6px; }
+  .facts span { background: var(--surface-2); border-radius: 999px; padding: 2px 9px 2px 7px; font-weight: 700; color: var(--ink-2); }
+  .facts .best { background: var(--mint-soft); color: var(--ink); }
+  .facts svg { color: var(--ink-2); }
+  .weight { gap: 3px; }
+  .weight i { width: 9px; height: 9px; border-radius: 2.5px; background: var(--line); }
+  .weight i.on { background: #e0a050; box-shadow: inset -1.5px -1.5px 0 rgb(0 0 0 / .18); }
+  .addons { border-top: 2.5px dashed var(--line); }
+  .addons > button { font-family: Fredoka, ui-rounded, sans-serif; font-weight: 600; color: var(--accent); font-size: .92rem; }
+  .addon .mini, .xitem .mini { border: 2px solid var(--outline); border-radius: 8px; }
+  .addon .nm { font-weight: 700; }
+  .tiny { border: 1.5px solid var(--outline); display: inline-flex; align-items: center; gap: 3px; }
+  .tiny svg { width: 11px; height: 11px; }
+
+  .sk { border: var(--edge); box-shadow: var(--pop); border-radius: var(--radius); }
+  .sk .img { border-bottom: var(--edge); }
+  .empty { border: 3px dashed var(--outline); border-radius: 26px; background: var(--surface); }
+  .empty h2 { font-weight: 700; }
+  .btn { border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); font-family: Fredoka, ui-rounded, sans-serif; font-weight: 600; font-size: 1.02rem; transition: transform .12s, box-shadow .12s; }
+  .btn:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .btn.ghost { border: var(--edge); }
+  .pager button { border: var(--edge); border-radius: 12px; box-shadow: var(--pop-sm); font-weight: 800; }
+  .pager button[aria-current="page"] { background: var(--yellow); color: var(--ink); border-color: var(--outline); transform: rotate(-6deg); }
+  .rolling { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; }
+  .rolling svg { animation: roll 1s cubic-bezier(.5,0,.5,1) infinite; }
+  @keyframes roll { 0% { transform: rotate(0) translateY(0); } 40% { transform: rotate(200deg) translateY(-6px); } 100% { transform: rotate(360deg) translateY(0); } }
+
+  .modal { background: rgb(40 25 55 / .55); }
+  .sheet { border: 3px solid var(--outline); border-radius: 28px; box-shadow: 10px 10px 0 var(--outline); }
+  .sheet .close { border: var(--edge); box-shadow: var(--pop-sm); font-weight: 800; }
+  .side { background-color: var(--surface-2); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 10%, transparent) 1.3px, transparent 1.7px); background-size: 18px 18px; }
+  .side .bigcover { border: 3px solid var(--outline); border-radius: 18px; box-shadow: var(--pop); transform: rotate(-2deg); }
+  .bigrate .v { font-weight: 700; }
+  .main h2 { font-weight: 700; }
+  .kv div { background: var(--surface); border: 2px solid var(--outline); border-radius: 16px; box-shadow: var(--pop-sm); }
+  .kv dt { font-family: Fredoka, ui-rounded, sans-serif; font-weight: 600; color: var(--ink-2); }
+  .kv dd { font-family: Fredoka, ui-rounded, sans-serif; font-size: 1.2rem; font-weight: 600; }
+  .sec h4 { font-family: Fredoka, ui-rounded, sans-serif; font-weight: 600; color: var(--ink-2); font-size: .85rem; }
+  .tag { border: 2px solid var(--line); background: var(--surface); font-weight: 700; }
+  button.tag:hover { border-color: var(--outline); background: var(--yellow-soft); color: var(--ink); }
+  .xitem { border: 2px solid var(--line); border-radius: 14px; background: var(--surface); }
+  footer { border-top: 2.5px dashed var(--line); font-weight: 600; }
+  .bgg { border: var(--edge); box-shadow: var(--pop-sm); border-radius: 12px; }
+  @media (max-width: 1000px) {
+    .filters { border-left: 3px solid var(--outline); }
+    .drawer-head { border-bottom: 2.5px dashed var(--line); margin-bottom: 4px; }
+    .pchips { gap: 10px; }
+    .pchip { width: auto; height: 46px; }
+  }
+  @media (max-width: 760px) {
+    .logo { width: 54px; height: 54px; }
+    .brand { gap: 12px; }
+    .grid { gap: 14px; }
+    .card, .stat { box-shadow: var(--pop-sm); }
+    .facts span { padding: 1px 7px 1px 5px; }
+    .sheet { box-shadow: none; border-width: 3px 0 0; }
+    .own svg { width: 12px; height: 12px; }
   }
 
-  /* List */
-  ul.games { list-style: none; margin: 0; padding: 0; }
-  ul.games > li { border-top: 1px solid var(--line); padding: 12px 0; }
-  .row { display: flex; align-items: flex-start; gap: 12px; }
-  .row img { width: 56px; height: 56px; object-fit: contain; border-radius: 8px; flex: none; background: var(--soft); }
-  .title { flex: 1; min-width: 0; }
-  .title a { color: var(--ink); text-decoration: none; font-weight: 600; }
-  .title a:hover { text-decoration: underline; }
-  .meta { color: var(--muted); font-size: 0.85rem; overflow-wrap: anywhere; }
-  .meta .best { color: var(--ink); }
-  .tag { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted);
-    border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; margin-left: 6px; vertical-align: 2px; white-space: nowrap; }
-  .pill { font-size: 0.8rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; border: 1px solid currentColor; flex: none; margin-top: 2px; }
-  .pill.Remy { color: var(--remy); } .pill.Jonathan { color: var(--jon); } .pill.Both { color: var(--both); }
-
-  details.kids { margin: 8px 0 0 68px; }
-  details.kids > summary { cursor: pointer; color: var(--muted); font-size: 0.85rem; padding: 2px 0; width: fit-content; }
-  details.kids > summary:hover { color: var(--ink); }
-  details.kids ul { list-style: none; margin: 6px 0 0; padding: 0 0 0 12px; border-left: 2px solid var(--line); }
-  details.kids li { padding: 6px 0; }
-  details.kids .row img { width: 36px; height: 36px; border-radius: 6px; }
-  details.kids .title a { font-weight: 500; }
-  @media (max-width: 560px) { details.kids { margin-left: 20px; } }
-
-  .empty { color: var(--muted); padding: 24px 0; border-top: 1px solid var(--line); }
-  .warn { color: var(--muted); font-size: 0.85rem; margin: 0 0 10px; }
-  footer { margin-top: 32px; color: var(--muted); font-size: 0.9rem; }
-  footer a { color: var(--accent); }
-  /* BGG's logo has dark lettering, so it sits on a white card to stay legible in dark mode. */
-  .bgg-logo { display: inline-block; background: #ffffff; border-radius: 10px; padding: 6px 10px; line-height: 0; }
-  .bgg-logo img { display: block; width: 220px; height: auto; }
-  [hidden] { display: none !important; }
+  /* Real box art */
+  .cover { --h: 30; background-color: hsl(var(--h) 90% 87%);
+    background-image: radial-gradient(circle, rgb(255 255 255 / .55) 2px, transparent 2.4px), linear-gradient(135deg, hsl(var(--h) 90% 88%), hsl(calc(var(--h) + 35) 80% 77%));
+    background-size: 18px 18px, 100% 100%; }
+  .cover .art { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 44px 18px 16px; }
+  .cover .art img { min-width: 0; min-height: 0; }
+  .cover .art img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 6px;
+    filter: drop-shadow(3px 4px 0 rgb(61 42 79 / .35)); transition: transform .3s ease; }
+  .card:hover .cover .art img { transform: scale(1.04) rotate(-1deg); }
+  .cover > svg { position: absolute; inset: 0; }
+  .side .bigcover { aspect-ratio: auto; display: flex; align-items: center; justify-content: center; padding: 18px; min-height: 220px; --h: 30;
+    background-color: hsl(var(--h) 90% 87%); background-image: radial-gradient(circle, rgb(255 255 255 / .55) 2px, transparent 2.4px), linear-gradient(135deg, hsl(var(--h) 90% 88%), hsl(calc(var(--h) + 35) 80% 77%));
+    background-size: 18px 18px, 100% 100%; }
+  .side .bigcover img { max-width: 100%; max-height: 420px; object-fit: contain; border-radius: 8px; filter: drop-shadow(4px 5px 0 rgb(61 42 79 / .35)); }
+  .side .bigcover > svg { width: 100%; height: auto; aspect-ratio: 1; border-radius: 10px; }
+  .addon .mini img, .xitem .mini img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .desc { white-space: pre-line; }
+  .desc.clamp { display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden; }
+  .banner.info { background: var(--yellow-soft); border-color: var(--outline); }
+  .banner.info b { color: var(--ink); }
+  .banner .btn { height: 34px; padding: 0 12px; font-size: .9rem; margin-left: auto; flex: none; }
+  a.xitem { color: inherit; text-decoration: none; }
+  a.xitem:hover { border-color: var(--outline); }
+  .credits { color: var(--ink-2); font-size: .95rem; margin-top: 4px; }
+  .credits b { color: var(--ink); font-weight: 700; }
+  @media (max-width: 760px) {
+    .cover .art { padding: 36px 12px 12px; }
+    .side .bigcover { width: 120px; min-height: 0; padding: 10px; flex: none; }
+    .side .bigcover img { max-height: 160px; }
+  }
 </style>
 </head>
 <body>
-<main>
-  <h1>Our Game Shelf</h1>
-  <p class="sub">Every board game we own, with expansions and accessories tucked under the game they belong to. Refreshed daily.</p>
-
-  <section id="notice" class="card notice">
-    <h2 id="notice-title">Loading…</h2>
-    <p id="notice-body"></p>
-  </section>
-
-  <section id="app" hidden>
-    <div class="controls">
-      <input id="q" class="field" type="search" placeholder="Search games, expansions and accessories" aria-label="Search titles">
-      <select id="owner" class="field" aria-label="Owner">
-        <option value="">Everyone</option>
-        <option value="Both">Owned by both</option>
-        <option value="Remy">Remy</option>
-        <option value="Jonathan">Jonathan</option>
-      </select>
-      <select id="best" class="field" aria-label="Best player count">
-        <option value="">Best at any count</option>
-      </select>
-      <details class="picker" id="mech-picker">
-        <summary class="field" id="mech-summary">Mechanics</summary>
-        <div class="panel">
-          <input id="mech-q" class="field" type="search" placeholder="Find a mechanic" aria-label="Find a mechanic">
-          <div class="opts" id="mech-opts" role="group" aria-label="Mechanics"></div>
-          <div class="foot"><span>Shows games with any selected</span><button type="button" class="linkbtn" id="mech-clear">Clear</button></div>
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="3" y="3" width="66" height="66" rx="18" fill="var(--yellow)" stroke="var(--outline)" stroke-width="3"/>
+          <g transform="translate(36 10) rotate(14)"><rect x="0" y="0" width="22" height="22" rx="5" fill="#fff" stroke="var(--outline)" stroke-width="2.5"/>
+            <circle cx="6" cy="6" r="2.2" fill="var(--outline)"/><circle cx="11" cy="11" r="2.2" fill="var(--outline)"/><circle cx="16" cy="16" r="2.2" fill="var(--outline)"/></g>
+          <g transform="translate(9 20) scale(1.75)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.4" stroke-linejoin="round"/></g>
+        </svg>
+        <div>
+          <h1>Our Game <span class="hl">Shelf</span></h1>
+          <p class="tagline">Our collection, all in one place.</p>
         </div>
-      </details>
+      </div>
+      <div class="sync" id="sync" data-state="syncing" role="status">
+        <span class="dot"></span>
+        <strong id="sync-label">Syncing…</strong>
+        <span class="sep" id="sync-sep1" hidden>·</span><span id="sync-last"></span>
+        <span class="sep long" id="sync-sep2" hidden>·</span><span class="long" id="sync-next"></span>
+      </div>
     </div>
-    <div class="chips" id="chips" hidden></div>
-    <p class="warn" id="details-warn" hidden>Some game details didn't load from BoardGameGeek, so mechanics and player counts may be missing for a few games. They'll fill in on a later refresh.</p>
+    <div class="banner" id="banner" hidden role="alert"></div>
+    <div class="stats" id="stats"></div>
+  </header>
 
-    <nav class="pager" id="pager-top" aria-label="Pages, top"></nav>
-    <ul class="games" id="list"></ul>
-    <p class="empty" id="empty" hidden>No games match these filters.</p>
-    <nav class="pager" id="pager-bottom" aria-label="Pages, bottom"></nav>
-  </section>
+  <div class="toolbar" id="toolbar">
+    <div class="searchrow">
+      <label class="search">
+        <span class="sr">Search the collection</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Search by title, mechanic, designer or publisher" autocomplete="off">
+        <button class="clear" id="q-clear" aria-label="Clear search" hidden>×</button>
+      </label>
+      <button class="filter-btn" id="open-filters" aria-controls="filters" aria-expanded="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+        Filters <span class="badge" id="fcount" hidden>0</span>
+      </button>
+    </div>
+
+    <div class="filters" id="filters" role="region" aria-label="Filters">
+      <div class="drawer-head"><h2>Filters</h2><button class="iconbtn" id="close-filters" aria-label="Close filters">×</button></div>
+      <div class="fgroup">
+        <span class="flabel" id="own-l">Owner</span>
+        <div class="seg" role="group" aria-labelledby="own-l" id="own-seg"></div>
+      </div>
+      <div class="fgroup">
+        <span class="flabel" id="best-l">Best with</span>
+        <div class="pchips" role="group" aria-labelledby="best-l" id="best-chips"></div>
+      </div>
+      <div class="fgroup dd" id="mech-dd">
+        <span class="flabel" id="mech-l">Mechanics</span>
+        <button id="mech-btn" aria-expanded="false" aria-controls="mech-panel">Any mechanic <span class="count" id="mech-count" hidden></span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="panel" id="mech-panel" hidden>
+          <input id="mech-q" type="search" placeholder="Find a mechanic" aria-label="Find a mechanic">
+          <div class="opts" id="mech-opts" role="group" aria-labelledby="mech-l"></div>
+          <div class="panel-foot"><span>Shows games with any selected</span><button class="linkbtn" id="mech-clear">Clear</button></div>
+        </div>
+      </div>
+      <div class="drawer-foot">
+        <button class="btn ghost" id="drawer-reset">Reset</button>
+        <button class="btn" id="drawer-done">Show games</button>
+      </div>
+    </div>
+
+    <div class="active" id="active" hidden></div>
+  </div>
+
+  <main>
+    <div class="resbar">
+      <div id="rescount" aria-live="polite"></div>
+      <div class="resright">
+        <div class="sortbox">
+          <label for="sort">Sort</label>
+          <select id="sort">
+            <option value="name">Name</option>
+            <option value="rating">BGG rating</option>
+            <option value="year">Year published</option>
+            <option value="players">Player count</option>
+          </select>
+          <button class="iconbtn" id="dir" aria-label="Sort direction"></button>
+        </div>
+        <label class="perpage">Per page
+          <select id="per" aria-label="Games per page"><option>24</option><option>36</option><option>48</option></select>
+        </label>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div id="empty" hidden></div>
+    <nav class="pager" id="pager" aria-label="Pages"></nav>
+  </main>
 
   <footer>
-    <p>A personal, non-commercial page. Game data comes from BoardGameGeek and is shown as provided. This site isn't affiliated with or endorsed by BoardGameGeek.</p>
-    <p><a class="bgg-logo" href="https://boardgamegeek.com" target="_blank" rel="noopener"><img src="/powered-by-bgg.png" width="220" height="65" alt="Powered by BGG"></a></p>
+    <div>A personal, non-commercial page. Game data and images come from BoardGameGeek and are shown as provided.<br>This site isn't affiliated with or endorsed by BoardGameGeek.</div>
+    <a class="bgg" href="https://boardgamegeek.com" target="_blank" rel="noopener"><img src="/powered-by-bgg.png" alt="Powered by BGG" width="200" height="59"></a>
   </footer>
-</main>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="d-title"></div>
+
 <script>
-  const $ = (id) => document.getElementById(id);
-  const PAGE_SIZES = [10, 25, 50, 100, 200, 300];
-  const KIND_ORDER = { "Expansion": 0, "Accessory": 1 };
+/* ---------- Helpers ---------- */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const store = {
+  get(area, key, fallback) { try { const v = window[area].getItem("game-shelf:" + key); return v === null ? fallback : JSON.parse(v); } catch { return fallback; } },
+  set(area, key, value) { try { window[area].setItem("game-shelf:" + key, JSON.stringify(value)); } catch {} },
+};
+const ICON = {
+  people: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c.6-3.3 3-5 6-5s5.4 1.7 6 5"/><path d="M16 5.5a3 3 0 0 1 0 5.6M18 14.3c1.6.7 2.6 2.2 3 4.7"/></svg>',
+  clock: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+  star: '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg>',
+  chev: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>',
+  ext: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+  up: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 14l5-5 5 5"/></svg>',
+  down: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 10l5 5 5-5"/></svg>',
+  warn: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none;margin-top:1px"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>',
+};
+const MEEPLE = "M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z";
+const meeple = (fill, size = 16) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true"><path d="${MEEPLE}" fill="${fill}" stroke="var(--outline)" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+const ownIcon = (o) => o === "Both"
+  ? `<svg width="20" height="14" viewBox="0 0 34 24" aria-hidden="true"><path d="${MEEPLE}" fill="currentColor"/><g transform="translate(10 0)"><path d="${MEEPLE}" fill="currentColor" stroke="var(--surface)" stroke-width="2"/></g></svg>`
+  : `<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="${MEEPLE}" fill="currentColor"/></svg>`;
+const PIPS = { 1: [[.5,.5]], 2: [[.28,.28],[.72,.72]], 3: [[.25,.25],[.5,.5],[.75,.75]], 4: [[.28,.28],[.72,.28],[.28,.72],[.72,.72]], 5: [[.25,.25],[.75,.25],[.5,.5],[.25,.75],[.75,.75]] };
+const pipSvg = (n, size = 24) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true">${PIPS[n].map(([x, y]) => `<circle cx="${x * 24}" cy="${y * 24}" r="2.7" fill="currentColor"/>`).join("")}</svg>`;
+const hueOf = (g) => (Number(String(g.id).replace(/\D/g, "")) * 47) % 360;
 
-  const store = {
-    get(area, key, fallback) { try { const v = window[area].getItem("game-shelf:" + key); return v === null ? fallback : JSON.parse(v); } catch { return fallback; } },
-    set(area, key, value) { try { window[area].setItem("game-shelf:" + key, JSON.stringify(value)); } catch {} },
-  };
+// Board-game doodle shown when BGG has no image for an item (or it fails to load).
+function doodle(g) {
+  const h = hueOf(g), O = "#3d2a4f", id = "d" + String(g.id).replace(/\W/g, "");
+  const c1 = `hsl(${(h + 150) % 360} 75% 62%)`, c2 = `hsl(${(h + 210) % 360} 85% 68%)`, c3 = `hsl(${(h + 70) % 360} 92% 66%)`;
+  const mp = (x, y, sc, fill, rot = 0) => `<g transform="translate(${x} ${y}) rotate(${rot} 12 12) scale(${sc})"><path d="${MEEPLE}" fill="${fill}" stroke="${O}" stroke-width="${3.2 / sc * 1.6}" stroke-linejoin="round"/></g>`;
+  const die = (x, y, sz, n, rot, fill = "#fff") => `<g transform="translate(${x} ${y}) rotate(${rot} ${sz / 2} ${sz / 2})"><rect width="${sz}" height="${sz}" rx="${sz * .2}" fill="${fill}" stroke="${O}" stroke-width="3.2"/>${PIPS[n].map(([px, py]) => `<circle cx="${px * sz}" cy="${py * sz}" r="${sz * .09}" fill="${O}"/>`).join("")}</g>`;
+  const motif = Number(String(g.id).replace(/\D/g, "")) % 2 ? mp(46, 52, 2.6, c1, -8) + mp(98, 36, 3, c2) + mp(150, 54, 2.6, c3, 8) : die(52, 44, 68, 5, -14) + die(126, 62, 62, 3, 12, c3);
+  return `<svg viewBox="0 0 240 240" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs><linearGradient id="g${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${h} 90% 85%)"/><stop offset="1" stop-color="hsl(${(h + 35) % 360} 80% 74%)"/></linearGradient></defs>
+    <rect width="240" height="240" fill="url(#g${id})"/><g transform="translate(0 38)">${motif}</g></svg>`;
+}
+// Swap a broken image for the doodle.
+window.artFail = (img) => { const g = byId.get(img.dataset.id); const box = img.closest(".art, .mini, .bigcover"); if (g && box) { if (box.classList.contains("art")) box.outerHTML = doodle(g); else box.innerHTML = doodle(g); } };
+const imgTag = (g, src, cls = "") => `<img ${cls ? `class="${cls}"` : ""} src="${esc(src)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-id="${esc(g.id)}" onerror="artFail(this)">`;
 
-  let groups = [];           // [{ head, kids: [] }]
-  let selectedMechs = new Set();
-  let pageSize = PAGE_SIZES.includes(store.get("localStorage", "page-size", 25)) ? store.get("localStorage", "page-size", 25) : 25;
-  let page = Number(store.get("sessionStorage", "page", 1)) || 1;
+const bestShort = (g) => (g.bestWith || "").replace(/^Best with\s+/i, "").replace(/\s+players?$/i, "");
+const players = (g) => !g.minPlayers ? "" : (g.maxPlayers && g.maxPlayers !== g.minPlayers ? `${g.minPlayers}–${g.maxPlayers}` : `${g.minPlayers}`);
+const timeText = (g) => g.minTime && g.maxTime && g.minTime !== g.maxTime ? `${g.minTime}–${g.maxTime} min` : (g.playTime || g.minTime || g.maxTime) ? `${g.playTime || g.minTime || g.maxTime} min` : "";
+const weightLabel = (w) => w < 2 ? "Light" : w < 3 ? "Medium" : w < 3.8 ? "Medium-heavy" : "Heavy";
+const weightBar = (w) => `<span class="weight" aria-hidden="true">${[1,2,3,4,5].map((n) => `<i class="${w >= n - .5 ? "on" : ""}"></i>`).join("")}</span>`;
+const fmtTime = (d) => d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+const listText = (arr, max) => arr.length <= max ? arr.join(", ") : `${arr.slice(0, max).join(", ")} and ${arr.length - max} more`;
 
-  function showNotice(title, body) {
-    $("notice-title").textContent = title;
-    $("notice-body").textContent = body;
-    $("notice").hidden = false;
-    $("app").hidden = true;
+/* ---------- Data ---------- */
+let groups = [];          // [{ head, kids }]
+let byId = new Map();
+let mechCounts = [];
+const KIND_ORDER = { "Expansion": 0, "Accessory": 1 };
+
+// Expansions and accessories go under the base game(s) BGG links them to (links back to the
+// game an item belongs to come first). Ones whose base game we don't own stand on their own.
+function buildGroups(items) {
+  const bases = new Map();
+  for (const g of items) if (g.type === "Base game") bases.set(g.id, { head: g, kids: [] });
+  const out = [];
+  for (const g of items) {
+    if (g.type === "Base game") continue;
+    const owned = [...new Set((g.links || []).filter((id) => bases.has(id)))];
+    if (owned.length) owned.forEach((id) => bases.get(id).kids.push(g));
+    else out.push({ head: g, kids: [] });
   }
+  const all = [...bases.values(), ...out];
+  for (const grp of all) grp.kids.sort((a, b) => (KIND_ORDER[a.type] - KIND_ORDER[b.type]) || a.name.localeCompare(b.name));
+  return all.sort((a, b) => a.head.name.localeCompare(b.head.name));
+}
 
-  function el(tag, props = {}, ...children) {
-    const n = document.createElement(tag);
-    for (const [k, v] of Object.entries(props)) {
-      if (k === "class") n.className = v;
-      else if (k === "text") n.textContent = v;
-      else if (k in n) n[k] = v;
-      else n.setAttribute(k, v);
+/* ---------- State ---------- */
+const PER = [24, 36, 48];
+const state = { q: "", owner: "", best: null, mechs: new Set(), sort: "name", dir: 1,
+  page: Number(store.get("sessionStorage", "page", 1)) || 1,
+  per: PER.includes(store.get("localStorage", "per-page", 24)) ? store.get("localStorage", "per-page", 24) : 24 };
+const DEFAULT_DIR = { name: 1, rating: -1, year: -1, players: -1 };
+let status = "loading"; // loading | ok | error
+
+// Filters check the base game; its expansions and accessories follow it. Search and the owner
+// filter also look at nested items, so a game shows if something under it matches.
+function visibleGroups() {
+  const out = [];
+  const q = state.q.toLowerCase();
+  for (const grp of groups) {
+    const h = grp.head;
+    if (state.best !== null && !(h.bestPlayers || []).some((b) => state.best === 5 ? b >= 5 : b === state.best)) continue;
+    if (state.mechs.size && !(h.mechanics || []).some((m) => state.mechs.has(m))) continue;
+    let kids = grp.kids;
+    if (state.owner) {
+      const headOk = h.ownedBy === state.owner;
+      kids = kids.filter((k) => k.ownedBy === state.owner);
+      if (!headOk && !kids.length) continue;
     }
-    n.append(...children.filter((c) => c !== null && c !== undefined && c !== false));
-    return n;
-  }
-
-  // Expansions and accessories go under the base game(s) BGG links them to. When BGG marks
-  // some links as pointing back to the game an item belongs to ("inbound"), those win.
-  function buildGroups(items) {
-    const byId = new Map(items.map((g) => [g.id, g]));
-    const bases = new Map();
-    for (const g of items) if (g.type === "Base game") bases.set(g.id, { head: g, kids: [] });
-    const orphans = [];
-    for (const g of items) {
-      if (g.type === "Base game") continue;
-      const owned = [...new Set((g.links || []).filter((id) => bases.has(id)))];
-      if (owned.length) owned.forEach((id) => bases.get(id).kids.push(g));
-      else orphans.push({ head: g, kids: [] });
+    if (q) {
+      const hay = [h.name, ...(h.designers || []), ...(h.publishers || []), ...(h.mechanics || [])].join(" ").toLowerCase();
+      const headHit = hay.includes(q);
+      const kidHits = kids.filter((k) => k.name.toLowerCase().includes(q));
+      if (!headHit && !kidHits.length) continue;
+      if (!headHit) kids = kidHits;
     }
-    const all = [...bases.values(), ...orphans];
-    for (const grp of all) grp.kids.sort((a, b) => (KIND_ORDER[a.type] - KIND_ORDER[b.type]) || a.name.localeCompare(b.name));
-    return all.sort((a, b) => a.head.name.localeCompare(b.head.name));
+    out.push({ head: h, kids });
   }
-
-  function playerText(g) {
-    if (!g.minPlayers) return "";
-    const range = g.maxPlayers && g.maxPlayers !== g.minPlayers ? `${g.minPlayers}–${g.maxPlayers}` : `${g.minPlayers}`;
-    return `${range} player${range === "1" ? "" : "s"}`;
-  }
-
-  function mechanicText(g) {
-    const m = g.mechanics || [];
-    if (!m.length) return "";
-    return m.length > 4 ? `${m.slice(0, 4).join(" · ")} · +${m.length - 4} more` : m.join(" · ");
-  }
-
-  function itemRow(g, isHead) {
-    const img = el("img", { alt: "", loading: "lazy" });
-    if (g.thumbnail) img.src = g.thumbnail;
-    const title = el("div", { class: "title" },
-      el("a", { href: g.url, target: "_blank", rel: "noopener", text: g.name }),
-      g.year ? el("span", { class: "meta", text: ` (${g.year})` }) : null,
-      g.type !== "Base game" && isHead ? el("span", { class: "tag", text: g.type }) : null,
-    );
-    const facts = [playerText(g)].filter(Boolean);
-    const meta = el("div", { class: "meta" });
-    if (facts.length || g.bestWith) {
-      meta.append(facts.join(""));
-      if (g.bestWith) meta.append(facts.length ? " · " : "", el("span", { class: "best", text: g.bestWith }));
-    }
-    const mech = mechanicText(g);
-    const mechLine = isHead && mech ? el("div", { class: "meta", text: mech, title: (g.mechanics || []).join(", ") }) : null;
-    if (meta.childNodes.length) title.append(meta);
-    if (mechLine) title.append(mechLine);
-    return el("div", { class: "row" }, img, title, el("span", { class: "pill " + g.ownedBy, text: g.ownedBy }));
-  }
-
-  function kidSummary(kids) {
-    const n = (t) => kids.filter((k) => k.type === t).length;
-    const parts = [];
-    const e = n("Expansion"), a = n("Accessory");
-    if (e) parts.push(`${e} expansion${e === 1 ? "" : "s"}`);
-    if (a) parts.push(`${a} accessor${a === 1 ? "y" : "ies"}`);
-    return parts.join(" · ");
-  }
-
-  function filters() {
-    return {
-      q: $("q").value.trim().toLowerCase(),
-      owner: $("owner").value,
-      best: $("best").value ? Number($("best").value) : null,
-    };
-  }
-
-  // Filters check the base game; its expansions and accessories follow it. Search and the
-  // owner filter also look at the nested items, so a game shows if something under it matches.
-  function visibleGroups() {
-    const f = filters();
-    const out = [];
-    for (const grp of groups) {
-      const h = grp.head;
-      if (f.best !== null && !(h.bestPlayers || []).includes(f.best)) continue;
-      if (selectedMechs.size && !(h.mechanics || []).some((m) => selectedMechs.has(m))) continue;
-      let kids = grp.kids;
-      if (f.owner) {
-        const headOk = h.ownedBy === f.owner;
-        kids = kids.filter((k) => k.ownedBy === f.owner);
-        if (!headOk && !kids.length) continue;
-      }
-      if (f.q) {
-        const headHit = h.name.toLowerCase().includes(f.q);
-        const kidHits = kids.filter((k) => k.name.toLowerCase().includes(f.q));
-        if (!headHit && !kidHits.length) continue;
-        if (!headHit) kids = kidHits;
-      }
-      out.push({ head: h, kids });
-    }
-    return out;
-  }
-
-  function pageList(p, pages) {
-    const want = [...new Set([1, pages, p - 1, p, p + 1])].filter((n) => n >= 1 && n <= pages).sort((a, b) => a - b);
-    const out = [];
-    want.forEach((n, i) => { if (i > 0 && n - want[i - 1] > 1) out.push("gap"); out.push(n); });
-    return out;
-  }
-
-  function renderPager(nav, total, pages, current) {
-    const from = total === 0 ? 0 : (current - 1) * pageSize + 1;
-    const to = Math.min(total, current * pageSize);
-    const size = el("select", { class: "field", "aria-label": "Games per page" },
-      ...PAGE_SIZES.map((n) => el("option", { value: String(n), text: String(n), selected: n === pageSize })));
-    size.addEventListener("change", () => {
-      const firstIndex = (current - 1) * pageSize; // keep the first game on screen in view
-      pageSize = Number(size.value);
-      store.set("localStorage", "page-size", pageSize);
-      setPage(Math.floor(firstIndex / pageSize) + 1);
-      render();
-    });
-    const left = el("div", { class: "left" },
-      el("span", { class: "count", "aria-live": "polite", text: `${from}–${to} of ${total} game${total === 1 ? "" : "s"}` }),
-      el("label", {}, "Show", size));
-    nav.replaceChildren(left);
-    if (pages > 1) {
-      const btn = (text, target, label, disabled) => {
-        const b = el("button", { type: "button", class: "nav", text, disabled, "aria-label": label });
-        b.addEventListener("click", () => goTo(target));
-        return b;
-      };
-      const right = el("div", { class: "pages" }, btn("‹ Prev", current - 1, "Previous page", current <= 1));
-      for (const p of pageList(current, pages)) {
-        if (p === "gap") { right.append(el("span", { class: "gap", "aria-hidden": "true", text: "…" })); continue; }
-        const b = el("button", { type: "button", class: "num", text: String(p), "aria-label": `Page ${p}` });
-        if (p === current) b.setAttribute("aria-current", "page");
-        b.addEventListener("click", () => goTo(p));
-        right.append(b);
-      }
-      right.append(el("span", { class: "of", text: `of ${pages}` }), btn("Next ›", current + 1, "Next page", current >= pages));
-      nav.append(right);
-    }
-  }
-
-  function setPage(p) { page = p; store.set("sessionStorage", "page", p); }
-  function goTo(p) {
-    setPage(p);
-    render();
-    $("pager-top").scrollIntoView({ block: "start", behavior: "smooth" });
-  }
-
-  function render() {
-    const shown = visibleGroups();
-    const pages = Math.max(1, Math.ceil(shown.length / pageSize));
-    const current = Math.min(Math.max(1, page), pages);
-    const rows = shown.slice((current - 1) * pageSize, current * pageSize);
-
-    $("list").replaceChildren(...rows.map(({ head, kids }) => {
-      const li = el("li", {}, itemRow(head, true));
-      if (kids.length) {
-        li.append(el("details", { class: "kids", open: true },
-          el("summary", { text: kidSummary(kids) }),
-          el("ul", {}, ...kids.map((k) => el("li", {}, itemRow(k, false))))));
-      }
-      return li;
-    }));
-    $("empty").hidden = shown.length > 0;
-    renderPager($("pager-top"), shown.length, pages, current);
-    if (shown.length > pageSize) renderPager($("pager-bottom"), shown.length, pages, current);
-    else $("pager-bottom").replaceChildren();
-    renderChips();
-  }
-
-  // Any change to the filters starts back on page 1.
-  function filtersChanged() { setPage(1); render(); }
-
-  function setupBestFilter() {
-    const counts = new Set();
-    for (const g of groups) (g.head.bestPlayers || []).forEach((n) => counts.add(n));
-    const sel = $("best");
-    for (const n of [...counts].sort((a, b) => a - b)) {
-      sel.append(el("option", { value: String(n), text: `Best with ${n} player${n === 1 ? "" : "s"}` }));
-    }
-    sel.disabled = counts.size === 0;
-  }
-
-  function mechanicCounts() {
-    const counts = new Map();
-    for (const g of groups) for (const m of g.head.mechanics || []) counts.set(m, (counts.get(m) || 0) + 1);
-    return [...counts].sort((a, b) => a[0].localeCompare(b[0]));
-  }
-
-  let mechList = [];
-  function renderMechOptions() {
-    const q = $("mech-q").value.trim().toLowerCase();
-    const opts = mechList.filter(([m]) => !q || m.toLowerCase().includes(q)).map(([m, n]) => {
-      const box = el("input", { type: "checkbox", checked: selectedMechs.has(m) });
-      box.addEventListener("change", () => {
-        if (box.checked) selectedMechs.add(m); else selectedMechs.delete(m);
-        updateMechSummary();
-        filtersChanged();
-      });
-      return el("label", {}, box, el("span", { text: m }), el("span", { class: "n", text: String(n) }));
-    });
-    $("mech-opts").replaceChildren(...(opts.length ? opts : [el("p", { class: "meta", text: mechList.length ? "No mechanics match." : "No mechanics available yet." })]));
-  }
-
-  function updateMechSummary() {
-    $("mech-summary").textContent = selectedMechs.size ? `Mechanics (${selectedMechs.size})` : "Mechanics";
-  }
-
-  function renderChips() {
-    const chips = [...selectedMechs].sort().map((m) => {
-      const x = el("button", { type: "button", "aria-label": `Remove ${m}`, text: "×" });
-      x.addEventListener("click", () => {
-        selectedMechs.delete(m);
-        updateMechSummary(); renderMechOptions(); filtersChanged();
-      });
-      return el("span", { class: "chip" }, m, x);
-    });
-    const f = filters();
-    const any = chips.length || f.q || f.owner || f.best !== null;
-    if (any) {
-      const clear = el("button", { type: "button", class: "linkbtn", text: "Clear all filters" });
-      clear.addEventListener("click", () => {
-        $("q").value = ""; $("owner").value = ""; $("best").value = "";
-        selectedMechs.clear(); updateMechSummary(); renderMechOptions(); filtersChanged();
-      });
-      chips.push(clear);
-    }
-    $("chips").replaceChildren(...chips);
-    $("chips").hidden = !any;
-  }
-
-  async function load() {
-    try {
-      const res = await fetch("/api/collection");
-      const data = await res.json();
-      if (data.status === "not_configured") {
-        return showNotice("Coming soon",
-          "This page is waiting on BoardGameGeek API access. Once it's approved, both collections will appear here automatically.");
-      }
-      if (data.status !== "ok") {
-        return showNotice("Couldn't reach BoardGameGeek", data.message || "Please try again in a few minutes.");
-      }
-      groups = buildGroups(data.games);
-      mechList = mechanicCounts();
-      setupBestFilter();
-      renderMechOptions();
-      $("details-warn").hidden = data.detailsComplete !== false;
-      $("notice").hidden = true;
-      $("app").hidden = false;
-      render();
-    } catch {
-      showNotice("Couldn't load the list", "Please try again in a few minutes.");
-    }
-  }
-
-  $("q").addEventListener("input", filtersChanged);
-  $("owner").addEventListener("change", filtersChanged);
-  $("best").addEventListener("change", filtersChanged);
-  $("mech-q").addEventListener("input", renderMechOptions);
-  $("mech-clear").addEventListener("click", () => { selectedMechs.clear(); updateMechSummary(); renderMechOptions(); filtersChanged(); });
-  // Open the mechanics panel toward whichever side has room.
-  $("mech-picker").addEventListener("toggle", () => {
-    const picker = $("mech-picker"), panel = picker.querySelector(".panel");
-    panel.style.left = panel.style.right = "";
-    if (!picker.open || window.matchMedia("(max-width: 560px)").matches) return;
-    const r = panel.getBoundingClientRect();
-    if (r.right > document.documentElement.clientWidth - 8) { panel.style.left = "auto"; panel.style.right = "0"; }
+  return out;
+}
+function sortGroups(list) {
+  const d = state.dir;
+  const val = {
+    name: (g) => g.name,
+    rating: (g) => g.rating,
+    year: (g) => Number(g.year) || null,
+    players: (g) => g.bestPlayers?.length ? Math.max(...g.bestPlayers) * 100 + (g.maxPlayers || 0) : (g.maxPlayers || null),
+  }[state.sort];
+  return [...list].sort((A, B) => {
+    const a = A.head, b = B.head, x = val(a), y = val(b);
+    if (x == null && y != null) return 1;   // missing values always last
+    if (y == null && x != null) return -1;
+    const c = x == null ? 0 : typeof x === "string" ? x.localeCompare(y) : x - y;
+    return c * d || a.name.localeCompare(b.name);
   });
-  document.addEventListener("click", (e) => { const p = $("mech-picker"); if (p.open && !p.contains(e.target)) p.open = false; });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("mech-picker").open = false; });
-  load();
+}
+
+/* ---------- Render: header & controls ---------- */
+function renderStats() {
+  const c = (o) => groups.filter((g) => g.head.ownedBy === o).length;
+  const addons = groups.reduce((n, g) => n + g.kids.length, 0);
+  const cards = [
+    { key: "", cls: "total", ico: `<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="15" width="24" height="12" rx="3" fill="var(--accent)" stroke="var(--outline)" stroke-width="2"/><rect x="6" y="6" width="20" height="10" rx="3" fill="var(--mint)" stroke="var(--outline)" stroke-width="2"/><path d="M10 21h12" stroke="var(--outline)" stroke-width="2" stroke-linecap="round"/></svg>`,
+      n: groups.length, l: `games · plus ${addons} expansions & accessories` },
+    { key: "Remy", cls: "Remy", ico: meeple("var(--remy)", 30), n: c("Remy"), l: "only Remy owns" },
+    { key: "Jonathan", cls: "Jonathan", ico: meeple("var(--jon)", 30), n: c("Jonathan"), l: "only Jonathan owns" },
+    { key: "Both", cls: "Both", ico: `<svg viewBox="0 0 36 28" width="34" height="28" aria-hidden="true"><g transform="translate(0 3)"><path d="${MEEPLE}" fill="var(--remy)" stroke="var(--outline)" stroke-width="1.6" stroke-linejoin="round"/></g><g transform="translate(11 2)"><path d="${MEEPLE}" fill="var(--jon)" stroke="var(--outline)" stroke-width="1.6" stroke-linejoin="round"/></g></svg>`,
+      n: c("Both"), l: "we both own" },
+  ];
+  $("stats").innerHTML = status === "ok" ? cards.map((s) => `<button class="stat ${s.cls}" data-owner="${s.key}" aria-pressed="${state.owner === s.key}" title="${s.key ? `Show ${s.key === "Both" ? "games we both own" : s.key + "'s games"}` : "Show everything"}">
+      <span class="ico" aria-hidden="true">${s.ico}</span><span class="n">${s.n}</span><span class="l">${s.l}</span></button>`).join("") : "";
+}
+function renderOwnerSeg() {
+  const opts = [["", "All games"], ["Remy", "Remy"], ["Jonathan", "Jonathan"], ["Both", "Both"]];
+  const col = { Remy: "var(--remy)", Jonathan: "var(--jon)", Both: "var(--both)" };
+  $("own-seg").innerHTML = opts.map(([v, l]) => `<button data-owner="${v}" aria-pressed="${state.owner === v}">${v ? `<span class="sw" style="color:${col[v]}">${ownIcon(v)}</span>` : ""}${l}</button>`).join("");
+}
+function renderBest() {
+  $("best-chips").innerHTML = [1,2,3,4,5].map((n) => `<button class="pchip" data-best="${n}" aria-pressed="${state.best === n}" aria-label="Best with ${n === 5 ? "5 or more" : n} player${n === 1 ? "" : "s"}" title="Best with ${n === 5 ? "5+" : n}">${pipSvg(n, 26)}${n === 5 ? '<span class="plus" aria-hidden="true">+</span>' : ""}</button>`).join("");
+}
+function renderMechOpts() {
+  const q = $("mech-q").value.trim().toLowerCase();
+  const list = mechCounts.filter(([m]) => !q || m.toLowerCase().includes(q));
+  $("mech-opts").innerHTML = list.length ? list.map(([m, n]) => `<label class="opt"><input type="checkbox" value="${esc(m)}" ${state.mechs.has(m) ? "checked" : ""}><span>${esc(m)}</span><span class="n">${n}</span></label>`).join("")
+    : `<p style="color:var(--muted);padding:8px;margin:0">${mechCounts.length ? "No mechanics match." : "No mechanics yet."}</p>`;
+  const n = state.mechs.size;
+  $("mech-count").hidden = !n; $("mech-count").textContent = n;
+  $("mech-btn").firstChild.textContent = n ? "Mechanics " : "Any mechanic ";
+}
+function renderSort() {
+  $("sort").value = state.sort; $("per").value = String(state.per);
+  const asc = state.dir === 1;
+  $("dir").innerHTML = asc ? ICON.up : ICON.down;
+  $("dir").setAttribute("aria-label", `Sorted ${asc ? "ascending" : "descending"}; click to reverse`);
+  $("dir").title = asc ? "Ascending" : "Descending";
+}
+function activeFilters() {
+  const out = [];
+  if (state.q) out.push({ search: true, label: `“${state.q}”`, clear: () => { state.q = ""; $("q").value = ""; } });
+  if (state.owner) out.push({ label: `Owner: ${state.owner}`, clear: () => { state.owner = ""; } });
+  if (state.best !== null) out.push({ label: `Best with ${state.best === 5 ? "5+" : state.best}`, clear: () => { state.best = null; } });
+  [...state.mechs].sort().forEach((m) => out.push({ label: m, clear: () => state.mechs.delete(m) }));
+  return out;
+}
+function renderActive() {
+  const list = activeFilters();
+  const box = $("active");
+  box.hidden = !list.length;
+  box.replaceChildren();
+  list.forEach((f) => {
+    const chip = document.createElement("span"); chip.className = "chip"; chip.textContent = f.label;
+    const x = document.createElement("button"); x.setAttribute("aria-label", `Remove ${f.label}`); x.textContent = "×";
+    x.onclick = () => { f.clear(); changed(); };
+    chip.append(x); box.append(chip);
+  });
+  if (list.length) { const c = document.createElement("button"); c.className = "linkbtn"; c.textContent = "Clear all"; c.onclick = resetAll; box.append(c); }
+  const n = list.filter((f) => !f.search).length;
+  $("fcount").hidden = !n; $("fcount").textContent = n;
+  $("q-clear").hidden = !state.q;
+  const shown = visibleGroups().length;
+  $("drawer-done").textContent = `Show ${shown} game${shown === 1 ? "" : "s"}`;
+}
+
+/* ---------- Render: grid ---------- */
+function addonSummary(kids) {
+  const e = kids.filter((a) => a.type === "Expansion").length, a = kids.length - e;
+  return [e && `${e} expansion${e > 1 ? "s" : ""}`, a && `${a} accessor${a > 1 ? "ies" : "y"}`].filter(Boolean).join(" · ");
+}
+const ownTiny = (o) => `<span class="tiny own-${o}">${ownIcon(o)}${o}</span>`;
+function card({ head: g, kids }) {
+  const facts = [
+    bestShort(g) && `<span class="best" title="${esc(g.bestWith)}">${ICON.people}Best ${esc(bestShort(g))}</span>`,
+    timeText(g) && `<span title="Playing time">${ICON.clock}${timeText(g)}</span>`,
+    g.weight && `<span class="w" title="Complexity ${g.weight.toFixed(2)} / 5">${weightBar(g.weight)} ${weightLabel(g.weight)}</span>`,
+  ].filter(Boolean).join("");
+  const sub = [g.year, players(g) && `${players(g)} players`].filter(Boolean).join(" · ");
+  return `<article class="card">
+    <button class="open" data-open="${esc(g.id)}" aria-label="${esc(g.name)}, owned by ${g.ownedBy}. Open details">
+      <div class="cover" style="--h:${hueOf(g)}">${g.thumbnail ? `<div class="art">${imgTag(g, g.thumbnail)}</div>` : doodle(g)}
+        <span class="own own-${g.ownedBy}">${ownIcon(g.ownedBy)}${g.ownedBy}</span>${g.rating ? `<span class="rate" title="BGG rating">${ICON.star}${g.rating.toFixed(1)}</span>` : ""}</div>
+      <div class="cbody">
+        <h3>${esc(g.name)}${g.type !== "Base game" ? `<span class="tag" style="font-size:.7rem;padding:1px 7px;margin-left:6px;vertical-align:3px">${g.type}</span>` : ""}</h3>
+        ${sub ? `<div class="yr">${esc(sub)}</div>` : ""}
+        ${facts ? `<div class="facts">${facts}</div>` : ""}
+      </div>
+    </button>
+    ${kids.length ? `<div class="addons">
+      <button aria-expanded="false" data-toggle="${esc(g.id)}">${addonSummary(kids)}${ICON.chev}</button>
+      <ul hidden id="add-${esc(g.id)}">${kids.map((a) => `<li class="addon"><span class="mini">${a.thumbnail ? imgTag(a, a.thumbnail) : doodle(a)}</span>
+        <span class="nm">${esc(a.name)}<span class="ty">${a.type}</span></span>${a.ownedBy !== g.ownedBy ? ownTiny(a.ownedBy) : ""}</li>`).join("")}</ul>
+    </div>` : `<div class="nocard"></div>`}
+  </article>`;
+}
+const skeletons = (n) => Array.from({ length: n }, () => `<div class="sk" aria-hidden="true"><div class="b img"></div><div class="pad"><div class="b" style="height:16px;width:75%"></div>
+    <div class="b" style="height:12px;width:40%"></div><div class="b" style="height:12px;width:90%"></div></div></div>`).join("");
+const ROLLING = `<span class="rolling"><svg width="22" height="22" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="var(--surface)" stroke="var(--outline)" stroke-width="2.2"/><circle cx="8" cy="8" r="1.9" fill="var(--outline)"/><circle cx="16" cy="16" r="1.9" fill="var(--outline)"/><circle cx="12" cy="12" r="1.9" fill="var(--outline)"/></svg>`;
+const SLEEPY = `<svg width="150" height="80" viewBox="0 0 150 80" aria-hidden="true"><path d="M8 72h134" stroke="var(--outline)" stroke-width="3" stroke-linecap="round"/>
+  <g transform="translate(10 25) scale(2) rotate(-90 12 12)"><path d="${MEEPLE}" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.6" stroke-linejoin="round"/></g>
+  <g transform="translate(86 22) rotate(18 20 20)"><rect width="40" height="40" rx="9" fill="#fff" stroke="var(--outline)" stroke-width="3"/><circle cx="20" cy="20" r="4" fill="var(--outline)"/></g>
+  <text x="62" y="20" font-family="Fredoka, sans-serif" font-size="16" font-weight="600" fill="var(--muted)">z z</text></svg>`;
+
+let slowTimer;
+function renderGrid() {
+  if (status === "loading") {
+    $("grid").hidden = false; $("empty").hidden = true; $("pager").innerHTML = "";
+    $("grid").innerHTML = skeletons(12);
+    return;
+  }
+  if (status === "error") {
+    $("grid").hidden = true; $("pager").innerHTML = ""; $("rescount").textContent = "";
+    $("empty").hidden = false;
+    $("empty").innerHTML = `<div class="empty">${SLEEPY}<h2>Couldn't reach BoardGameGeek</h2><p>Our collection didn't load this time. BGG may be busy, so give it a minute and try again.</p><button class="btn" id="retry">Try again</button></div>`;
+    $("retry").onclick = load;
+    return;
+  }
+  const list = sortGroups(visibleGroups());
+  const pages = Math.max(1, Math.ceil(list.length / state.per));
+  state.page = Math.min(Math.max(1, state.page), pages);
+  const from = (state.page - 1) * state.per;
+  const rows = list.slice(from, from + state.per);
+  $("rescount").innerHTML = list.length ? `Showing <b>${from + 1}–${from + rows.length}</b> of <b>${list.length}</b> game${list.length === 1 ? "" : "s"}` : "No games match";
+  $("grid").hidden = !list.length;
+  $("empty").hidden = !!list.length;
+  if (!list.length) {
+    $("empty").innerHTML = `<div class="empty">${SLEEPY}<h2>No games here… yet!</h2><p>Nothing matches these filters. Try removing one, or start fresh.</p><button class="btn" id="empty-reset">Reset all filters</button></div>`;
+    $("empty-reset").onclick = resetAll;
+    $("pager").innerHTML = ""; return;
+  }
+  $("grid").innerHTML = rows.map(card).join("");
+  renderPager(pages);
+}
+function renderPager(pages) {
+  if (pages <= 1) { $("pager").innerHTML = ""; return; }
+  const p = state.page;
+  const want = [...new Set([1, pages, p - 1, p, p + 1])].filter((n) => n >= 1 && n <= pages).sort((a, b) => a - b);
+  let html = `<button data-page="${p - 1}" ${p <= 1 ? "disabled" : ""} aria-label="Previous page">‹ Prev</button>`;
+  want.forEach((n, i) => {
+    if (i && n - want[i - 1] > 1) html += `<span class="gap" aria-hidden="true">…</span>`;
+    html += `<button class="num" data-page="${n}" ${n === p ? 'aria-current="page"' : ""} aria-label="Page ${n}">${n}</button>`;
+  });
+  html += `<span class="of">Page ${p} of ${pages}</span><button data-page="${p + 1}" ${p >= pages ? "disabled" : ""} aria-label="Next page">Next ›</button>`;
+  $("pager").innerHTML = html;
+}
+
+/* ---------- Detail view ---------- */
+let lastFocus = null;
+function openDetail(id) {
+  const grp = groups.find((x) => x.head.id === id); if (!grp) return;
+  const g = grp.head, kids = grp.kids;
+  lastFocus = document.activeElement;
+  const pic = g.image || g.thumbnail;
+  const stat = (dt, dd) => dd ? `<div><dt>${dt}</dt><dd>${dd}</dd></div>` : "";
+  const credits = [
+    g.designers?.length && `Designed by <b>${esc(listText(g.designers, 3))}</b>`,
+    g.publishers?.length && `Published by <b>${esc(listText(g.publishers, 2))}</b>`,
+  ].filter(Boolean).join(" · ");
+  const m = $("modal");
+  m.innerHTML = `<div class="sheet">
+    <button class="close" id="d-close" aria-label="Close">×</button>
+    <div class="side">
+      <div class="bigcover" style="--h:${hueOf(g)}">${pic ? imgTag(g, pic) : doodle(g)}</div>
+      <div class="meta">
+        <div class="row"><span class="own own-${g.ownedBy}" style="position:static">${ownIcon(g.ownedBy)}${g.ownedBy === "Both" ? "We both own this" : `${g.ownedBy}'s ${g.type === "Base game" ? "game" : g.type.toLowerCase()}`}</span></div>
+        ${g.rating ? `<div class="row"><div class="bigrate"><span style="color:var(--star)">${ICON.star.replace('width="12" height="12"', 'width="20" height="20"')}</span><span class="v">${g.rating.toFixed(1)}</span><small>BGG rating · ${g.votes.toLocaleString()} votes</small></div></div>` : `<div class="row"><small style="color:var(--muted)">Not rated on BGG yet</small></div>`}
+        <a class="btn ghost" href="${esc(g.url)}" target="_blank" rel="noopener">View on BoardGameGeek ${ICON.ext}</a>
+      </div>
+    </div>
+    <div class="main">
+      <h2 id="d-title">${esc(g.name)}</h2>
+      <div class="byline">${[g.year && `Published ${esc(g.year)}`, g.type !== "Base game" && g.type].filter(Boolean).join(" · ")}</div>
+      ${credits ? `<div class="credits">${credits}</div>` : ""}
+      <dl class="kv">
+        ${stat("Players", players(g))}
+        ${stat("Best with", esc(bestShort(g)))}
+        ${stat("Playing time", timeText(g))}
+        ${stat("Weight", g.weight ? `${g.weight.toFixed(2)} <small style="color:var(--muted);font-weight:500">/ 5</small>` : "")}
+      </dl>
+      ${g.description ? `<p class="desc clamp" id="d-desc">${esc(g.description.trim())}</p><button class="linkbtn" id="d-more" hidden>Read more</button>` : ""}
+      ${g.mechanics?.length ? `<div class="sec"><h4>Mechanics</h4><div class="tags">${g.mechanics.map((x) => `<button class="tag" data-mech="${esc(x)}" title="Show games with this mechanic">${esc(x)}</button>`).join("")}</div></div>` : ""}
+      ${g.categories?.length ? `<div class="sec"><h4>Categories</h4><div class="tags">${g.categories.map((x) => `<span class="tag">${esc(x)}</span>`).join("")}</div></div>` : ""}
+      ${kids.length ? `<div class="sec"><h4>Expansions & accessories (${kids.length})</h4><div class="xlist">${kids.map((a) => `<a class="xitem" href="${esc(a.url)}" target="_blank" rel="noopener">
+        <span class="mini">${a.thumbnail ? imgTag(a, a.thumbnail) : doodle(a)}</span><div style="min-width:0"><div class="nm">${esc(a.name)}</div><div class="ty">${[a.type, a.year].filter(Boolean).join(" · ")}</div>
+        ${a.ownedBy !== g.ownedBy ? `<div class="diff">Owned by ${ownTiny(a.ownedBy)}</div>` : ""}</div></a>`).join("")}</div></div>` : ""}
+    </div></div>`;
+  m.hidden = false; document.body.style.overflow = "hidden";
+  const desc = $("d-desc"), more = $("d-more");
+  if (desc && desc.scrollHeight > desc.clientHeight + 4) { more.hidden = false; more.onclick = () => { desc.classList.remove("clamp"); more.hidden = true; }; }
+  $("d-close").focus();
+  $("d-close").onclick = closeDetail;
+  m.onclick = (e) => { if (e.target === m) closeDetail(); };
+  m.querySelectorAll("[data-mech]").forEach((b) => b.onclick = () => { state.mechs = new Set([b.dataset.mech]); closeDetail(); changed(); });
+}
+function closeDetail() { $("modal").hidden = true; $("modal").innerHTML = ""; document.body.style.overflow = ""; lastFocus?.focus?.(); }
+
+/* ---------- Sync status ---------- */
+function setSync(kind, updatedAt) {
+  $("sync").dataset.state = kind === "ok" ? "ok" : kind === "error" ? "error" : "syncing";
+  $("sync-label").textContent = kind === "ok" ? "Up to date" : kind === "error" ? "Sync error" : "Syncing…";
+  const last = updatedAt ? new Date(updatedAt) : null;
+  $("sync-last").textContent = last ? `Synced ${fmtTime(last)}` : "";
+  $("sync-next").textContent = last ? `Next sync after ${fmtTime(new Date(last.getTime() + 864e5))}` : "";
+  $("sync-sep1").hidden = !last; $("sync-sep2").hidden = !last;
+}
+function banner(kind, html) {
+  const b = $("banner");
+  if (!html) { b.hidden = true; return; }
+  b.className = "banner" + (kind === "info" ? " info" : "");
+  b.innerHTML = `${ICON.warn}<div>${html}</div>`;
+  b.hidden = false;
+}
+
+/* ---------- Wiring ---------- */
+function setPage(p) { state.page = p; store.set("sessionStorage", "page", p); }
+function changed() { setPage(1); render(); }
+function render() { renderStats(); renderOwnerSeg(); renderBest(); renderMechOpts(); renderSort(); renderActive(); renderGrid(); }
+function resetAll() { Object.assign(state, { q: "", owner: "", best: null, mechs: new Set() }); $("q").value = ""; $("mech-q").value = ""; changed(); }
+
+let qt; $("q").addEventListener("input", (e) => { clearTimeout(qt); qt = setTimeout(() => { state.q = e.target.value.trim(); changed(); }, 150); });
+$("q-clear").onclick = () => { state.q = ""; $("q").value = ""; changed(); $("q").focus(); };
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("button, a");
+  if (!t) { if (!$("mech-dd").contains(e.target)) closeMech(); return; }
+  if (t.dataset.owner !== undefined && (t.closest("#own-seg") || t.closest("#stats"))) { state.owner = state.owner === t.dataset.owner ? "" : t.dataset.owner; changed(); }
+  else if (t.dataset.best) { const n = Number(t.dataset.best); state.best = state.best === n ? null : n; changed(); }
+  else if (t.dataset.open) openDetail(t.dataset.open);
+  else if (t.dataset.toggle) { const ul = $("add-" + t.dataset.toggle); const open = ul.hidden; ul.hidden = !open; t.setAttribute("aria-expanded", String(open)); }
+  else if (t.dataset.page) { setPage(Number(t.dataset.page)); renderGrid(); $("toolbar").scrollIntoView({ behavior: "smooth" }); }
+  if (!$("mech-dd").contains(t)) closeMech();
+});
+function closeMech() { $("mech-panel").hidden = true; $("mech-btn").setAttribute("aria-expanded", "false"); }
+$("mech-btn").onclick = (e) => { e.stopPropagation(); const open = $("mech-panel").hidden; $("mech-panel").hidden = !open; $("mech-btn").setAttribute("aria-expanded", String(open)); if (open) $("mech-q").focus(); };
+$("mech-q").oninput = renderMechOpts;
+$("mech-opts").addEventListener("change", (e) => { const v = e.target.value; e.target.checked ? state.mechs.add(v) : state.mechs.delete(v); setPage(1); renderMechOpts(); renderActive(); renderGrid(); });
+$("mech-clear").onclick = () => { state.mechs.clear(); changed(); };
+$("sort").onchange = (e) => { state.sort = e.target.value; state.dir = DEFAULT_DIR[state.sort]; changed(); };
+$("dir").onclick = () => { state.dir *= -1; changed(); };
+$("per").onchange = (e) => {
+  const first = (state.page - 1) * state.per; // keep the first game on screen in view
+  state.per = Number(e.target.value); store.set("localStorage", "per-page", state.per);
+  setPage(Math.floor(first / state.per) + 1); renderGrid();
+};
+
+function openDrawer() { $("filters").classList.add("open"); $("scrim").hidden = false; $("open-filters").setAttribute("aria-expanded", "true"); document.body.style.overflow = "hidden"; $("close-filters").focus(); }
+function closeDrawer() { $("filters").classList.remove("open"); $("scrim").hidden = true; $("open-filters").setAttribute("aria-expanded", "false"); document.body.style.overflow = ""; }
+$("open-filters").onclick = openDrawer; $("close-filters").onclick = closeDrawer; $("scrim").onclick = closeDrawer; $("drawer-done").onclick = closeDrawer;
+$("drawer-reset").onclick = () => { Object.assign(state, { owner: "", best: null, mechs: new Set() }); $("mech-q").value = ""; changed(); };
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (!$("modal").hidden) closeDetail(); else if ($("filters").classList.contains("open")) closeDrawer(); else closeMech(); } });
+new IntersectionObserver(([e]) => $("toolbar").classList.toggle("stuck", e.intersectionRatio < 1), { threshold: [1], rootMargin: "-1px 0px 0px 0px" }).observe($("toolbar"));
+const shortPh = matchMedia("(max-width: 760px)");
+const setPh = () => { $("q").placeholder = shortPh.matches ? "Search the shelf" : "Search by title, mechanic, designer or publisher"; };
+setPh(); shortPh.addEventListener("change", setPh);
+
+/* ---------- Load ---------- */
+async function load() {
+  status = "loading"; setSync("syncing"); banner(); render();
+  $("rescount").innerHTML = `${ROLLING}Shuffling the shelf…</span>`;
+  clearTimeout(slowTimer);
+  slowTimer = setTimeout(() => { if (status === "loading") $("rescount").innerHTML = `${ROLLING}Fetching from BoardGameGeek… the first visit each day can take a minute.</span>`; }, 6000);
+  try {
+    const res = await fetch("/api/collection");
+    const data = await res.json().catch(() => ({}));
+    if (data.status === "not_configured") throw new Error("not_configured");
+    if (data.status !== "ok") throw new Error(data.message || "error");
+    groups = buildGroups(data.games);
+    byId = new Map(data.games.map((g) => [g.id, g]));
+    const counts = new Map();
+    for (const grp of groups) for (const m of grp.head.mechanics || []) counts.set(m, (counts.get(m) || 0) + 1);
+    mechCounts = [...counts].sort((a, b) => a[0].localeCompare(b[0]));
+    status = "ok";
+    setSync("ok", data.updatedAt);
+    if (data.detailsComplete === false) banner("info", "<b>Some game details didn't load from BoardGameGeek.</b> A few games may be missing ratings, player counts or mechanics. They'll fill in on the next sync.");
+  } catch (err) {
+    status = "error";
+    setSync("error");
+    banner("error", err.message === "not_configured"
+      ? "<b>BoardGameGeek access isn't set up yet.</b> The collection will appear once the site's BGG token is added."
+      : "<b>We couldn't reach BoardGameGeek.</b> It may be busy. Give it a minute and try again.");
+  }
+  clearTimeout(slowTimer);
+  render();
+}
+renderSort();
+load();
 </script>
 </body>
 </html>

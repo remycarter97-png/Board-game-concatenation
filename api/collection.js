@@ -21,8 +21,17 @@ const PAUSE_MS = 1500; // pause between thing requests to go easy on BGG
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+const NAMED = {
+  nbsp: "\u00a0", mdash: "\u2014", ndash: "\u2013", hellip: "\u2026", rsquo: "\u2019", lsquo: "\u2018",
+  rdquo: "\u201d", ldquo: "\u201c", bull: "\u2022", eacute: "\u00e9", egrave: "\u00e8", aacute: "\u00e1",
+  agrave: "\u00e0", iacute: "\u00ed", oacute: "\u00f3", uacute: "\u00fa", ouml: "\u00f6", uuml: "\u00fc",
+  auml: "\u00e4", ntilde: "\u00f1", ccedil: "\u00e7", times: "\u00d7", deg: "\u00b0", trade: "\u2122",
+  reg: "\u00ae", copy: "\u00a9", szlig: "\u00df", euro: "\u20ac", pound: "\u00a3",
+};
+
 export const decode = (s = "") =>
   s
+    .replace(/&([a-z]+);/gi, (m, n) => NAMED[n] ?? NAMED[n.toLowerCase()] ?? m)
     .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
     .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
     .replace(/&quot;/g, '"')
@@ -101,6 +110,12 @@ export function playerCountsIn(text) {
   return [...counts].sort((a, b) => a - b);
 }
 
+const LINK_LISTS = {
+  boardgamecategory: "categories",
+  boardgamedesigner: "designers",
+  boardgamepublisher: "publishers",
+};
+
 export function parseThings(xml) {
   const out = {};
   for (const m of xml.matchAll(/<item\s([^>]*)>([\s\S]*?)<\/item>/g)) {
@@ -109,12 +124,16 @@ export function parseThings(xml) {
     const body = m[2];
     const mechanics = [];
     const links = [];
+    const lists = { categories: [], designers: [], publishers: [] };
     for (const l of body.matchAll(/<link\s([^>]*?)\/?>/g)) {
       const type = attr(l[1], "type");
       const linkId = attr(l[1], "id");
       if (type === "boardgamemechanic") {
         const v = attr(l[1], "value");
         if (v) mechanics.push(v);
+      } else if (LINK_LISTS[type]) {
+        const v = attr(l[1], "value");
+        if (v) lists[LINK_LISTS[type]].push(v);
       } else if (/^boardgame(expansion|accessory)?$/.test(type) && /^\d+$/.test(linkId)) {
         links.push({ id: linkId, inbound: attr(l[1], "inbound") === "true" });
       }
@@ -127,7 +146,20 @@ export function parseThings(xml) {
         if (attr(r[1], "name") === "bestwith") bestWith = attr(r[1], "value");
       }
     }
+    const votes = num(valueOf(body, "usersrated"));
     out[id] = {
+      image: tag(body, "image"),
+      thumbnail: tag(body, "thumbnail"),
+      description: tag(body, "description"),
+      year: valueOf(body, "yearpublished"),
+      playTime: num(valueOf(body, "playingtime")),
+      minTime: num(valueOf(body, "minplaytime")),
+      maxTime: num(valueOf(body, "maxplaytime")),
+      // BGG's average user rating and average weight (complexity, 1-5); 0 means not rated yet.
+      rating: votes ? num(valueOf(body, "average")) : null,
+      votes: votes ?? 0,
+      weight: num(valueOf(body, "averageweight")),
+      ...lists,
       minPlayers: num(valueOf(body, "minplayers")),
       maxPlayers: num(valueOf(body, "maxplayers")),
       mechanics,
@@ -149,7 +181,7 @@ async function fetchDetails(ids, token) {
     const batch = ids.slice(i, i + THING_BATCH);
     try {
       const xml = await bggGet(
-        `https://boardgamegeek.com/xmlapi2/thing?id=${batch.join(",")}`,
+        `https://boardgamegeek.com/xmlapi2/thing?id=${batch.join(",")}&stats=1`,
         token,
         "game details"
       );
@@ -191,19 +223,38 @@ export default async function handler(req, res) {
 
     const { details, failedBatches } = await fetchDetails([...merged.keys()], token);
 
+    // Expansions and accessories are shown under a base game we own. Only items that appear
+    // at the top level (base games, and add-ons for games neither of us owns) open a detail
+    // view, so only those carry BGG's description; that keeps the response small.
+    const ownedBases = new Set([...merged.values()].filter((g) => g.type === "Base game").map((g) => g.id));
     const games = [...merged.values()]
       .map((g) => {
         const d = details[g.id] || {};
+        const links = d.links ?? [];
+        const topLevel = g.type === "Base game" || !links.some((id) => ownedBases.has(id));
         return {
           ...g,
+          year: g.year || d.year || "",
+          thumbnail: g.thumbnail || d.thumbnail || "",
+          image: topLevel ? d.image || "" : "",
           ownedBy: g.owners.length === OWNERS.length ? "Both" : g.owners[0],
-          url: `https://boardgamegeek.com/boardgame/${g.id}`,
+          url: `https://boardgamegeek.com/${g.type === "Base game" ? "boardgame" : g.type === "Expansion" ? "boardgameexpansion" : "boardgameaccessory"}/${g.id}`,
           minPlayers: d.minPlayers ?? null,
           maxPlayers: d.maxPlayers ?? null,
+          playTime: d.playTime ?? null,
+          minTime: d.minTime ?? null,
+          maxTime: d.maxTime ?? null,
+          rating: d.rating ?? null,
+          votes: d.votes ?? 0,
+          weight: d.weight ?? null,
           mechanics: d.mechanics ?? [],
+          categories: d.categories ?? [],
+          designers: d.designers ?? [],
+          publishers: d.publishers ?? [],
+          description: topLevel ? d.description || "" : "",
           bestWith: d.bestWith ?? "",
           bestPlayers: d.bestPlayers ?? [],
-          links: d.links ?? [],
+          links,
         };
       })
       .sort((a, b) => a.name.localeCompare(b.name));
