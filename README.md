@@ -18,13 +18,19 @@ Combines the owned BoardGameGeek collections of **Asianofchaos** (Remy) and **ce
 ## How it works
 
 - `index.html`: the page.
-- `api/collection.js`: a Vercel function that fetches both collections and their game details (images, ratings, overall rank, weight, playing time, mechanics, categories, designers, publishers, descriptions, player counts, BGG's best-player-count summary and links between games) from the BGG XML API2. It uses batches of 20 with a pause between requests. The result is cached at Vercel's edge for a day, so the site makes a small, fixed number of BGG requests each day.
+- `api/sync.js`: the daily sync. Vercel Cron runs it at 10:00 UTC (see `vercel.json`). It fetches both owned collections from the BGG XML API2, refreshes game details (images, ratings, overall rank, weight, playing time, mechanics, categories, designers, publishers, descriptions, player counts, BGG's best-player-count summary and links between games) that are missing or more than six days old, in batches of 20 with a pause between requests, and saves a snapshot to Vercel Blob. If BGG is unavailable, the previous snapshot stays up and the page notes that the day's refresh failed.
+- `api/collection.js`: serves the saved snapshot to the page. It never calls BGG, so it's fast no matter how many people visit.
+- `lib/bgg.js`: BGG fetching and parsing.
 
 BGG data is shown as BGG provides it.
 
 ## Setup
 
-The function needs a BGG application token in the Vercel environment variable `BGG_API_TOKEN` (register at https://boardgamegeek.com/applications). Until it's set, the page shows a "Coming soon" notice.
+Environment variables in Vercel:
+
+- `BGG_API_TOKEN`: a BGG application token (register at https://boardgamegeek.com/applications).
+- `CRON_SECRET`: authorizes the sync; Vercel Cron sends it automatically. To run a sync by hand, open `/api/sync?secret=<CRON_SECRET>`.
+- `BLOB_READ_WRITE_TOKEN`: added by connecting the project's Blob store.
 
 Pushes to `main` deploy automatically.
 

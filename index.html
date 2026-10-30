@@ -939,9 +939,12 @@ function renderGrid() {
     return;
   }
   if (status === "error") {
+    const first = $("banner").classList.contains("info");
     $("grid").hidden = true; $("tablewrap").hidden = true; $("pager").innerHTML = ""; $("rescount").textContent = "";
     $("empty").hidden = false;
-    $("empty").innerHTML = `<div class="empty">${SLEEPY}<h2>Couldn't reach BoardGameGeek</h2><p>Our collection didn't load this time. BGG may be busy, so give it a minute and try again.</p><button class="btn" id="retry">Try again</button></div>`;
+    $("empty").innerHTML = first
+      ? `<div class="empty">${SLEEPY}<h2>Setting up the shelf…</h2><p>The first sync from BoardGameGeek takes a few minutes. Check back shortly.</p><button class="btn" id="retry">Check again</button></div>`
+      : `<div class="empty">${SLEEPY}<h2>Couldn't load the shelf</h2><p>Something went wrong loading our collection. Give it a minute and try again.</p><button class="btn" id="retry">Try again</button></div>`;
     $("retry").onclick = load;
     return;
   }
@@ -1085,12 +1088,12 @@ function openDetail(id) {
 function closeDetail() { $("modal").hidden = true; $("modal").innerHTML = ""; document.body.style.overflow = ""; lastFocus?.focus?.(); }
 
 /* ---------- Sync status ---------- */
-function setSync(kind, updatedAt) {
-  $("sync").dataset.state = kind === "ok" ? "ok" : kind === "error" ? "error" : "syncing";
-  $("sync-label").textContent = kind === "ok" ? "Up to date" : kind === "error" ? "Sync error" : "Syncing…";
+function setSync(kind, updatedAt, nextAt) {
+  $("sync").dataset.state = kind === "ok" ? "ok" : kind === "error" || kind === "stale" ? "error" : "syncing";
+  $("sync-label").textContent = kind === "ok" ? "Up to date" : kind === "stale" ? "Showing last sync" : kind === "error" ? "Sync error" : "Syncing…";
   const last = updatedAt ? new Date(updatedAt) : null;
   $("sync-last").textContent = last ? `Synced ${fmtTime(last)}` : "";
-  $("sync-next").textContent = last ? `Next sync after ${fmtTime(new Date(last.getTime() + 864e5))}` : "";
+  $("sync-next").textContent = last ? `Next sync ${fmtTime(nextAt ? new Date(nextAt) : new Date(last.getTime() + 864e5))}` : "";
   $("sync-sep1").hidden = !last; $("sync-sep2").hidden = !last;
 }
 function banner(kind, html) {
@@ -1164,11 +1167,12 @@ async function load() {
   status = "loading"; setSync("syncing"); banner(); render();
   $("rescount").innerHTML = `${ROLLING}Shuffling the shelf…</span>`;
   clearTimeout(slowTimer);
-  slowTimer = setTimeout(() => { if (status === "loading") $("rescount").innerHTML = `${ROLLING}Fetching from BoardGameGeek… the first visit each day can take a minute.</span>`; }, 6000);
+  slowTimer = setTimeout(() => { if (status === "loading") $("rescount").innerHTML = `${ROLLING}Still shuffling…</span>`; }, 6000);
   try {
     const res = await fetch("/api/collection");
     const data = await res.json().catch(() => ({}));
     if (data.status === "not_configured") throw new Error("not_configured");
+    if (data.status === "syncing") throw new Error("syncing");
     if (data.status !== "ok") throw new Error(data.message || "error");
     groups = buildGroups(data.games);
     byId = new Map(data.games.map((g) => [g.id, g]));
@@ -1176,14 +1180,17 @@ async function load() {
     for (const grp of groups) for (const m of grp.head.mechanics || []) counts.set(m, (counts.get(m) || 0) + 1);
     mechCounts = [...counts].sort((a, b) => a[0].localeCompare(b[0]));
     status = "ok";
-    setSync("ok", data.updatedAt);
-    if (data.detailsComplete === false) banner("info", "<b>Some game details didn't load from BoardGameGeek.</b> A few games may be missing ratings, player counts or mechanics. They'll fill in on the next sync.");
+    setSync(data.lastSyncError ? "stale" : "ok", data.updatedAt, data.nextSyncAt);
+    if (data.lastSyncError) banner("info", `<b>Today's refresh from BoardGameGeek didn't work.</b> You're seeing the collection as of ${esc(fmtTime(new Date(data.updatedAt)))}. It'll try again at the next sync.`);
+    else if (data.detailsComplete === false) banner("info", "<b>Some game details didn't load from BoardGameGeek.</b> A few games may be missing ratings, player counts or mechanics. They'll fill in on the next sync.");
   } catch (err) {
     status = "error";
     setSync("error");
-    banner("error", err.message === "not_configured"
+    banner(err.message === "syncing" ? "info" : "error", err.message === "syncing"
+      ? "<b>The shelf is being set up.</b> The first sync from BoardGameGeek takes a few minutes. Check back shortly."
+      : err.message === "not_configured"
       ? "<b>BoardGameGeek access isn't set up yet.</b> The collection will appear once the site's BGG token is added."
-      : "<b>We couldn't reach BoardGameGeek.</b> It may be busy. Give it a minute and try again.");
+      : "<b>We couldn't load the shelf.</b> Give it a minute and try again.");
   }
   clearTimeout(slowTimer);
   render();
