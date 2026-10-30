@@ -724,7 +724,8 @@ const fmtTime = (d) => d.toLocaleString(undefined, { month: "short", day: "numer
 const listText = (arr, max) => arr.length <= max ? arr.join(", ") : `${arr.slice(0, max).join(", ")} and ${arr.length - max} more`;
 
 /* ---------- Data ---------- */
-let groups = [];          // [{ head, kids }]
+let groups = [];         // as BGG links them (table, export)
+let tileGroups = [];     // add-ons tucked under a game we own (tile view)          // [{ head, kids }]
 let byId = new Map();
 let mechCounts = [];
 const KIND_ORDER = { "Expansion": 0, "Accessory": 1 };
@@ -744,6 +745,27 @@ function buildGroups(items) {
   const all = [...bases.values(), ...out];
   for (const grp of all) grp.kids.sort((a, b) => (KIND_ORDER[a.type] - KIND_ORDER[b.type]) || a.name.localeCompare(b.name));
   return all.sort((a, b) => a.head.name.localeCompare(b.head.name));
+}
+
+// Tile view: add-ons only appear under a base game's arrow. Ones BGG doesn't link to a game we own
+// are tucked under the edition we own with the same name before the colon or dash (e.g.
+// "7 Wonders: Armada" -> "7 Wonders (Second Edition)"). Ones with no match get no tile; they still
+// show up when a search matches them, and the table lists them as their own rows.
+function buildTileGroups(strict) {
+  const bases = strict.filter((g) => g.head.type === "Base game");
+  const tiles = bases.map((g) => ({ head: g.head, kids: [...g.kids] }));
+  const byId = new Map(tiles.map((t) => [t.head.id, t]));
+  const loose = [];
+  for (const g of strict) {
+    if (g.head.type === "Base game") continue;
+    const pre = g.head.name.split(/\s*[:\u2013\u2014]\s+|\s+-\s+/)[0].trim().toLowerCase();
+    const score = (b) => { const n = b.head.name.toLowerCase(); return n === pre ? 0 : n.startsWith(pre + " (") ? 1 : n.startsWith(pre + ":") ? 2 : -1; };
+    const best = bases.map((b) => [score(b), b]).filter(([sc]) => sc >= 0).sort((x, y) => x[0] - y[0] || x[1].head.name.length - y[1].head.name.length)[0];
+    if (pre && best) byId.get(best[1].head.id).kids.push(g.head);
+    else loose.push({ head: g.head, kids: [], loose: true });
+  }
+  for (const t of tiles) t.kids.sort((a, b) => (KIND_ORDER[a.type] - KIND_ORDER[b.type]) || a.name.localeCompare(b.name));
+  return [...tiles, ...loose].sort((a, b) => a.head.name.localeCompare(b.head.name));
 }
 
 /* ---------- State ---------- */
@@ -782,11 +804,12 @@ const colfLabel = (k, v) => {
 
 // Filters check the base game; its expansions and accessories follow it. Search and the owner
 // filter also look at nested items, so a game shows if something under it matches.
-function visibleGroups() {
+function visibleGroups(source = state.view === "cards" ? tileGroups : groups) {
   const out = [];
   const q = state.q.toLowerCase();
-  for (const grp of groups) {
+  for (const grp of source) {
     const h = grp.head;
+    if (grp.loose && !q) continue; // add-ons without a game of ours only surface through search
     if (state.best !== null && !(h.bestPlayers || []).some((b) => state.best === TEN ? b >= TEN : b === state.best)) continue;
     if (state.mechs.size && !(h.mechanics || []).some((m) => state.mechs.has(m))) continue;
     let kids = grp.kids;
@@ -1067,7 +1090,7 @@ function renderPager(pages) {
 /* ---------- Detail view ---------- */
 let lastFocus = null;
 function openDetail(id) {
-  const grp = groups.find((x) => x.head.id === id); if (!grp) return;
+  const grp = (state.view === "cards" ? tileGroups : groups).find((x) => x.head.id === id) || groups.find((x) => x.head.id === id); if (!grp) return;
   const g = grp.head, kids = grp.kids;
   lastFocus = document.activeElement;
   const pic = g.image || g.thumbnail;
@@ -1128,7 +1151,7 @@ function loadExcelJS() {
   });
 }
 function renderExportMenu() {
-  const shown = visibleGroups(), all = groups;
+  const shown = visibleGroups(groups), all = groups;
   const count = (list) => list.reduce((n, g) => n + 1 + g.kids.length, 0);
   const filtered = activeFilters().length > 0;
   $("export-view").innerHTML = `${filtered ? "These games" : "All games, as sorted"}<span class="n">${shown.length}</span>`;
@@ -1142,7 +1165,7 @@ async function exportXlsx(which) {
   btn.disabled = true; const label = btn.querySelector("span").textContent; btn.querySelector("span").textContent = "Exporting…";
   try {
     const ExcelJS = await loadExcelJS();
-    const list = which === "all" ? [...groups].sort((a, b) => a.head.name.localeCompare(b.head.name)) : sortGroups(visibleGroups());
+    const list = which === "all" ? [...groups].sort((a, b) => a.head.name.localeCompare(b.head.name)) : sortGroups(visibleGroups(groups));
     const wb = new ExcelJS.Workbook();
     wb.creator = "Our Game Shelf"; wb.created = new Date();
     const ws = wb.addWorksheet("Games", { views: [{ state: "frozen", ySplit: 1, xSplit: 1 }] });
@@ -1299,6 +1322,7 @@ async function load() {
     if (data.status === "syncing") throw new Error("syncing");
     if (data.status !== "ok") throw new Error(data.message || "error");
     groups = buildGroups(data.games);
+    tileGroups = buildTileGroups(groups);
     byId = new Map(data.games.map((g) => [g.id, g]));
     const counts = new Map();
     for (const grp of groups) for (const m of grp.head.mechanics || []) counts.set(m, (counts.get(m) || 0) + 1);
