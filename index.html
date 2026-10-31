@@ -479,6 +479,20 @@
   .thsort:hover, .thsort.on { color: var(--ink); }
   .thsort:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
   .thsort .arr { font-size: .75em; opacity: .55; } .thsort.on .arr { opacity: 1; color: var(--accent); }
+  .thsort .prio { display: inline-grid; place-items: center; min-width: 16px; height: 16px; border-radius: 50%; background: var(--yellow); color: #3d2a4f;
+    border: 1.5px solid var(--outline); font: 700 .66rem/1 Fredoka, ui-rounded, sans-serif; margin-left: 1px; }
+  .sortbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 2px dashed var(--line); font-size: .86rem; font-weight: 700; }
+  .sblabel { font: 600 .78rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-2); }
+  .slevel { display: inline-flex; align-items: center; gap: 6px; background: var(--yellow-soft); border: 2px solid var(--outline); border-radius: 999px; padding: 2px 4px 2px 3px; }
+  .snum { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--yellow); color: #3d2a4f; border: 1.5px solid var(--outline); font: 700 .72rem/1 Fredoka, sans-serif; }
+  .sdir { border: 0; background: var(--surface); border-radius: 999px; padding: 2px 8px; font-weight: 700; font-size: .78rem; color: var(--ink-2); }
+  .sdir:hover { color: var(--ink); background: var(--surface-2); }
+  .srem { border: 0; background: none; width: 22px; height: 22px; border-radius: 50%; color: var(--ink-2); font-size: 1rem; line-height: 1; }
+  .srem:hover { background: color-mix(in srgb, var(--accent) 20%, transparent); }
+  .sthen { color: var(--muted); font-weight: 600; }
+  .sadd { height: 30px; border: 2px dashed var(--outline); border-radius: 999px; background: var(--surface); color: var(--ink); font: 700 .82rem Nunito, sans-serif; padding: 0 8px; }
+  .shint { margin-left: auto; color: var(--muted); font-weight: 600; font-size: .78rem; }
+  @media (hover: none), (max-width: 760px) { .shint { display: none; } }
   .gtable td { padding: 7px 8px; border-bottom: 1.5px solid var(--line); vertical-align: middle; }
   .gtable tbody tr.head-row:hover td { background: color-mix(in srgb, var(--yellow) 14%, var(--surface)); }
   .gtable tr:last-child td { border-bottom: 0; }
@@ -646,9 +660,14 @@
           <select id="sort">
             <option value="name">Name</option>
             <option value="rating">BGG rating</option>
-            <option value="year">Year published</option>
+            <option value="rank">BGG rank</option>
             <option value="players">Player count</option>
+            <option value="best">Best with</option>
+            <option value="time">Playing time</option>
             <option value="weight">Complexity</option>
+            <option value="year">Year published</option>
+            <option value="mech">Mechanics</option>
+            <option value="owner">Owner</option>
           </select>
           <button class="iconbtn" id="dir" aria-label="Sort direction"></button>
         </div>
@@ -770,14 +789,28 @@ function buildTileGroups(strict) {
 
 /* ---------- State ---------- */
 const PER = [24, 36, 48];
-const state = { q: "", best: null, mechs: new Set(), sort: "name", dir: 1,
+const state = { q: "", best: null, mechs: new Set(), sorts: [{ key: "name", dir: 1 }],
   page: Number(store.get("sessionStorage", "page", 1)) || 1,
   per: PER.includes(store.get("localStorage", "per-page", 24)) ? store.get("localStorage", "per-page", 24) : 24 };
 state.view = store.get("localStorage", "view", "cards") === "table" ? "table" : "cards";
 // Per-column filters from the table's filter row. They also apply in card view and show as chips.
 const COLF_EMPTY = { name: "", rating: "", rank: "", players: "", time: "", weight: "", year: "", mech: "", owner: "" };
 state.col = { ...COLF_EMPTY };
-const DEFAULT_DIR = { name: 1, rating: -1, year: -1, players: -1, weight: 1 };
+// Every sortable column: its label, the direction a first click uses, and the value compared.
+const SORTS = {
+  name: { label: "Name", dir: 1, val: (g) => g.name },
+  rating: { label: "Rating", dir: -1, val: (g) => g.rating },
+  rank: { label: "BGG rank", dir: 1, val: (g) => g.rank },
+  players: { label: "Players", dir: -1, val: (g) => g.maxPlayers ? g.maxPlayers * 100 + (g.minPlayers || 0) : null },
+  best: { label: "Best with", dir: 1, val: (g) => g.bestPlayers?.length ? g.bestPlayers[0] * 100 + g.bestPlayers[g.bestPlayers.length - 1] : null },
+  time: { label: "Time", dir: 1, val: (g) => g.maxTime || g.playTime || g.minTime || null },
+  weight: { label: "Complexity", dir: 1, val: (g) => g.weight },
+  year: { label: "Year", dir: -1, val: (g) => Number(g.year) || null },
+  mech: { label: "Mechanics", dir: 1, val: (g) => g.mechanics?.length ? g.mechanics.join(", ") : null },
+  owner: { label: "Owner", dir: 1, val: (g) => g.ownedBy },
+};
+const MAX_SORTS = 4;
+const DEFAULT_DIR = Object.fromEntries(Object.entries(SORTS).map(([k, v]) => [k, v.dir]));
 let status = "loading"; // loading | ok | error
 let lastUpdatedAt = null;
 
@@ -847,22 +880,29 @@ function visibleGroups(source = state.view === "cards" ? tileGroups : groups) {
   }
   return out;
 }
+// Sorts by each chosen column in turn; games missing a value go last for that column either way.
 function sortGroups(list) {
-  const d = state.dir;
-  const val = {
-    name: (g) => g.name,
-    rating: (g) => g.rating,
-    year: (g) => Number(g.year) || null,
-    weight: (g) => g.weight,
-    players: (g) => g.bestPlayers?.length ? Math.max(...g.bestPlayers) * 100 + (g.maxPlayers || 0) : (g.maxPlayers || null),
-  }[state.sort];
+  const keys = state.sorts.filter((x) => SORTS[x.key]);
   return [...list].sort((A, B) => {
-    const a = A.head, b = B.head, x = val(a), y = val(b);
-    if (x == null && y != null) return 1;   // missing values always last
-    if (y == null && x != null) return -1;
-    const c = x == null ? 0 : typeof x === "string" ? x.localeCompare(y) : x - y;
-    return c * d || a.name.localeCompare(b.name);
+    const a = A.head, b = B.head;
+    for (const { key, dir } of keys) {
+      const x = SORTS[key].val(a), y = SORTS[key].val(b);
+      if (x == null && y == null) continue;
+      if (x == null) return 1;
+      if (y == null) return -1;
+      const c = typeof x === "string" ? x.localeCompare(y) : x - y;
+      if (c) return c * dir;
+    }
+    return a.name.localeCompare(b.name);
   });
+}
+function setSort(key, { add = false } = {}) {
+  const i = state.sorts.findIndex((x) => x.key === key);
+  if (add) {
+    if (i >= 0) state.sorts[i].dir *= -1;
+    else if (state.sorts.length < MAX_SORTS) state.sorts.push({ key, dir: DEFAULT_DIR[key] });
+  } else if (state.sorts.length === 1 && i === 0) state.sorts[0].dir *= -1;
+  else state.sorts = [{ key, dir: DEFAULT_DIR[key] }];
 }
 
 /* ---------- Render: header & controls ---------- */
@@ -910,8 +950,8 @@ function renderMechOpts() {
   $("mech-btn").firstChild.textContent = n ? "Mechanics " : "Any mechanic ";
 }
 function renderSort() {
-  $("sort").value = state.sort; $("per").value = String(state.per);
-  const asc = state.dir === 1;
+  $("sort").value = state.sorts[0].key; $("per").value = String(state.per);
+  const asc = state.sorts[0].dir === 1;
   $("dir").innerHTML = asc ? ICON.up : ICON.down;
   $("dir").setAttribute("aria-label", `Sorted ${asc ? "ascending" : "descending"}; click to reverse`);
   $("dir").title = asc ? "Ascending" : "Descending";
@@ -1018,12 +1058,23 @@ function renderGrid() {
   else { $("tablewrap").innerHTML = ""; $("grid").innerHTML = rows.map(card).join(""); }
   renderPager(pages);
 }
-const SORTABLE = { name: "Name", rating: "Rating", players: "Players", weight: "Complexity", year: "Year" };
 function th(key, label, cls = "") {
   if (!key) return `<th scope="col" class="${cls}">${label}</th>`;
-  const on = state.sort === key;
-  const aria = on ? ` aria-sort="${state.dir === 1 ? "ascending" : "descending"}"` : "";
-  return `<th scope="col" class="${cls}"${aria}><button class="thsort${on ? " on" : ""}" data-sorth="${key}" title="Sort by ${label.toLowerCase()}">${label}<span class="arr" aria-hidden="true">${on ? (state.dir === 1 ? "▲" : "▼") : "↕"}</span></button></th>`;
+  const i = state.sorts.findIndex((x) => x.key === key), on = i >= 0, d = on ? state.sorts[i].dir : 0;
+  const aria = i === 0 ? ` aria-sort="${d === 1 ? "ascending" : "descending"}"` : "";
+  const multi = state.sorts.length > 1;
+  return `<th scope="col" class="${cls}"${aria}><button class="thsort${on ? " on" : ""}" data-sorth="${key}"
+    title="Sort by ${label.toLowerCase()} (Shift-click to add it as another sort level)">${label}<span class="arr" aria-hidden="true">${on ? (d === 1 ? "▲" : "▼") : "↕"}</span>${on && multi ? `<span class="prio" aria-label="sort level ${i + 1}">${i + 1}</span>` : ""}</button></th>`;
+}
+function sortBar() {
+  const dirWord = (k, d) => ["name", "mech", "owner"].includes(k) ? (d === 1 ? "A–Z" : "Z–A") : k === "rank" ? (d === 1 ? "best first" : "worst first") : (d === 1 ? "low–high" : "high–low");
+  const free = Object.keys(SORTS).filter((k) => !state.sorts.some((x) => x.key === k));
+  return `<div class="sortbar" role="group" aria-label="Sort order"><span class="sblabel">Sorted by</span>
+    ${state.sorts.map((x, i) => `<span class="slevel"><span class="snum">${i + 1}</span>${SORTS[x.key].label}
+      <button class="sdir" data-sdir="${i}" title="Reverse" aria-label="${SORTS[x.key].label}: ${dirWord(x.key, x.dir)}. Reverse">${x.dir === 1 ? "▲" : "▼"} ${dirWord(x.key, x.dir)}</button>
+      ${state.sorts.length > 1 ? `<button class="srem" data-srem="${i}" aria-label="Stop sorting by ${SORTS[x.key].label}">×</button>` : ""}</span>${i < state.sorts.length - 1 ? '<span class="sthen" aria-hidden="true">then</span>' : ""}`).join("")}
+    ${state.sorts.length < MAX_SORTS && free.length ? `<select class="sadd" data-sadd="1" aria-label="Add another sort level"><option value="">+ Then by…</option>${free.map((k) => `<option value="${k}">${SORTS[k].label}</option>`).join("")}</select>` : ""}
+    <span class="shint">Tip: Shift-click a column header to add it</span></div>`;
 }
 function tableRows({ head: g, kids }) {
   const id = esc(g.id);
@@ -1060,10 +1111,10 @@ function bestCell() {
 function renderTable(rows) {
   // Keep typing focus in a text filter across re-renders.
   const ae = document.activeElement, keep = ae?.dataset?.colf ? { k: ae.dataset.colf, s: ae.selectionStart, e: ae.selectionEnd } : null;
-  $("tablewrap").innerHTML = `<table class="gtable">
+  $("tablewrap").innerHTML = `${sortBar()}<table class="gtable">
     <caption class="sr">Games, ${state.page > 1 ? `page ${state.page}` : "first page"}. Use the second header row to filter each column. Select a game's name to see its details.</caption>
-    <thead><tr>${th("", '<span class="sr">Cover</span>', "c-img")}${th("name", "Name")}${th("rating", "Rating", "c-num")}${th("", "BGG rank", "c-num")}
-      ${th("players", "Players", "c-num")}${th("", "Best with", "c-num")}${th("", "Time", "c-num c-time")}${th("weight", "Complexity", "c-num")}${th("year", "Year", "c-num")}${th("", "Mechanics", "c-mech")}${th("", "Owner")}</tr>
+    <thead><tr>${th("", '<span class="sr">Cover</span>', "c-img")}${th("name", "Name")}${th("rating", "Rating", "c-num")}${th("rank", "BGG rank", "c-num")}
+      ${th("players", "Players", "c-num")}${th("best", "Best with", "c-num")}${th("time", "Time", "c-num c-time")}${th("weight", "Complexity", "c-num")}${th("year", "Year", "c-num")}${th("mech", "Mechanics", "c-mech")}${th("owner", "Owner")}</tr>
       <tr class="frow"><td class="c-img"><span class="sr">No filter</span>${ICON.filter}</td>${colfCell("name")}${colfCell("rating")}${colfCell("rank")}${colfCell("players")}${bestCell()}${colfCell("time")}${colfCell("weight")}${colfCell("year")}${colfCell("mech")}${colfCell("owner")}</tr></thead>
     <tbody>${rows.length ? rows.map(tableRows).join("") : `<tr><td colspan="11" class="tempty">${SLEEPY}<div><b>No games match these filters.</b> Change a filter above, or <button class="linkbtn" data-reset="1">reset all filters</button>.</div></td></tr>`}</tbody></table>`;
   if (keep) {
@@ -1264,7 +1315,9 @@ document.addEventListener("click", (e) => {
   if (!t) { if (!$("mech-dd").contains(e.target)) closeMech(); return; }
   if (t.dataset.reset) resetAll();
   else if (t.dataset.view) { state.view = t.dataset.view; store.set("localStorage", "view", state.view); renderView(); renderGrid(); }
-  else if (t.dataset.sorth) { const k = t.dataset.sorth; state.dir = state.sort === k ? -state.dir : DEFAULT_DIR[k]; state.sort = k; changed(); }
+  else if (t.dataset.sorth) { setSort(t.dataset.sorth, { add: e.shiftKey }); changed(); }
+  else if (t.dataset.sdir) { state.sorts[Number(t.dataset.sdir)].dir *= -1; changed(); }
+  else if (t.dataset.srem) { state.sorts.splice(Number(t.dataset.srem), 1); changed(); }
   else if (t.dataset.trow) { const open = t.getAttribute("aria-expanded") !== "true"; t.setAttribute("aria-expanded", String(open));
     document.querySelectorAll(".kid-of-" + CSS.escape(t.dataset.trow)).forEach((r) => r.hidden = !open); }
   else if (t.dataset.best) { const n = Number(t.dataset.best); state.best = state.best === n ? null : n; changed(); }
@@ -1285,14 +1338,16 @@ $("tablewrap").addEventListener("input", (e) => {
   clearTimeout(cft); cft = setTimeout(() => { state.col[el.dataset.colf] = el.value.trim(); setPage(1); renderMechOpts(); renderBest(); renderActive(); renderGrid(); }, 180);
 });
 $("tablewrap").addEventListener("change", (e) => {
+  const add = e.target.closest("select[data-sadd]");
+  if (add) { if (add.value) { setSort(add.value, { add: true }); changed(); } return; }
   const el = e.target.closest("select[data-colf]"); if (!el) return;
   if (el.dataset.colf === "best") state.best = el.value === "" ? null : Number(el.value);
   else state.col[el.dataset.colf] = el.value;
   changed();
   $("tablewrap").querySelector(`[data-colf="${el.dataset.colf}"]`)?.focus({ preventScroll: true });
 });
-$("sort").onchange = (e) => { state.sort = e.target.value; state.dir = DEFAULT_DIR[state.sort]; changed(); };
-$("dir").onclick = () => { state.dir *= -1; changed(); };
+$("sort").onchange = (e) => { state.sorts = [{ key: e.target.value, dir: DEFAULT_DIR[e.target.value] }]; changed(); };
+$("dir").onclick = () => { state.sorts[0].dir *= -1; changed(); };
 $("per").onchange = (e) => {
   const first = (state.page - 1) * state.per; // keep the first game on screen in view
   state.per = Number(e.target.value); store.set("localStorage", "per-page", state.per);
