@@ -301,14 +301,14 @@
       --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
       --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
       --remy: #ffa064; --remy-soft: #4b2e1c; --jon: #6ab9f2; --jon-soft: #1b3550; --both: #b89bff; --both-soft: #36295a;
-      --yellow: #ffd45c; --yellow-soft: #4a3d1e; --mint: #6fd3ac; --mint-soft: #1f3d33; --star: #ffd45c; --ok: #6fd3ac; --hl: #6b44c9;
+      --yellow: #ffd45c; --yellow-soft: #4a3d1e; --welcome: #352a4c; --mint: #6fd3ac; --mint-soft: #1f3d33; --star: #ffd45c; --ok: #6fd3ac; --hl: #6b44c9;
     }
   }
   :root[data-theme="dark"] {
     --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
     --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
     --remy: #ffa064; --remy-soft: #4b2e1c; --jon: #6ab9f2; --jon-soft: #1b3550; --both: #b89bff; --both-soft: #36295a;
-    --yellow: #ffd45c; --yellow-soft: #4a3d1e; --mint: #6fd3ac; --mint-soft: #1f3d33; --star: #ffd45c; --ok: #6fd3ac; --hl: #6b44c9;
+    --yellow: #ffd45c; --yellow-soft: #4a3d1e; --welcome: #352a4c; --mint: #6fd3ac; --mint-soft: #1f3d33; --star: #ffd45c; --ok: #6fd3ac; --hl: #6b44c9;
   }
   body { background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
   .brand { display: flex; align-items: center; gap: 16px; }
@@ -413,7 +413,7 @@
     .logo { width: 54px; height: 54px; }
     .brand { gap: 12px; }
     .grid { gap: 14px; }
-    .card, .pod { box-shadow: var(--pop-sm); }
+    .card, .welcome { box-shadow: var(--pop-sm); }
     .facts span { padding: 1px 7px 1px 5px; }
     .sheet { box-shadow: none; border-width: 3px 0 0; }
     .own svg { width: 12px; height: 12px; }
@@ -423,32 +423,6 @@
   .pchips { flex-wrap: wrap; }
   .pchip .pnum { font: 700 .95rem/1 Fredoka, ui-rounded, sans-serif; letter-spacing: -.02em; }
   .pchip:has(.pnum) { width: auto; min-width: 40px; padding: 0 8px; }
-
-  /* Top of our shelf */
-  .podium { margin-top: 24px; }
-  .pod-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 14px; }
-  .pod-head h2 { font-family: Fredoka, ui-rounded, sans-serif; font-weight: 700; font-size: 1.35rem; margin: 0; display: flex; align-items: center; gap: 8px; }
-  .pod-head h2 svg { align-self: center; }
-  .pod-head span { color: var(--ink-2); font-weight: 600; font-size: .92rem; }
-  .pods { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
-  .pod { all: unset; box-sizing: border-box; cursor: pointer; position: relative; width: 100%; height: 100%; display: flex; align-items: center; gap: 14px;
-    padding: 14px 16px 14px 14px; border: var(--edge); border-radius: 20px; box-shadow: var(--pop); transition: transform .12s, box-shadow .12s;
-    background: color-mix(in srgb, var(--medal) 24%, var(--surface)); }
-  .pod:hover { transform: translate(-2px, -2px) rotate(-.6deg); box-shadow: 6px 6px 0 var(--outline); }
-  .pod:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
-  .pod:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
-  .pod-1 { --medal: #ffcc33; } .pod-2 { --medal: #c9d2e3; } .pod-3 { --medal: #f2a46b; }
-  .medal { position: absolute; top: -13px; left: -11px; width: 36px; height: 36px; border-radius: 50%; background: var(--medal); border: 2.5px solid var(--outline);
-    box-shadow: 2px 2px 0 var(--outline); display: grid; place-items: center; font: 700 1.05rem/1 Fredoka, ui-rounded, sans-serif; color: #3d2a4f; transform: rotate(-10deg); }
-  .pthumb { --h: 30; width: 84px; height: 84px; flex: none; border-radius: 14px; border: 2px solid var(--outline); overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 7px;
-    background: linear-gradient(135deg, hsl(var(--h) 90% 88%), hsl(calc(var(--h) + 35) 80% 77%)); }
-  .pthumb img { max-width: 100%; max-height: 100%; min-width: 0; min-height: 0; object-fit: contain; border-radius: 4px; }
-  .pthumb > svg { width: calc(100% + 14px); height: calc(100% + 14px); margin: -7px; }
-  .pinfo { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
-  .pname { font-family: Fredoka, ui-rounded, sans-serif; font-weight: 600; font-size: 1.1rem; line-height: 1.2; overflow-wrap: anywhere; }
-  .pmeta { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: .86rem; color: var(--ink-2); }
-  .pmeta svg { color: var(--star); }
-  .pinfo .own { position: static; font-size: .72rem; }
 
   /* Export */
   .export { position: relative; }
@@ -536,6 +510,21 @@
     .tablewrap { border-radius: 16px; box-shadow: var(--pop-sm); }
   }
 
+  /* Welcome */
+  .welcome { position: relative; margin-top: 24px; display: flex; align-items: center; gap: 20px; padding: 20px 22px; border: var(--edge); border-radius: 22px;
+    box-shadow: var(--pop); background-color: var(--welcome, var(--yellow-soft)); overflow: hidden;
+    background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 10%, transparent) 1.3px, transparent 1.7px); background-size: 18px 18px; }
+  .welcome-text { flex: 1; min-width: 0; }
+  .welcome h2 { font: 700 1.45rem/1.15 Fredoka, ui-rounded, sans-serif; margin: 0 0 6px; }
+  .welcome p { margin: 0; font-size: 1.02rem; line-height: 1.6; color: var(--ink-2); font-weight: 600; max-width: 78ch; }
+  .welcome-art { width: 170px; height: 130px; flex: none; }
+  @media (max-width: 760px) {
+    .welcome { flex-direction: column-reverse; align-items: flex-start; gap: 8px; padding: 16px; }
+    .welcome-art { width: 112px; height: 86px; }
+    .welcome h2 { font-size: 1.25rem; }
+    .welcome p { font-size: .97rem; }
+  }
+
   /* Real box art */
   .cover { --h: 30; background-color: hsl(var(--h) 90% 87%);
     background-image: radial-gradient(circle, rgb(255 255 255 / .55) 2px, transparent 2.4px), linear-gradient(135deg, hsl(var(--h) 90% 88%), hsl(calc(var(--h) + 35) 80% 77%));
@@ -561,10 +550,7 @@
   a.xitem:hover { border-color: var(--outline); }
   .credits { color: var(--ink-2); font-size: .95rem; margin-top: 4px; }
   .credits b { color: var(--ink); font-weight: 700; }
-  @media (max-width: 1000px) and (min-width: 761px) { .pthumb { width: 64px; height: 64px; } .pod { gap: 10px; padding: 12px; } .pname { font-size: 1rem; } }
   @media (max-width: 760px) {
-    .pods { grid-template-columns: 1fr; gap: 16px; }
-    .pthumb { width: 64px; height: 64px; }
     .cover .art { padding: 36px 12px 12px; }
     .side .bigcover { width: 120px; min-height: 0; padding: 10px; flex: none; }
     .side .bigcover img { max-height: 160px; }
@@ -595,7 +581,21 @@
       </div>
     </div>
     <div class="banner" id="banner" hidden role="alert"></div>
-    <section class="podium" id="podium" aria-labelledby="pod-h" hidden></section>
+    <section class="welcome" aria-labelledby="welcome-h">
+      <div class="welcome-text">
+        <h2 id="welcome-h">Welcome to our game shelf!</h2>
+        <p>Pull up a chair! Whatever kind of night you're in the mood for, there's something here for you. We have epic fantasy campaigns like Gloomhaven, brain-burning strategy like Ark Nova and Twilight Imperium, friendly hour-long favorites, cooperative games where we all win (or lose) together, and quick party picks like Flip&nbsp;7. Most games shine at 2–4 players, and plenty play solo too. Take a look around, find something that catches your eye, and let's play!</p>
+      </div>
+      <svg class="welcome-art" viewBox="0 0 170 130" aria-hidden="true">
+        <ellipse cx="88" cy="118" rx="74" ry="8" fill="var(--outline)" opacity=".12"/>
+        <g transform="translate(96 18) rotate(16 25 25)"><rect width="50" height="50" rx="11" fill="#fff" stroke="var(--outline)" stroke-width="3.2"/>
+          <circle cx="14" cy="14" r="4.6" fill="var(--outline)"/><circle cx="36" cy="14" r="4.6" fill="var(--outline)"/><circle cx="25" cy="25" r="4.6" fill="var(--outline)"/><circle cx="14" cy="36" r="4.6" fill="var(--outline)"/><circle cx="36" cy="36" r="4.6" fill="var(--outline)"/></g>
+        <g transform="translate(120 72) rotate(-12 18 18)"><rect width="36" height="36" rx="8" fill="var(--mint)" stroke="var(--outline)" stroke-width="3"/>
+          <circle cx="11" cy="11" r="3.4" fill="var(--outline)"/><circle cx="25" cy="25" r="3.4" fill="var(--outline)"/></g>
+        <g transform="translate(6 40) rotate(-8 12 12) scale(3)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--remy)" stroke="var(--outline)" stroke-width="1.1" stroke-linejoin="round"/></g>
+        <g transform="translate(52 50) rotate(7 12 12) scale(2.6)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--jon)" stroke="var(--outline)" stroke-width="1.25" stroke-linejoin="round"/></g>
+      </svg>
+    </section>
   </header>
 
   <div class="toolbar" id="toolbar">
@@ -909,28 +909,6 @@ function setSort(key, { add = false } = {}) {
 const TEN = 10; // the "10+" best-with button covers 10 or more players
 const bestLabel = (n) => n === TEN ? "10+" : String(n);
 
-// The three games on our shelf with the best BGG overall rank ("Board Game Rank").
-let podiumFor = null;
-function renderPodium() {
-  const box = $("podium");
-  if (status !== "ok") { box.hidden = true; podiumFor = null; return; }
-  if (podiumFor === groups) return; // only changes when the data does
-  podiumFor = groups;
-  const top = groups.map((g) => g.head).filter((g) => g.rank).sort((a, b) => a.rank - b.rank).slice(0, 3);
-  box.hidden = !top.length;
-  if (!top.length) return;
-  const trophy = `<svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 5h14v6a7 7 0 0 1-14 0Z" fill="var(--yellow)" stroke="var(--outline)" stroke-width="2.2" stroke-linejoin="round"/>
-    <path d="M9 7H5v2a5 5 0 0 0 5 5M23 7h4v2a5 5 0 0 1-5 5" fill="none" stroke="var(--outline)" stroke-width="2.2" stroke-linecap="round"/><path d="M16 18v5" stroke="var(--outline)" stroke-width="2.2"/>
-    <rect x="10" y="23" width="12" height="5" rx="2" fill="var(--accent)" stroke="var(--outline)" stroke-width="2.2"/></svg>`;
-  box.innerHTML = `<div class="pod-head"><h2 id="pod-h">${trophy}Top of our shelf</h2><span>Our highest-ranked games on BoardGameGeek</span></div>
-    <ol class="pods">${top.map((g, i) => `<li><button class="pod pod-${i + 1}" data-open="${esc(g.id)}" aria-label="Number ${i + 1}: ${esc(g.name)}, BGG rank ${g.rank}. Open details">
-      <span class="medal" aria-hidden="true">${i + 1}</span>
-      <span class="pthumb" style="--h:${hueOf(g)}">${g.thumbnail ? imgTag(g, g.thumbnail) : doodle(g)}</span>
-      <span class="pinfo"><span class="pname">${esc(g.name)}</span>
-        <span class="pmeta">BGG rank #${g.rank.toLocaleString()}${g.rating ? ` · ${ICON.star} ${g.rating.toFixed(1)}` : ""}</span>
-        <span class="own own-${g.ownedBy}">${ownIcon(g.ownedBy)}${g.ownedBy}</span></span>
-    </button></li>`).join("")}</ol>`;
-}
 function renderBest() {
   // Offer every best player count that appears on the shelf; 1-6 show as dice faces.
   const counts = new Set();
@@ -1305,7 +1283,7 @@ function banner(kind, html) {
 /* ---------- Wiring ---------- */
 function setPage(p) { state.page = p; store.set("sessionStorage", "page", p); }
 function changed() { setPage(1); render(); }
-function render() { renderView(); renderPodium(); renderBest(); renderMechOpts(); renderSort(); renderActive(); renderGrid(); }
+function render() { renderView(); renderBest(); renderMechOpts(); renderSort(); renderActive(); renderGrid(); }
 function resetAll() { Object.assign(state, { q: "", best: null, mechs: new Set(), col: { ...COLF_EMPTY } }); $("q").value = ""; $("mech-q").value = ""; changed(); }
 
 let qt; $("q").addEventListener("input", (e) => { clearTimeout(qt); qt = setTimeout(() => { state.q = e.target.value.trim(); changed(); }, 150); });
