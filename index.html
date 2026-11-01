@@ -682,6 +682,17 @@
     .gnweights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .gnart { width: 56px; height: 56px; }
   }
+
+  /* Mechanics / Categories column filter */
+  .colfdd { display: flex; align-items: center; justify-content: space-between; gap: 4px; text-align: left; cursor: pointer; padding: 0 6px 0 8px; }
+  .colfdd span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .colfdd svg { flex: none; width: 12px; height: 12px; }
+  .colpop { position: fixed; z-index: 48; background: var(--surface); border: var(--edge); border-radius: 16px; box-shadow: var(--pop); padding: 10px; display: flex; flex-direction: column; text-align: left; }
+  .colpop input[type=search] { width: 100%; height: 38px; border: 2px solid var(--line); border-radius: 12px; background: var(--bg); padding: 0 12px; margin-bottom: 6px; font-weight: 600; }
+  .colpop input[type=search]:focus { outline: none; border-color: var(--outline); box-shadow: 0 0 0 3px var(--yellow); }
+  .colpop .opts { flex: 1; min-height: 0; max-height: none; overflow: auto; }
+  .colpop .panel-foot { flex: none; }
+  .cpnone { color: var(--muted); padding: 8px; margin: 0; font-weight: 600; }
   /* Welcome */
   .welcome { position: relative; margin-top: 24px; display: flex; align-items: center; gap: 20px; padding: 20px 22px; border: var(--edge); border-radius: 22px;
     box-shadow: var(--pop); background-color: var(--welcome, var(--yellow-soft)); overflow: hidden;
@@ -869,6 +880,7 @@
 
 <div class="scrim" id="scrim" hidden></div>
 <div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="d-title"></div>
+<div class="colpop" id="colpop" hidden role="dialog"></div>
 <div class="modal gn" id="gn" hidden role="dialog" aria-modal="true" aria-labelledby="gn-title"></div>
 
 <script>
@@ -1024,6 +1036,8 @@ const colfLabel = (k, v) => {
 // filter also look at nested items, so a game shows if something under it matches.
 // A mechanic or category picked from the list matches exactly; text from an older saved view matches as before.
 let mechNames = new Set(), catNames = new Set();
+// Several picked from the Mechanics or Categories column: games with any of them.
+const colHas = (arr, v, known) => Array.isArray(v) ? (!v.length || v.some((x) => (arr || []).includes(x))) : listHas(arr, v, known);
 const listHas = (arr, v, known) => known.has(v) ? (arr || []).includes(v) : (arr || []).some((m) => m.toLowerCase().includes(v.toLowerCase()));
 function visibleGroups(source = state.view === "table" ? groups : tileGroups) {
   const out = [];
@@ -1044,8 +1058,8 @@ function visibleGroups(source = state.view === "table" ? groups : tileGroups) {
     if (c.weight && !(h.weight && WEIGHT_BANDS[c.weight].test(h.weight))) continue;
     if (c.year) { const y = Number(h.year);
       if (!y || (c.year === "old" ? y >= 1990 : (y < Number(c.year) || y >= Number(c.year) + 10))) continue; }
-    if (c.mech && !listHas(h.mechanics, c.mech, mechNames)) continue;
-    if (c.cat && !listHas(h.categories, c.cat, catNames)) continue;
+    if (c.mech && !colHas(h.mechanics, c.mech, mechNames)) continue;
+    if (c.cat && !colHas(h.categories, c.cat, catNames)) continue;
     if (c.owner) {
       const headOk = h.ownedBy === c.owner;
       kids = kids.filter((k) => k.ownedBy === c.owner);
@@ -1128,7 +1142,10 @@ function activeFilters() {
   if (state.q) out.push({ search: true, label: `“${state.q}”`, clear: () => { state.q = ""; $("q").value = ""; } });
   if (state.best !== null) out.push({ label: `Best with ${bestLabel(state.best)}`, clear: () => { state.best = null; } });
   [...state.mechs].sort().forEach((m) => out.push({ label: m, clear: () => state.mechs.delete(m) }));
-  for (const [k, v] of Object.entries(state.col)) if (v) out.push({ col: true, label: colfLabel(k, v), clear: () => { state.col[k] = ""; } });
+  for (const [k, v] of Object.entries(state.col)) {
+    if (Array.isArray(v)) v.forEach((x) => out.push({ col: true, label: `${COLF_NAMES[k]}: ${x}`, clear: () => { state.col[k] = state.col[k].filter((y) => y !== x); if (!state.col[k].length) state.col[k] = ""; } }));
+    else if (v) out.push({ col: true, label: colfLabel(k, v), clear: () => { state.col[k] = ""; } });
+  }
   return out;
 }
 function renderActive() {
@@ -1205,6 +1222,7 @@ function renderGrid() {
     $("retry").onclick = load;
     return;
   }
+  if (colPop && state.view !== "table") closeColPop(false);
   const showRows = rowsMode();
   $("rowsview").hidden = state.view !== "rows";
   $("sortbox").hidden = showRows || (state.view === "rows" && !!rowAll);
@@ -1259,9 +1277,9 @@ const loadViews = () => { const v = store.get("localStorage", SV_KEY, []); retur
 const saveViews = (v) => store.set("localStorage", SV_KEY, v);
 function snapshotView() {
   return { sorts: state.sorts.map((x) => ({ key: x.key, dir: x.dir })), q: state.q, best: state.best, mechs: [...state.mechs].sort(),
-    col: Object.fromEntries(Object.entries(state.col).filter(([, v]) => v)), cols: normCols(state.cols) };
+    col: Object.fromEntries(Object.entries(state.col).filter(([, v]) => Array.isArray(v) ? v.length : v).map(([k, v]) => [k, Array.isArray(v) ? [...v].sort() : v])), cols: normCols(state.cols) };
 }
-const viewSig = (v) => JSON.stringify([v.sorts, v.q || "", v.best ?? null, [...(v.mechs || [])].sort(), Object.entries(v.col || {}).filter(([, x]) => x).sort(), normCols(v.cols)]);
+const viewSig = (v) => JSON.stringify([v.sorts, v.q || "", v.best ?? null, [...(v.mechs || [])].sort(), Object.entries(v.col || {}).filter(([, x]) => Array.isArray(x) ? x.length : x).map(([k, x]) => [k, Array.isArray(x) ? [...x].sort() : x]).sort(), normCols(v.cols)]);
 function suggestName() {
   const parts = state.sorts.map((x) => `${SORTS[x.key].label} ${x.dir === 1 ? "↑" : "↓"}`);
   const n = activeFilters().length;
@@ -1395,13 +1413,10 @@ function colfCell(k, cls = "") {
   const v = state.col[k];
   if (k === "name") return `<td class="${cls}"><input class="colf${v ? " set" : ""}" data-colf="${k}" type="search" value="${esc(v)}" placeholder="Filter names" aria-label="${label}" autocomplete="off"></td>`;
   if (k === "mech" || k === "cat") {
-    // Every mechanic or category on the shelf, with how many games have it.
-    const counts = new Map(), key = k === "mech" ? "mechanics" : "categories";
-    for (const grp of groups) for (const m of grp.head[key] || []) counts.set(m, (counts.get(m) || 0) + 1);
-    const opts = [...counts].sort((a, b) => a[0].localeCompare(b[0]));
-    const extra = v && !counts.has(v) ? `<option value="${esc(v)}" selected>“${esc(v)}”</option>` : ""; // a typed filter from an older saved view
-    return `<td class="${cls}"><select class="colf${v ? " set" : ""}" data-colf="${k}" aria-label="${label}"><option value="">Any</option>${extra}${opts.map(([m, n]) =>
-      `<option value="${esc(m)}"${m === v ? " selected" : ""}>${esc(m)} (${n})</option>`).join("")}</select></td>`;
+    const picked = Array.isArray(v) ? v : v ? [v] : [];
+    const text = !picked.length ? "Any" : picked.length === 1 ? (Array.isArray(v) ? picked[0] : `“${picked[0]}”`) : `${picked.length} selected`;
+    return `<td class="${cls}"><button class="colf colfdd${picked.length ? " set" : ""}" data-colpop="${k}" aria-haspopup="dialog" aria-expanded="${colPop === k}" aria-label="${label}: ${esc(text)}"
+      title="${esc(picked.join(", "))}"><span>${esc(text)}</span>${ICON.chev}</button></td>`;
   }
   return `<td class="${cls}"><select class="colf${v ? " set" : ""}" data-colf="${k}" aria-label="${label}">${COLF_OPTS[k].map(([x, l]) => `<option value="${x}"${x === v ? " selected" : ""}>${l}</option>`).join("")}</select></td>`;
 }
@@ -1420,6 +1435,7 @@ function renderTable(rows) {
     <thead><tr>${cols.map((k) => COLS[k].head()).join("")}</tr>
       <tr class="frow">${cols.map((k) => COLS[k].filt()).join("")}</tr></thead>
     <tbody>${rows.length ? rows.map(tableRows).join("") : `<tr><td colspan="${cols.length}" class="tempty">${SLEEPY}<div><b>No games match these filters.</b> Change a filter above, or <button class="linkbtn" data-reset="1">reset all filters</button>.</div></td></tr>`}</tbody></table></div>`;
+  if (colPop) { placeColPop(); markColPop(); } // keep the open column filter pinned to its button
   if (keep) {
     const el = $("tablewrap").querySelector(`[data-colf="${keep.k}"]`);
     if (el) { el.focus({ preventScroll: true }); if (el.setSelectionRange && keep.s != null) try { el.setSelectionRange(keep.s, keep.e); } catch {} }
@@ -2020,6 +2036,79 @@ document.addEventListener("keydown", (e) => {
     else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); } }
 }, true);
 $("gn-open").onclick = openGn;
+
+/* ---------- Mechanics / Categories column filter: type to find, pick several ---------- */
+let colPop = null, colPopQ = "";
+function colPopItems(k) {
+  const counts = new Map(), key = k === "mech" ? "mechanics" : "categories";
+  for (const grp of groups) for (const m of new Set(grp.head[key] || [])) counts.set(m, (counts.get(m) || 0) + 1);
+  return [...counts].sort((a, b) => a[0].localeCompare(b[0]));
+}
+const colPicked = (k) => Array.isArray(state.col[k]) ? state.col[k] : [];
+function renderColPopList() {
+  const k = colPop; if (!k) return;
+  const q = colPopQ.trim().toLowerCase(), picked = colPicked(k);
+  const items = colPopItems(k).filter(([m]) => !q || m.toLowerCase().includes(q));
+  $("colpop-opts").innerHTML = items.length ? items.map(([m, n]) => `<label class="opt"><input type="checkbox" value="${esc(m)}" ${picked.includes(m) ? "checked" : ""}><span>${esc(m)}</span><span class="n">${n}</span></label>`).join("")
+    : `<p class="cpnone">Nothing matches “${esc(colPopQ.trim())}”.</p>`;
+  $("colpop-n").textContent = picked.length ? `${picked.length} selected · games with any of them` : "Pick one or more";
+  $("colpop-clear").hidden = !picked.length;
+}
+function openColPop(k) {
+  colPop = k; colPopQ = "";
+  const name = k === "mech" ? "mechanics" : "categories";
+  $("colpop").innerHTML = `<input id="colpop-q" type="search" placeholder="Type to find ${name}" aria-label="Find ${name}" autocomplete="off">
+    <div class="opts" id="colpop-opts" role="group" aria-label="${k === "mech" ? "Mechanics" : "Categories"}"></div>
+    <div class="panel-foot"><span id="colpop-n"></span><button class="linkbtn" id="colpop-clear">Clear</button></div>`;
+  $("colpop").setAttribute("aria-label", `Filter ${name}`);
+  $("colpop").hidden = false;
+  renderColPopList(); placeColPop(); markColPop();
+  $("colpop-q").focus();
+}
+function closeColPop(focus = true) {
+  const k = colPop; if (!k) return;
+  colPop = null; $("colpop").hidden = true; $("colpop").innerHTML = ""; markColPop();
+  if (focus) document.querySelector(`[data-colpop="${k}"]`)?.focus();
+}
+function markColPop() { document.querySelectorAll("[data-colpop]").forEach((b) => b.setAttribute("aria-expanded", String(b.dataset.colpop === colPop))); }
+// Pinned under its column's filter button; flips above when there's no room below.
+function placeColPop() {
+  if (!colPop) return;
+  const btn = document.querySelector(`[data-colpop="${colPop}"]`), el = $("colpop");
+  if (!btn || state.view !== "table") return closeColPop(false);
+  const r = btn.getBoundingClientRect(), w = Math.min(300, innerWidth - 16);
+  el.style.width = w + "px"; el.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + "px";
+  const below = innerHeight - r.bottom - 14, above = r.top - 14, up = below < 220 && above > below;
+  el.style.maxHeight = Math.max(160, Math.min(400, up ? above : below)) + "px";
+  el.style.top = up ? "" : r.bottom + 6 + "px"; el.style.bottom = up ? innerHeight - r.top + 6 + "px" : "";
+}
+function colPopChanged() { setPage(1); renderMechOpts(); renderBest(); renderActive(); renderGrid(); renderColPopList(); placeColPop(); markColPop(); }
+$("colpop").addEventListener("input", (e) => { if (e.target.id === "colpop-q") { colPopQ = e.target.value; renderColPopList(); } });
+$("colpop").addEventListener("keydown", (e) => {
+  // Enter in the search box picks the only match (or the first one).
+  if (e.target.id === "colpop-q" && e.key === "Enter") { e.preventDefault(); const first = $("colpop-opts").querySelector("input"); if (first) { first.click(); } }
+});
+$("colpop").addEventListener("change", (e) => {
+  const cb = e.target.closest("input[type=checkbox]"); if (!cb || !colPop) return;
+  const k = colPop, set = new Set(colPicked(k)); cb.checked ? set.add(cb.value) : set.delete(cb.value);
+  state.col[k] = set.size ? [...set].sort((a, b) => a.localeCompare(b)) : "";
+  colPopChanged();
+  ($("colpop").querySelector(`input[value="${CSS.escape(cb.value)}"]`) || $("colpop-q"))?.focus();
+});
+$("colpop").addEventListener("click", (e) => { if (e.target.id === "colpop-clear") { state.col[colPop] = ""; colPopChanged(); $("colpop-q").focus(); } });
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("[data-colpop]");
+  if (t) { colPop === t.dataset.colpop ? closeColPop() : openColPop(t.dataset.colpop); return; }
+  if (colPop && !e.target.closest("#colpop")) closeColPop(false);
+});
+document.addEventListener("keydown", (e) => {
+  if (!colPop) return;
+  if (e.key === "Escape") { e.stopImmediatePropagation(); closeColPop(); }
+  else if (e.key === "Tab") { const f = [...$("colpop").querySelectorAll("input, button:not([hidden])")]; if (!f.length) return;
+    if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); } }
+}, true);
+addEventListener("resize", placeColPop); addEventListener("scroll", placeColPop, { capture: true, passive: true });
 
 /* ---------- Load ---------- */
 async function load() {
