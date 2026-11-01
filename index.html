@@ -1011,7 +1011,9 @@ const COLF_OPTS = {
 };
 const COLF_NAMES = { name: "Name", rating: "Rating", rank: "BGG rank", players: "Players", time: "Time", weight: "Complexity", year: "Year", mech: "Mechanic", cat: "Category", owner: "Owner" };
 const colfLabel = (k, v) => {
-  if (k === "name" || k === "mech" || k === "cat") return `${COLF_NAMES[k]}: “${v}”`;
+  if (k === "name") return `${COLF_NAMES[k]}: “${v}”`;
+  if ((k === "mech" && mechNames.has(v)) || (k === "cat" && catNames.has(v))) return `${COLF_NAMES[k]}: ${v}`;
+  if (k === "mech" || k === "cat") return `${COLF_NAMES[k]}: “${v}”`;
   const opt = (COLF_OPTS[k] || []).find(([x]) => x === v);
   const txt = opt ? opt[1] : v;
   return k === "rating" ? `Rating ${txt}` : k === "owner" ? `Owner: ${txt}` : k === "time" && v !== "long" ? `Time ${txt}` : txt;
@@ -1019,6 +1021,9 @@ const colfLabel = (k, v) => {
 
 // Filters check the base game; its expansions and accessories follow it. Search and the owner
 // filter also look at nested items, so a game shows if something under it matches.
+// A mechanic or category picked from the list matches exactly; text from an older saved view matches as before.
+let mechNames = new Set(), catNames = new Set();
+const listHas = (arr, v, known) => known.has(v) ? (arr || []).includes(v) : (arr || []).some((m) => m.toLowerCase().includes(v.toLowerCase()));
 function visibleGroups(source = state.view === "table" ? groups : tileGroups) {
   const out = [];
   const q = state.q.toLowerCase();
@@ -1038,8 +1043,8 @@ function visibleGroups(source = state.view === "table" ? groups : tileGroups) {
     if (c.weight && !(h.weight && WEIGHT_BANDS[c.weight].test(h.weight))) continue;
     if (c.year) { const y = Number(h.year);
       if (!y || (c.year === "old" ? y >= 1990 : (y < Number(c.year) || y >= Number(c.year) + 10))) continue; }
-    if (c.mech && !(h.mechanics || []).some((m) => m.toLowerCase().includes(c.mech.toLowerCase()))) continue;
-    if (c.cat && !(h.categories || []).some((m) => m.toLowerCase().includes(c.cat.toLowerCase()))) continue;
+    if (c.mech && !listHas(h.mechanics, c.mech, mechNames)) continue;
+    if (c.cat && !listHas(h.categories, c.cat, catNames)) continue;
     if (c.owner) {
       const headOk = h.ownedBy === c.owner;
       kids = kids.filter((k) => k.ownedBy === c.owner);
@@ -1387,7 +1392,16 @@ function tableRows({ head: g, kids }) {
 function colfCell(k, cls = "") {
   const label = `Filter ${COLF_NAMES[k].toLowerCase()}`;
   const v = state.col[k];
-  if (k === "name" || k === "mech" || k === "cat") return `<td class="${cls}"><input class="colf${v ? " set" : ""}" data-colf="${k}" type="search" value="${esc(v)}" placeholder="${k === "name" ? "Filter names" : k === "cat" ? "Filter categories" : "Filter mechanics"}" aria-label="${label}" autocomplete="off"></td>`;
+  if (k === "name") return `<td class="${cls}"><input class="colf${v ? " set" : ""}" data-colf="${k}" type="search" value="${esc(v)}" placeholder="Filter names" aria-label="${label}" autocomplete="off"></td>`;
+  if (k === "mech" || k === "cat") {
+    // Every mechanic or category on the shelf, with how many games have it.
+    const counts = new Map(), key = k === "mech" ? "mechanics" : "categories";
+    for (const grp of groups) for (const m of grp.head[key] || []) counts.set(m, (counts.get(m) || 0) + 1);
+    const opts = [...counts].sort((a, b) => a[0].localeCompare(b[0]));
+    const extra = v && !counts.has(v) ? `<option value="${esc(v)}" selected>“${esc(v)}”</option>` : ""; // a typed filter from an older saved view
+    return `<td class="${cls}"><select class="colf${v ? " set" : ""}" data-colf="${k}" aria-label="${label}"><option value="">Any</option>${extra}${opts.map(([m, n]) =>
+      `<option value="${esc(m)}"${m === v ? " selected" : ""}>${esc(m)} (${n})</option>`).join("")}</select></td>`;
+  }
   return `<td class="${cls}"><select class="colf${v ? " set" : ""}" data-colf="${k}" aria-label="${label}">${COLF_OPTS[k].map(([x, l]) => `<option value="${x}"${x === v ? " selected" : ""}>${l}</option>`).join("")}</select></td>`;
 }
 function bestCell() {
@@ -2022,6 +2036,7 @@ async function load() {
     tileGroups = buildTileGroups(groups);
     byId = new Map(data.games.map((g) => [g.id, g]));
     hot = data.hot || null;
+    mechNames = new Set(data.games.flatMap((g) => g.mechanics || [])); catNames = new Set(data.games.flatMap((g) => g.categories || []));
     const counts = new Map();
     for (const grp of groups) for (const m of grp.head.mechanics || []) counts.set(m, (counts.get(m) || 0) + 1);
     mechCounts = [...counts].sort((a, b) => a[0].localeCompare(b[0]));
