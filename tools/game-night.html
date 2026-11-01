@@ -149,6 +149,15 @@
   .alllist small { color: var(--ink-2); font-weight: 700; white-space: nowrap; }
   .empty { text-align: center; color: var(--ink-2); font-weight: 700; padding: 22px 12px; border: 2.5px dashed var(--line); border-radius: 18px; }
   .left { display: grid; gap: 22px; }
+  .share { display: grid; gap: 8px; border-top: 2px dashed var(--line); padding-top: 12px; }
+  .share input { width: 8.5em; height: 36px; text-transform: uppercase; letter-spacing: .12em; font-family: Fredoka, ui-rounded, sans-serif; }
+  .codebox { display: grid; grid-template-columns: auto auto auto 1fr; align-items: center; gap: 10px; background: var(--yellow-soft); border: 2px dashed var(--outline); border-radius: 16px; padding: 12px 14px; }
+  .codebox .note, .codebox .link { grid-column: 1 / -1; justify-self: start; }
+  .codebox .btn { white-space: nowrap; }
+  .code { font: 700 1.8rem/1 Fredoka, ui-rounded, sans-serif; letter-spacing: .16em; background: var(--surface); border: var(--edge); border-radius: 12px; box-shadow: var(--pop-sm); padding: 6px 10px 6px 16px; }
+  .status { font-size: .85rem; font-weight: 800; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
+  .status .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); } .status.off .dot { background: var(--warn); }
+  @media (max-width: 520px) { .codebox { grid-template-columns: 1fr 1fr; } .codebox .code { grid-column: 1 / -1; justify-self: start; } }
   #results { display: grid; gap: 12px; }
   footer { margin: 48px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
   @media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
@@ -188,6 +197,7 @@
         <div class="guests"><span>Guests without a profile</span>
           <span class="stepper"><button type="button" id="gMinus" aria-label="One fewer guest">−</button><output id="guests" aria-live="polite">0</output><button type="button" id="gPlus" aria-label="One more guest">+</button></span></div>
         <div id="editor"></div>
+        <div class="share" id="share"></div>
       </section>
       <section class="card tonight" aria-labelledby="tonightH">
         <h2 id="tonightH">Tonight</h2>
@@ -205,7 +215,7 @@
       <div id="results" aria-live="polite"><p class="summary">Loading the shelf…</p></div>
     </section>
   </div>
-  <footer>People and their preferences are saved in this browser. "Played recently" uses Remy's logged plays on BoardGameGeek.</footer>
+  <footer>People and their preferences are saved in this browser, and shared with anyone who has the group's code if you share it. "Played recently" uses Remy's logged plays on BoardGameGeek.</footer>
 </div>
 <script>
 (function () {
@@ -222,7 +232,78 @@
   try { S = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { S = null; }
   if (!S || !Array.isArray(S.people)) { const r = person("Remy"), j = person("Jonathan"); S = { people: [r, j], selected: [r.id, j.id], guests: 0, time: 0, recentOn: false, recentDays: 30 }; }
   S.selected = (S.selected || []).filter((id) => S.people.some((p) => p.id === id));
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+  const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+  const save = () => { persist(); schedulePush(); };
+
+  /* ---------- Sharing the group by code (people and their preferences; picks stay on each device) ---------- */
+  const shared = () => S.people.map(({ id, name, weights, likes, avoid, time }) => ({ id, name, weights, likes, avoid, time }));
+  const sig = () => JSON.stringify(shared());
+  let pushTimer = null, online = true, showCode = false, shareMsg = "";
+  function schedulePush() { if (!S.code || sig() === S.syncedSig) return renderShare(); clearTimeout(pushTimer); pushTimer = setTimeout(push, 700); renderShare("Saving…"); }
+  async function push() {
+    if (!S.code) return; const mine = sig();
+    try {
+      const r = await fetch(`/api/group?code=${S.code}`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: "Game night group", people: shared() }) });
+      if (r.status === 404) { S.code = null; S.syncedSig = null; persist(); shareMsg = "That shared group is gone, so these people are now saved only here."; return renderShare(); }
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json(); S.updatedAt = d.updatedAt; S.syncedSig = mine; online = true; persist();
+    } catch (e) { online = false; clearTimeout(pushTimer); pushTimer = setTimeout(push, 8000); }
+    renderShare();
+  }
+  async function pull() {
+    if (!S.code || document.hidden || sig() !== S.syncedSig) return;
+    try {
+      const r = await fetch(`/api/group?code=${S.code}`, { cache: "no-store" });
+      if (r.status === 404) { S.code = null; S.syncedSig = null; persist(); shareMsg = "That shared group is gone, so these people are now saved only here."; return renderShare(); }
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json(); online = true;
+      if (sig() === S.syncedSig && (!S.updatedAt || d.updatedAt > S.updatedAt)) {
+        S.people = d.people; S.selected = S.selected.filter((id) => S.people.some((p) => p.id === id));
+        if (editing && !S.people.some((p) => p.id === editing)) editing = null;
+        S.updatedAt = d.updatedAt; S.syncedSig = sig(); persist(); all(false);
+      }
+    } catch (e) { online = false; }
+    renderShare();
+  }
+  async function makeCode() {
+    shareMsg = "Making a code…"; renderShare();
+    try {
+      const r = await fetch("/api/group", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: "Game night group", people: shared() }) });
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json(); S.code = d.code; S.updatedAt = d.updatedAt; S.syncedSig = sig(); online = true; showCode = true; shareMsg = ""; persist();
+    } catch (e) { shareMsg = "Couldn't make a code right now. Check your connection and try again."; }
+    renderShare(); document.querySelector("[data-copy]")?.focus();
+  }
+  async function joinCode(raw) {
+    const code = String(raw || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (code.length !== 6) { shareMsg = "Codes are 6 letters and numbers, like ABC234."; return renderShare(); }
+    shareMsg = "Opening…"; renderShare();
+    try {
+      const r = await fetch(`/api/group?code=${code}`, { cache: "no-store" });
+      if (r.status === 404 || r.status === 400) { shareMsg = `No group found for ${code}. Check the code and try again.`; return renderShare(); }
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json();
+      S.people = d.people; S.selected = d.people.map((p) => p.id); S.code = code; S.updatedAt = d.updatedAt; S.syncedSig = sig(); editing = null; seen.clear(); persist();
+      shareMsg = `Joined. Everyone using code ${code} shares these people and their preferences.`; all();
+    } catch (e) { shareMsg = "Couldn't reach the site. Check your connection and try again."; renderShare(); }
+  }
+  function renderShare(text) {
+    const el = $("share"); if (!el) return;
+    const link = S.code ? `${location.origin}/tools/game-night?group=${S.code}` : "";
+    el.innerHTML = S.code
+      ? `<div class="row"><span class="status${online ? "" : " off"}"><span class="dot"></span>${esc(text || (!online ? "Offline · will sync when back" : sig() !== S.syncedSig ? "Saving…" : `Shared · code ${S.code}`))}</span>
+          <button class="btn sm" type="button" id="showCode" aria-expanded="${showCode}">${showCode ? "Hide code" : "Share code"}</button></div>
+        ${showCode ? `<div class="codebox"><span class="code" aria-label="Group code ${S.code.split("").join(" ")}">${S.code}</span>
+          <button class="btn sm yellow" type="button" data-copy="${esc(link)}">Copy link</button><button class="btn sm" type="button" data-copy="${S.code}">Copy code</button>
+          <p class="note">Anyone with this code can open this group and change who's in it and their preferences. Who's playing tonight, the time and the picks stay on each device.</p>
+          <button class="link" type="button" id="leaveGroup">Stop syncing on this device</button></div>` : ""}`
+      : `<div class="row"><button class="btn sm yellow" type="button" id="makeCode">Share these people</button>
+          <span class="note">Have a code?</span><input type="text" id="joinCode" maxlength="6" placeholder="ABC234" aria-label="Group code" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="btn sm" type="button" id="joinBtn">Open group</button></div>`;
+    if (shareMsg) el.insertAdjacentHTML("beforeend", `<p class="note" role="status">${esc(shareMsg)}</p>`);
+  }
+  setInterval(pull, 15000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) pull(); });
+  addEventListener("online", () => { schedulePush(); pull(); });
 
   let games = [], plays = null, tags = [], editing = null, seen = new Set(), picks = [], showAll = false, status = "loading";
   const playTime = (g) => g.playTime || g.maxTime || g.minTime || null;
@@ -337,7 +418,7 @@
     $("recentOn").checked = !!S.recentOn; $("recentDays").value = String(S.recentDays); $("recentDays").disabled = !S.recentOn;
     $("recentNote").textContent = !S.recentOn ? "" : plays ? `Based on Remy's logged plays (latest ${plays.length ? new Date(plays.reduce((a, p) => p.date > a ? p.date : a, "") + "T12:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—"}).` : "Recent plays aren't available right now, so nothing is skipped.";
   }
-  const all = (redeal = true) => { renderPeople(); renderEditor(); renderTonight(); renderResults(redeal); };
+  const all = (redeal = true) => { renderPeople(); renderEditor(); renderTonight(); renderResults(redeal); renderShare(); };
 
   /* ---------- Events ---------- */
   document.addEventListener("click", (e) => {
@@ -353,6 +434,11 @@
     else if (b.id === "ed-del") { S.people = S.people.filter((x) => x.id !== editing); S.selected = S.selected.filter((x) => x !== editing); editing = null; save(); all(); $("addPerson").focus(); }
     else if (b.id === "reroll") { renderResults(true); $("reroll")?.focus(); }
     else if (b.id === "toggleAll") { showAll = !showAll; renderResults(false); $("toggleAll").focus(); }
+    else if (b.id === "makeCode") makeCode();
+    else if (b.id === "joinBtn") joinCode($("joinCode").value);
+    else if (b.id === "showCode") { showCode = !showCode; renderShare(); $("showCode").focus(); }
+    else if (b.id === "leaveGroup") { S.code = null; S.syncedSig = null; showCode = false; shareMsg = "These people are now saved only on this device."; persist(); renderShare(); $("makeCode").focus(); }
+    else if (b.dataset.copy) { navigator.clipboard.writeText(b.dataset.copy).then(() => { shareMsg = "Copied!"; renderShare(); }, () => { shareMsg = `Copy this: ${b.dataset.copy}`; renderShare(); }); }
   });
   function addTag(key) {
     const p = S.people.find((x) => x.id === editing), input = $(`in-${key}`), v = input.value.trim();
@@ -362,7 +448,10 @@
     const other = key === "likes" ? "avoid" : "likes"; p[other] = p[other].filter((t) => t !== match);
     save(); renderPeople(); renderEditor(); renderResults(true); $(`in-${key}`).focus();
   }
-  document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.id?.startsWith("in-")) { e.preventDefault(); addTag(e.target.id.slice(3)); } });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.target.id?.startsWith("in-")) { e.preventDefault(); addTag(e.target.id.slice(3)); }
+    if (e.key === "Enter" && e.target.id === "joinCode") { e.preventDefault(); joinCode(e.target.value); }
+  });
   document.addEventListener("input", (e) => { if (e.target.id === "ed-name") { const p = S.people.find((x) => x.id === editing); p.name = e.target.value.trim().slice(0, 30) || p.name; save(); renderPeople(); renderResults(false); } });
   document.addEventListener("change", (e) => {
     const t = e.target;
@@ -373,13 +462,15 @@
   });
 
   /* ---------- Load ---------- */
-  renderPeople(); renderTonight();
+  renderPeople(); renderTonight(); renderShare();
   Promise.all([fetch("/api/collection").then((r) => r.json()), fetch("/api/plays").then((r) => r.ok ? r.json() : null).catch(() => null)]).then(([d, p]) => {
     if (!Array.isArray(d?.games)) throw new Error("no games");
     games = d.games.filter((g) => g.type === "Base game");
     tags = [...new Set(games.flatMap(tagsOf))].sort((a, b) => a.localeCompare(b));
     const dl = document.createElement("datalist"); dl.id = "taglist"; dl.innerHTML = tags.map((t) => `<option value="${esc(t)}">`).join(""); document.body.appendChild(dl);
     plays = p?.plays || null; status = "ok"; all();
+    const fromLink = new URLSearchParams(location.search).get("group");
+    if (fromLink) { history.replaceState(null, "", location.pathname); joinCode(fromLink); } else pull();
   }).catch(() => { status = "error"; $("results").innerHTML = `<div class="empty">Couldn't load the shelf right now. <button class="link" type="button" onclick="location.reload()">Try again</button></div>`; });
 })();
 </script>

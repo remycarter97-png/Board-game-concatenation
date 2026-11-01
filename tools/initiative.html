@@ -126,6 +126,16 @@
   ul.roster li input[type=number] { width: 5em; height: 38px; text-align: center; font-variant-numeric: tabular-nums; box-shadow: none; border-width: 2px; }
   ul.roster li .x { width: 32px; height: 32px; border-radius: 50%; border: 0; background: none; color: var(--ink-2); font-size: 1.2rem; font-weight: 800; flex: none; }
   ul.roster li .x:hover { background: var(--accent-soft); color: var(--danger); }
+  ul.roster li.foe { border-style: dashed; }
+  .star { width: 32px; height: 32px; border-radius: 50%; border: 0; background: none; font-size: 1.25rem; line-height: 1; color: var(--muted); flex: none; margin-left: -8px; }
+  .star[aria-pressed="true"] { color: #e0a000; }
+  .star:hover { background: var(--yellow-soft); }
+  #roster { display: grid; gap: 14px; }
+  .rgroup { display: grid; gap: 8px; }
+  .rgroup h3 { margin: 0; font: 600 .8rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+  .rgroup h3 small { font: 800 .8rem Nunito, sans-serif; color: var(--muted); margin-left: 4px; }
+  .rhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  ol.order li.foe:not(.current) { background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface)); }
   .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
   .confirm { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: .9rem; font-weight: 700; }
   .controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
@@ -218,9 +228,11 @@
         <input type="text" id="nameInput" placeholder="Add a name, e.g. Goblin 2" aria-label="Combatant name" maxlength="40">
         <button type="submit" class="btn primary">Add</button>
       </form>
+      <div class="ctl"><span>Add as</span><div class="seg" role="group" aria-label="Add as">
+        <button type="button" data-addas="core" id="addCore">Party member</button><button type="button" data-addas="foe" id="addFoe">Scenario / enemy</button></div></div>
       <p class="note" id="exampleNote" hidden>These are example names. Remove them and add your own party.</p>
       <p class="note" id="numNote" hidden>Type each player's initiative number in the box beside their name.</p>
-      <ul class="roster" id="roster"></ul>
+      <div id="roster"></div>
       <div class="row">
         <p class="note" id="savedNote">Saved in this browser.</p>
         <div id="clearArea"><button class="link danger" id="clearBtn" type="button">Clear all</button></div>
@@ -260,9 +272,11 @@
   const EXAMPLES = ['Thorne', 'Mira', 'Grub', 'Goblin 1', 'Goblin 2'];
   let seq = 0;
   const newId = (p = 'p') => p + Date.now().toString(36) + (seq++).toString(36) + Math.random().toString(36).slice(2, 5);
-  const person = name => ({ id: newId(), name, num: null });
+  // core: a regular party member who stays between scenarios. Everyone else is scenario-only
+  // (enemies, summons, allies) and can be cleared in one go. Core is a toggle, not permanent.
+  const person = (name, core = false) => ({ id: newId(), name, num: null, core });
   const freshState = (examples) => ({
-    people: examples ? EXAMPLES.map(person) : [], example: !!examples,
+    people: examples ? EXAMPLES.map((n, i) => person(n, i < 3)) : [], example: !!examples, addAs: null,
     method: 'random', dir: 'high', mode: 'full', order: [], pos: 0, round: 0, startAs: 1, tieOrder: []
   });
   const newParty = (name, examples) => ({ id: newId('party'), name, code: null, syncedSig: null, updatedAt: null, st: freshState(examples) });
@@ -285,7 +299,7 @@
   }
   function persist() { try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch (e) {} }
   // What's shared: the party's name and its names. Numbers and turns stay on each device.
-  const shareSig = p => JSON.stringify([p.name, p.st.people.map(x => [x.id, x.name])]);
+  const shareSig = p => JSON.stringify([p.name, p.st.people.map(x => [x.id, x.name, !!x.core])]);
   function save() { persist(); schedulePush(); }
 
   /* ---------- Talking to the site ---------- */
@@ -299,7 +313,7 @@
     const sig = shareSig(p);
     try {
       const r = await fetch(`/api/party?code=${p.code}`, { method: 'PUT', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ name: p.name, people: p.st.people.map(x => ({ id: x.id, name: x.name })) }) });
+        body: JSON.stringify({ name: p.name, people: p.st.people.map(x => ({ id: x.id, name: x.name, core: !!x.core })) }) });
       if (r.status === 404) { p.code = null; p.syncedSig = null; persist(); renderParty(); msg('That party is no longer on the site, so it\'s now saved only here.', true); return; }
       if (!r.ok) throw new Error(r.status);
       const d = await r.json(); p.updatedAt = d.updatedAt; p.syncedSig = sig; online = true; lastSyncAt = Date.now(); persist();
@@ -323,7 +337,7 @@
   function applyRemote(p, d) {
     const old = new Map(p.st.people.map(x => [x.id, x]));
     p.name = d.name;
-    p.st.people = d.people.map(x => ({ id: x.id, name: x.name, num: old.get(x.id)?.num ?? null }));
+    p.st.people = d.people.map(x => ({ id: x.id, name: x.name, core: !!x.core, num: old.get(x.id)?.num ?? null }));
     p.st.example = false;
     if (p.st === state) {
       // Newcomers join a running round like any other addition; people who left drop out.
@@ -342,7 +356,7 @@
     $('sharePanel').hidden = false; $('sharePanel').innerHTML = `<p class="note">Making a code…</p>`;
     try {
       const r = await fetch('/api/party', { method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ name: p.name, people: p.st.people.map(x => ({ id: x.id, name: x.name })) }) });
+        body: JSON.stringify({ name: p.name, people: p.st.people.map(x => ({ id: x.id, name: x.name, core: !!x.core })) }) });
       if (!r.ok) throw new Error(r.status);
       const d = await r.json();
       p.code = d.code; p.updatedAt = d.updatedAt; p.syncedSig = shareSig(p); p.st.example = false; online = true; lastSyncAt = Date.now(); persist();
@@ -362,7 +376,7 @@
       if (!r.ok) throw new Error(r.status);
       const d = await r.json();
       const p = newParty(d.name, false); p.code = code;
-      p.st.people = d.people.map(x => ({ id: x.id, name: x.name, num: null })); syncTieOrderFor(p.st);
+      p.st.people = d.people.map(x => ({ id: x.id, name: x.name, core: !!x.core, num: null })); syncTieOrderFor(p.st);
       p.updatedAt = d.updatedAt; p.syncedSig = shareSig(p);
       db.parties.push(p); db.current = p.id; state = p.st; normalize(); persist();
       $('joinCode').value = ''; msg(`Opened “${d.name}”. It stays in sync with everyone using code ${code}.`);
@@ -497,7 +511,7 @@
     else state.order.push(id); // no number yet, so last this round
   }
   function addName(n) {
-    const p = person(n);
+    const p = person(n, addAs() === 'core');
     state.people.push(p); state.tieOrder.push(p.id);
     if (active()) placeInRound(p.id);
   }
@@ -508,22 +522,35 @@
     syncTieOrder();
   }
 
+  const addAs = () => state.addAs || (state.people.some(p => p.core) ? 'foe' : 'core');
   function renderRoster() {
     const numMode = state.method === 'number';
     const lock = numMode && (active() || finished());
-    $('roster').innerHTML = state.people.map(p => `<li>
+    const row = p => `<li class="${p.core ? 'core' : 'foe'}">
+        <button type="button" class="star" data-core="${p.id}" aria-pressed="${!!p.core}" aria-label="${esc(p.name)}: core party member" title="${p.core ? 'Core party member. Tap to make scenario-only' : 'Scenario-only. Tap to make a core party member'}">${p.core ? '★' : '☆'}</button>
         <span>${esc(p.name)}</span>
         ${numMode ? `<input type="number" inputmode="decimal" step="any" data-id="${p.id}" value="${p.num === null ? '' : p.num}" aria-label="Initiative for ${esc(p.name)}" placeholder="#" ${lock ? 'readonly' : ''}>` : ''}
         <button type="button" class="x" data-rm="${p.id}" aria-label="Remove ${esc(p.name)}">×</button>
-      </li>`).join('');
+      </li>`;
+    const core = state.people.filter(p => p.core), foes = state.people.filter(p => !p.core);
+    $('roster').innerHTML = !state.people.length ? '' : `
+      <div class="rgroup"><h3>Party <small>${core.length}</small></h3>
+        ${core.length ? `<ul class="roster">${core.map(row).join('')}</ul>` : `<p class="note">Tap ☆ next to a name to make them a core party member. They stay when you clear a scenario.</p>`}</div>
+      <div class="rgroup"><div class="rhead"><h3>This scenario <small>${foes.length}</small></h3>
+        ${foes.length ? (confirmFoes ? `<span class="confirm">Remove ${foes.length}? <button class="link danger" type="button" id="yesFoes">Yes, clear</button><button class="link" type="button" id="noFoes">Cancel</button></span>`
+          : `<button class="btn sm" type="button" id="clearFoes">Clear scenario</button>`) : ''}</div>
+        ${foes.length ? `<ul class="roster">${foes.map(row).join('')}</ul>` : `<p class="note">Add enemies and other scenario-only combatants here. Clear them all when the scenario ends.</p>`}</div>`;
     $('countTag').textContent = state.people.length ? `${state.people.length} in the fight` : '';
     $('exampleNote').hidden = !state.example;
     $('numNote').hidden = !(numMode && !lock && state.people.length);
     $('clearArea').hidden = !state.people.length;
+    $('addCore').setAttribute('aria-pressed', addAs() === 'core'); $('addFoe').setAttribute('aria-pressed', addAs() === 'foe');
+    $('nameInput').placeholder = addAs() === 'core' ? 'Add a party member, e.g. Mira' : 'Add an enemy, e.g. Goblin 2';
   }
+  let confirmFoes = false;
   function orderRow(p, cls, extra) {
     const score = state.method === 'number' ? `<span class="score">${fmt(p.num)}</span>` : '';
-    return `<li class="${cls}"><span class="nm">${esc(p.name)}</span>${extra || ''}${score}</li>`;
+    return `<li class="${cls}${p.core ? '' : ' foe'}"><span class="nm">${esc(p.name)}</span>${extra || ''}${score}</li>`;
   }
   function renderSetup() {
     const sorted = numberSort(), missing = state.people.filter(p => p.num === null), counts = {};
@@ -593,8 +620,22 @@
     save(); render(false); $('nameInput').focus();
   });
   $('roster').addEventListener('click', e => {
-    const b = e.target.closest('button[data-rm]'); if (!b) return;
-    state.example = false; removeId(b.dataset.rm); save(); render(false);
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.rm) { state.example = false; removeId(b.dataset.rm); save(); render(false); }
+    else if (b.dataset.core) { const p = byId(b.dataset.core); p.core = !p.core; state.example = false; save(); render(false); $('roster').querySelector(`[data-core="${p.id}"]`)?.focus(); }
+    else if (b.id === 'clearFoes') { confirmFoes = true; renderRoster(); $('noFoes').focus(); }
+    else if (b.id === 'noFoes') { confirmFoes = false; renderRoster(); $('clearFoes')?.focus(); }
+    else if (b.id === 'yesFoes') {
+      // End of the scenario: everyone who isn't a core member leaves; the round resets if one was running.
+      state.people.filter(p => !p.core).forEach(p => removeId(p.id));
+      confirmFoes = false; state.example = false; resetRound(); state.round = 0; state.startAs = 1;
+      state.people.forEach(p => { p.num = null; });
+      save(); render(false); $('nameInput').focus();
+    }
+  });
+  document.querySelector('[aria-label="Add as"]').addEventListener('click', e => {
+    const b = e.target.closest('[data-addas]'); if (!b) return;
+    state.addAs = b.dataset.addas; save(); renderRoster(); $('nameInput').focus();
   });
   $('roster').addEventListener('input', e => {
     const el = e.target; if (!el.dataset.id || el.readOnly) return;

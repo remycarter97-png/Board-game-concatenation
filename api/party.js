@@ -11,7 +11,7 @@ const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O or 1/I/L to misre
 const CODE_LEN = 6;
 const MAX_PEOPLE = 60;
 const codeOk = (c) => typeof c === "string" && new RegExp(`^[${ALPHABET}]{${CODE_LEN}}$`).test(c);
-const pathFor = (code) => `parties/${code}.json`;
+const pathIn = (prefix, code) => `${prefix}/${code}.json`;
 
 export function newCode(rand = Math.random) {
   let c = "";
@@ -29,12 +29,12 @@ export function cleanParty(body) {
   for (const p of body.people.slice(0, MAX_PEOPLE)) {
     const id = String(p?.id ?? "").slice(0, 40), nm = String(p?.name ?? "").trim().slice(0, 40);
     if (!id || !nm || seen.has(id)) continue;
-    seen.add(id); people.push({ id, name: nm });
+    seen.add(id); people.push(p?.core ? { id, name: nm, core: true } : { id, name: nm });
   }
   return { name, people };
 }
 
-const save = (code, party) => put(pathFor(code), JSON.stringify(party), {
+const saveIn = (prefix) => (code, data) => put(pathIn(prefix, code), JSON.stringify(data), {
   access: "public", contentType: "application/json", addRandomSuffix: false, allowOverwrite: true, cacheControlMaxAge: 60,
 });
 
@@ -44,34 +44,41 @@ async function readBody(req) {
   return null;
 }
 
-export default async function handler(req, res, deps = { readJson, save, newCode }) {
-  res.setHeader("Cache-Control", "no-store");
-  try {
-    const code = String(req.query?.code || "").toUpperCase();
-    if (req.method === "GET") {
-      if (!codeOk(code)) return res.status(400).json({ status: "bad_code" });
-      const party = await deps.readJson(pathFor(code));
-      return party ? res.status(200).json({ code, ...party }) : res.status(404).json({ status: "not_found" });
-    }
-    if (req.method === "POST" || req.method === "PUT") {
-      const clean = cleanParty(await readBody(req));
-      if (!clean) return res.status(400).json({ status: "bad_party" });
-      let target = code;
-      if (req.method === "PUT") {
+// A small shared store: anything with a code, kept in Blob under `prefix/`. Used for initiative
+// parties (here) and game night groups (api/group.js).
+export function codeStore({ prefix, clean: clean_ }) {
+  const pathFor = (code) => pathIn(prefix, code);
+  return async function handler(req, res, deps = { readJson, save: saveIn(prefix), newCode }) {
+    res.setHeader("Cache-Control", "no-store");
+    try {
+      const code = String(req.query?.code || "").toUpperCase();
+      if (req.method === "GET") {
         if (!codeOk(code)) return res.status(400).json({ status: "bad_code" });
-        if (!(await deps.readJson(pathFor(code)))) return res.status(404).json({ status: "not_found" });
-      } else {
-        for (let i = 0; i < 6; i++) { target = deps.newCode(); if (!(await deps.readJson(pathFor(target)))) break; target = ""; }
-        if (!target) return res.status(503).json({ status: "busy" });
+        const party = await deps.readJson(pathFor(code));
+        return party ? res.status(200).json({ code, ...party }) : res.status(404).json({ status: "not_found" });
       }
-      const party = { ...clean, updatedAt: new Date().toISOString() };
-      await deps.save(target, party);
-      return res.status(req.method === "POST" ? 201 : 200).json({ code: target, ...party });
+      if (req.method === "POST" || req.method === "PUT") {
+        const clean = clean_(await readBody(req));
+        if (!clean) return res.status(400).json({ status: "bad_party" });
+        let target = code;
+        if (req.method === "PUT") {
+          if (!codeOk(code)) return res.status(400).json({ status: "bad_code" });
+          if (!(await deps.readJson(pathFor(code)))) return res.status(404).json({ status: "not_found" });
+        } else {
+          for (let i = 0; i < 6; i++) { target = deps.newCode(); if (!(await deps.readJson(pathFor(target)))) break; target = ""; }
+          if (!target) return res.status(503).json({ status: "busy" });
+        }
+        const party = { ...clean, updatedAt: new Date().toISOString() };
+        await deps.save(target, party);
+        return res.status(req.method === "POST" ? 201 : 200).json({ code: target, ...party });
+      }
+      res.setHeader("Allow", "GET, POST, PUT");
+      return res.status(405).json({ status: "method_not_allowed" });
+    } catch (err) {
+      console.error(`party failed: ${err.message}`);
+      return res.status(502).json({ status: "error" });
     }
-    res.setHeader("Allow", "GET, POST, PUT");
-    return res.status(405).json({ status: "method_not_allowed" });
-  } catch (err) {
-    console.error(`party failed: ${err.message}`);
-    return res.status(502).json({ status: "error" });
-  }
+  };
 }
+
+export default codeStore({ prefix: "parties", clean: cleanParty });
