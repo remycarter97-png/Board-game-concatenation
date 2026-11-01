@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Shelf Charts</title>
 <meta name="description" content="Charts about our board game collection.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#fff3e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1528" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Game Shelf">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -183,7 +193,7 @@
   .wrhead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-bottom: 16px; }
   .wrbadge { background: var(--yellow); color: #3d2a4f; border: 2px solid #0c0714; border-radius: 999px; padding: 3px 12px; font: 600 .9rem Fredoka, ui-rounded, sans-serif; box-shadow: 2px 2px 0 #0c0714; }
   .wrhead h3 { margin: 0; font: 700 clamp(1.8rem, 4vw, 2.8rem)/1.05 Fredoka, ui-rounded, sans-serif; }
-  .wrstats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .wrstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
   .wrstat { border: 2.5px solid #0c0714; border-radius: 20px; padding: 14px 16px; box-shadow: 3px 3px 0 #0c0714; color: #3d2a4f; display: grid; }
   .wrstat b { font: 700 clamp(2rem, 4.5vw, 3rem)/1 Fredoka, ui-rounded, sans-serif; font-variant-numeric: tabular-nums; }
   .wrstat span { font-weight: 800; font-size: .9rem; }
@@ -210,7 +220,7 @@
   .wrapped .plot { margin-top: 0; background: var(--surface); border-radius: 12px; padding: 8px; }
   @media (max-width: 760px) {
     .wrapped { padding: 16px; border-radius: 22px; box-shadow: 4px 4px 0 var(--outline); }
-    .wrstats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wrgrid { grid-template-columns: 1fr; }
+    .wrstats { grid-template-columns: repeat(3, minmax(0, 1fr)); } .wrstat { padding: 10px; } .wrstat span { font-size: .78rem; } .wrgrid { grid-template-columns: 1fr; }
   }
   footer { margin: 48px 0 0; padding: 26px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600;
     display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
@@ -640,8 +650,8 @@ function renderAll() {
 }
 function buildPage() {
   let html = `<dl class="tiles" id="tiles"></dl><p class="hint">Tip: click any bar, point or dot to see the games that make it up.</p>
-    <h2 class="sec" id="wrapped-h"><span class="dot" aria-hidden="true"></span>Gaming Wrapped</h2>
-    <p class="secnote">Remy's year and quarters at the table, from her logged plays on BoardGameGeek. The filters at the top don't change this section.</p>
+    <h2 class="sec" id="wrapped-h"><span class="dot" aria-hidden="true"></span><span id="wrapped-title">Our year</span></h2>
+    <p class="secnote">Our year and quarters at the table, from Remy's logged plays on BoardGameGeek. The filters at the top don't change this section.</p>
     <section id="wrapped" aria-labelledby="wrapped-h"></section>`, open = false;
   for (const c of DASH) {
     if (c.section) { if (open) html += `</div>`; html += `<h2 class="sec"><span class="dot" aria-hidden="true"></span>${c.section}</h2><p class="secnote">${c.note}</p><div class="charts">`; open = true; }
@@ -713,7 +723,7 @@ document.addEventListener("click", (e) => {
   else if (t.dataset.plmore) { PL.expanded = !PL.expanded; renderPlays(); document.querySelector("[data-plmore]")?.focus(); }
 });
 
-/* ---------- Gaming Wrapped: Remy's year and quarters in plays ---------- */
+/* ---------- "Our 2026": the year and its quarters in plays (from Remy's logged plays) ---------- */
 let LOG = null;                 // { plays: [...] } from /api/plays
 const WR = { year: null, q: 0 }; // q = 0 for the whole year, 1-4 for a quarter
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -761,41 +771,35 @@ function wrappedHtml() {
   const delta = ps.plays ? s.plays - ps.plays : null;
   const fresh = (() => { const f = firstPlays(); return s.top.filter((g) => inPeriod({ date: f.get(g.id) }, y, q)); })();
   const fav = s.top[0], favG = shelfGame(fav.id);
-  const winLine = (who, label) => s[who].n ? `<div class="wrwin"><b>${label}</b> won <b>${s[who].w}</b> of ${s[who].n} <span>(${Math.round(100 * s[who].w / s[who].n)}%)</span></div>` : "";
   const busiestDow = s.byDow.indexOf(Math.max(...s.byDow)), busiestDay = [...s.byDate].sort((a, b) => b[1] - a[1])[0];
-  const friends = [...s.with].sort((a, b) => b[1] - a[1]).slice(0, 5);
   const facts = [
     `Most game nights fell on <b>${DAYS[busiestDow]}</b>.`,
     busiestDay[1] > 1 && `Biggest day: <b>${new Date(busiestDay[0] + "T12:00:00").toLocaleDateString(undefined, { month: "long", day: "numeric" })}</b>, with ${busiestDay[1]} plays.`,
-    s.longest?.m && `Longest session: <b>${esc(s.longest.pl.name)}</b>, ${s.longest.est ? "about " : ""}${hrs(s.longest.m)} hours.`,
     delta !== null && `That's <b>${Math.abs(delta)} ${delta >= 0 ? "more" : "fewer"}</b> plays than ${periodName(prev[0], prev[1])}.`,
   ].filter(Boolean);
   return `${picker}<div class="wrapped" aria-live="polite">
-    <div class="wrhead"><span class="wrbadge">🎁 Gaming Wrapped</span><h3>Remy's ${periodName(y, q)}</h3></div>
+    <div class="wrhead"><h3>Our ${periodName(y, q)}</h3></div>
     <div class="wrstats">
       <div class="wrstat s1"><b>${fmt(s.plays)}</b><span>plays</span></div>
       <div class="wrstat s2"><b>${fmt(s.games.size)}</b><span>different games</span></div>
-      <div class="wrstat s3"><b>${s.mins ? hrs(s.mins) : "—"}</b><span>hours played${s.estMins ? "*" : ""}</span></div>
-      <div class="wrstat s4"><b>${s.remy.n ? Math.round(100 * s.remy.w / s.remy.n) + "%" : "—"}</b><span>${s.remy.n ? `win rate · ${s.remy.w} wins` : "no wins tracked"}</span></div>
+      <div class="wrstat s4"><b>${fmt(fresh.length)}</b><span>new to us</span></div>
     </div>
     <div class="wrgrid">
       <section class="wrcard wrfav"><h4>Favorite game</h4>
         <button class="wrtop" data-wrgame="${esc(fav.id)}">${favG?.thumbnail ? `<img src="${esc(favG.thumbnail)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : `<span class="wrdie" aria-hidden="true">🎲</span>`}
-          <span><b>${esc(fav.name)}</b><small>played ${fav.n} time${fav.n === 1 ? "" : "s"}${fav.mins ? ` · ${hrs(fav.mins)} hrs` : ""}${fav.wins ? ` · ${fav.wins} win${fav.wins === 1 ? "" : "s"}` : ""}</small></span></button>
+          <span><b>${esc(fav.name)}</b><small>played ${fav.n} time${fav.n === 1 ? "" : "s"}</small></span></button>
         <ol class="wrlist" start="2">${s.top.slice(1, 5).map((g) => `<li><button data-wrgame="${esc(g.id)}">${esc(g.name)}</button><span>${g.n}×</span></li>`).join("")}</ol></section>
-      <section class="wrcard"><h4>Wins</h4>${winLine("remy", "Remy") || `<p class="wrnote">No wins recorded for Remy this time.</p>`}${winLine("jon", "Jonathan")}
-        ${s.top.filter((g) => g.wins).length ? `<p class="wrnote">Best game for wins: <b>${esc([...s.top].sort((a, b) => b.wins - a.wins)[0].name)}</b></p>` : ""}</section>
-      <section class="wrcard"><h4>New to you</h4>${fresh.length ? `<p class="wrbig">${fresh.length} <span>game${fresh.length === 1 ? "" : "s"} played for the first time</span></p>
+      <section class="wrcard"><h4>New to us</h4>${fresh.length ? `<p class="wrbig">${fresh.length} <span>game${fresh.length === 1 ? "" : "s"} played for the first time</span></p>
         <div class="wrchips">${fresh.slice(0, 10).map((g) => `<button data-wrgame="${esc(g.id)}">${esc(g.name)}</button>`).join("")}${fresh.length > 10 ? `<span>+${fresh.length - 10} more</span>` : ""}</div>` : `<p class="wrnote">Only old favorites this time.</p>`}</section>
-      <section class="wrcard"><h4>Played most with</h4>${friends.length ? `<ol class="wrlist">${friends.map(([n, c]) => `<li><span>${esc(n)}</span><span>${c}×</span></li>`).join("")}</ol>` : `<p class="wrnote">No other players logged.</p>`}</section>
       <section class="wrcard wrwide"><h4>${q ? "Plays by week" : "Plays by month"}</h4><div class="plot" id="c-wrapped" style="height:200px"></div></section>
       <section class="wrcard wrwide"><h4>Fun facts</h4><ul class="wrfacts">${facts.map((f) => `<li>${f}</li>`).join("")}</ul>
-        ${s.estMins || s.noTime ? `<p class="wrnote">*${s.estMins ? `About ${hrs(s.estMins)} of these hours are estimated from BGG's listed play time for plays logged without a time.` : ""}${s.noTime ? ` ${s.noTime} play${s.noTime === 1 ? "" : "s"} had no time and no listed time, so ${s.noTime === 1 ? "it isn't" : "they aren't"} counted.` : ""}</p>` : ""}</section>
+</section>
     </div></div>`;
 }
 function renderWrapped() {
   const box = $("wrapped"); if (!box) return;
   box.innerHTML = wrappedHtml();
+  $("wrapped-title").textContent = WR.year ? `Our ${WR.year}` : "Our year";
   const plot = $("c-wrapped"); if (!plot) return;
   const y = WR.year, q = WR.q, list = LOG.plays.filter((p) => inPeriod(p, y, q)), T = chartTheme();
   let labels, buckets;
@@ -824,7 +828,7 @@ document.addEventListener("click", (e) => {
   if (t.dataset.wrq !== undefined) { WR.q = Number(t.dataset.wrq); renderWrapped(); document.querySelector(`[data-wrq="${WR.q}"]`)?.focus(); }
   else if (t.dataset.wrgame) {
     const y = WR.year, q = WR.q, mine = LOG.plays.filter((p) => p.game === t.dataset.wrgame && inPeriod(p, y, q)), s = summarize(mine), g = s.top[0];
-    openDrill(g.name, `${g.n} play${g.n === 1 ? "" : "s"} in ${periodName(y, q)}${g.mins ? ` · ${hrs(g.mins)} hours` : ""}${s.remy.n ? ` · Remy won ${s.remy.w}` : ""}`, [wrGame(g.id, g.name)]);
+    openDrill(g.name, `${g.n} play${g.n === 1 ? "" : "s"} in ${periodName(y, q)}`, [wrGame(g.id, g.name)]);
   }
 });
 document.addEventListener("change", (e) => { if (e.target.id === "wr-year") { WR.year = Number(e.target.value); renderWrapped(); $("wr-year").focus(); } });
@@ -908,5 +912,6 @@ async function load() {
 }
 load();
 </script>
+<script src="/pwa.js" defer></script>
 </body>
 </html>

@@ -1,15 +1,67 @@
 {
   "cleanUrls": true,
   "redirects": [
-    { "source": "/initiative", "destination": "/tools/initiative", "permanent": true }
+    {
+      "source": "/initiative",
+      "destination": "/tools/initiative",
+      "permanent": true
+    }
   ],
   "functions": {
-    "api/sync.js": { "maxDuration": 300 },
-    "api/collection.js": { "maxDuration": 15 },
-    "api/party.js": { "maxDuration": 10 },
-    "api/plays.js": { "maxDuration": 15 }
+    "api/sync.js": {
+      "maxDuration": 300
+    },
+    "api/collection.js": {
+      "maxDuration": 15
+    },
+    "api/party.js": {
+      "maxDuration": 10
+    },
+    "api/plays.js": {
+      "maxDuration": 15
+    }
   },
   "crons": [
-    { "path": "/api/sync", "schedule": "0 10 * * *" }
+    {
+      "path": "/api/sync",
+      "schedule": "0 10 * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        }
+      ]
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    },
+    {
+      "source": "/pwa.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    }
   ]
 }
