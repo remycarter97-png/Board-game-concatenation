@@ -192,12 +192,22 @@
   .pager button:disabled { opacity: .4; cursor: default; }
   .pager .gap { color: var(--muted); padding: 0 4px; }
   .pager .of { display: none; color: var(--ink-2); padding: 0 8px; }
+  .pager .nums { display: flex; flex-wrap: wrap; gap: 6px; }
 
   /* Detail */
   .modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 24px; background: rgb(15 10 5 / .55); backdrop-filter: blur(3px); }
   .sheet { position: relative; width: min(980px, 100%); max-height: calc(100vh - 48px); overflow: auto; background: var(--surface); border-radius: 22px; box-shadow: 0 30px 80px rgb(0 0 0 / .35);
     display: grid; grid-template-columns: 360px 1fr; animation: rise .22s ease; }
   @keyframes rise { from { transform: translateY(12px); opacity: 0; } }
+  .sheet.from-right { animation: fromright .22s ease; } .sheet.from-left { animation: fromleft .22s ease; }
+  @keyframes fromright { from { transform: translateX(40px); opacity: 0; } }
+  @keyframes fromleft { from { transform: translateX(-40px); opacity: 0; } }
+  .dnav { position: fixed; top: 50%; z-index: 2; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 50%; border: var(--edge, 2px solid #000); background: var(--surface);
+    box-shadow: var(--pop-sm); font: 700 1.8rem/1 Fredoka, ui-rounded, sans-serif; color: var(--ink); display: grid; place-items: center; padding: 0 0 4px; }
+  .dnav.prev { left: max(12px, calc(50% - 490px - 64px)); } .dnav.next { right: max(12px, calc(50% - 490px - 64px)); }
+  .dnav:hover:not(:disabled) { background: var(--yellow); color: #3d2a4f; }
+  .dnav:disabled { opacity: .35; cursor: default; }
+  @media (max-width: 1140px) { .dnav { display: none; } }
   .sheet .close { position: absolute; top: 14px; right: 14px; z-index: 2; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; }
   .side { padding: 24px; background: var(--surface-2); display: flex; flex-direction: column; gap: 14px; }
   .side .bigcover { border-radius: 14px; overflow: hidden; box-shadow: var(--shadow-hover); aspect-ratio: 4/5; }
@@ -273,7 +283,9 @@
     .main { padding: 20px 18px 28px; }
     .main h2 { margin-right: 0; }
     .kv { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .pager .num, .pager .gap { display: none; }
+    .pager { gap: 8px 10px; }
+    .pager .nums { order: -1; width: 100%; justify-content: center; gap: 5px; }
+    .pager .num { min-width: 30px; height: 36px; padding: 0 4px; font-size: .9rem; }
     .pager .of { display: inline; }
     .resbar { margin: 14px 0 12px; }
     .resright { width: 100%; flex-wrap: nowrap; gap: 8px; }
@@ -329,7 +341,7 @@
   .banner { border: var(--edge); box-shadow: var(--pop); border-radius: 16px; }
   .toolbar.stuck { border-bottom: 2.5px dashed var(--line); }
   .search input { border: var(--edge); border-radius: 18px; box-shadow: var(--pop); height: 56px; font-weight: 600; }
-  .search input:focus { border-color: var(--outline); box-shadow: var(--pop), 0 0 0 4px var(--yellow); }
+  .search input:focus { border-color: var(--outline); box-shadow: 0 0 0 4px var(--yellow), 4px 4px 0 4px var(--outline); }
   .filter-btn { border: var(--edge); border-radius: 18px; box-shadow: var(--pop); height: 56px; font-family: Fredoka, ui-rounded, sans-serif; font-weight: 600; }
   .flabel { font-family: Fredoka, ui-rounded, sans-serif; letter-spacing: .06em; color: var(--ink-2); }
   .pchips { gap: 8px; }
@@ -426,7 +438,7 @@
 
   /* Best-with buttons beyond 6 players */
   .pchips { flex-wrap: wrap; }
-  .pchip .pnum { font: 700 .95rem/1 Fredoka, ui-rounded, sans-serif; letter-spacing: -.02em; }
+  .pchip .pnum { font: 700 1.1rem/1 Fredoka, ui-rounded, sans-serif; letter-spacing: -.02em; }
   .pchip:has(.pnum) { width: auto; min-width: 40px; padding: 0 8px; }
 
   /* Export */
@@ -954,13 +966,13 @@ const TEN = 10; // the "10+" best-with button covers 10 or more players
 const bestLabel = (n) => n === TEN ? "10+" : String(n);
 
 function renderBest() {
-  // Offer every best player count that appears on the shelf; 1-6 show as dice faces.
+  // Offer every best player count that appears on the shelf, as numbers on dice-shaped buttons.
   const counts = new Set();
   for (const g of groups) for (const n of g.head.bestPlayers || []) counts.add(n >= TEN ? TEN : n);
   if (!counts.size) [1, 2, 3, 4, 5, 6].forEach((n) => counts.add(n));
   if (state.best !== null) counts.add(state.best);
   $("best-chips").innerHTML = [...counts].sort((a, b) => a - b).map((n) => `<button class="pchip" data-best="${n}" aria-pressed="${state.best === n}"
-    aria-label="Best with ${n === TEN ? "10 or more" : n} player${n === 1 ? "" : "s"}" title="Best with ${bestLabel(n)}">${n <= 6 ? pipSvg(n, 26) : `<span class="pnum">${bestLabel(n)}</span>`}</button>`).join("");
+    aria-label="Best with ${n === TEN ? "10 or more" : n} player${n === 1 ? "" : "s"}" title="Best with ${bestLabel(n)}"><span class="pnum">${bestLabel(n)}</span></button>`).join("");
 }
 function renderMechOpts() {
   const q = $("mech-q").value.trim().toLowerCase();
@@ -1251,27 +1263,38 @@ function renderTable(rows) {
   }
 }
 function renderView() {
+  // The table has its own "Best with" column filter, so the dice row only shows with cards.
+  $("best-chips").closest(".fgroup").hidden = state.view === "table";
   document.querySelectorAll(".viewseg [data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === state.view)));
 }
+const PAGE_NUMS = 10;
 function renderPager(pages) {
   if (pages <= 1) { $("pager").innerHTML = ""; return; }
   const p = state.page;
-  const want = [...new Set([1, pages, p - 1, p, p + 1])].filter((n) => n >= 1 && n <= pages).sort((a, b) => a - b);
-  let html = `<button data-page="${p - 1}" ${p <= 1 ? "disabled" : ""} aria-label="Previous page">‹ Prev</button>`;
-  want.forEach((n, i) => {
-    if (i && n - want[i - 1] > 1) html += `<span class="gap" aria-hidden="true">…</span>`;
-    html += `<button class="num" data-page="${n}" ${n === p ? 'aria-current="page"' : ""} aria-label="Page ${n}">${n}</button>`;
-  });
-  html += `<span class="of">Page ${p} of ${pages}</span><button data-page="${p + 1}" ${p >= pages ? "disabled" : ""} aria-label="Next page">Next ›</button>`;
-  $("pager").innerHTML = html;
+  // Up to 10 page numbers, in a window that keeps the current page near the middle.
+  const first = Math.max(1, Math.min(p - Math.floor((PAGE_NUMS - 1) / 2), pages - PAGE_NUMS + 1)), last = Math.min(pages, first + PAGE_NUMS - 1);
+  let nums = "";
+  for (let n = first; n <= last; n++) nums += `<button class="num" data-page="${n}" ${n === p ? 'aria-current="page"' : ""} aria-label="Page ${n}">${n}</button>`;
+  $("pager").innerHTML = `<button class="pn" data-page="${p - 1}" ${p <= 1 ? "disabled" : ""} aria-label="Previous page">‹ Prev</button>
+    <div class="nums">${nums}</div><span class="of">Page ${p} of ${pages}</span>
+    <button class="pn" data-page="${p + 1}" ${p >= pages ? "disabled" : ""} aria-label="Next page">Next ›</button>`;
 }
 
 /* ---------- Detail view ---------- */
 let lastFocus = null;
-function openDetail(id) {
+let detailId = null, detailStart = null;
+// In card view, the games in the order they're showing (all pages), for browsing with arrows or swipes.
+function detailOrder(id) {
+  if (state.view !== "cards") return null;
+  const list = sortGroups(visibleGroups()), i = list.findIndex((x) => x.head.id === id);
+  return i < 0 ? null : { list, i };
+}
+function openDetail(id, dir = 0) {
   const grp = (state.view === "cards" ? tileGroups : groups).find((x) => x.head.id === id) || groups.find((x) => x.head.id === id); if (!grp) return;
   const g = grp.head, kids = grp.kids;
-  lastFocus = document.activeElement;
+  if (!dir) { lastFocus = document.activeElement; detailStart = id; }
+  detailId = id;
+  const nav = detailOrder(id);
   const pic = g.image || g.thumbnail;
   const stat = (dt, dd) => dd ? `<div><dt>${dt}</dt><dd>${dd}</dd></div>` : "";
   const credits = [
@@ -1279,7 +1302,10 @@ function openDetail(id) {
     g.publishers?.length && `Published by <b>${esc(listText(g.publishers, 2))}</b>`,
   ].filter(Boolean).join(" · ");
   const m = $("modal");
-  m.innerHTML = `<div class="sheet">
+  m.innerHTML = `${nav ? `<button class="dnav prev" data-dstep="-1" ${nav.i === 0 ? "disabled" : ""} aria-label="Previous game" title="Previous game (←)">‹</button>
+    <button class="dnav next" data-dstep="1" ${nav.i === nav.list.length - 1 ? "disabled" : ""} aria-label="Next game" title="Next game (→)">›</button>
+    <p class="sr" aria-live="polite">Game ${nav.i + 1} of ${nav.list.length}</p>` : ""}
+  <div class="sheet${dir > 0 ? " from-right" : dir < 0 ? " from-left" : ""}">
     <button class="close" id="d-close" aria-label="Close">×</button>
     <div class="side">
       <div class="bigcover" style="--h:${hueOf(g)}">${pic ? imgTag(g, pic) : doodle(g)}</div>
@@ -1309,12 +1335,35 @@ function openDetail(id) {
   m.hidden = false; document.body.style.overflow = "hidden";
   const desc = $("d-desc"), more = $("d-more");
   if (desc && desc.scrollHeight > desc.clientHeight + 4) { more.hidden = false; more.onclick = () => { desc.classList.remove("clamp"); more.hidden = true; }; }
-  $("d-close").focus();
+  if (!dir) $("d-close").focus();
   $("d-close").onclick = closeDetail;
   m.onclick = (e) => { if (e.target === m) closeDetail(); };
   m.querySelectorAll("[data-mech]").forEach((b) => b.onclick = () => { state.mechs = new Set([b.dataset.mech]); closeDetail(); changed(); });
 }
-function closeDetail() { $("modal").hidden = true; $("modal").innerHTML = ""; document.body.style.overflow = ""; lastFocus?.focus?.(); }
+function closeDetail() {
+  $("modal").hidden = true; $("modal").innerHTML = ""; document.body.style.overflow = "";
+  // After browsing to another game, land on that game's card; otherwise go back where we were.
+  const card = detailId !== detailStart && document.querySelector(`.card [data-open="${CSS.escape(detailId || "")}"]`);
+  (card || lastFocus)?.focus?.();
+  detailId = detailStart = null;
+}
+function stepDetail(d) {
+  const nav = detailId && detailOrder(detailId); if (!nav) return;
+  const j = nav.i + d; if (j < 0 || j >= nav.list.length) return;
+  const page = Math.floor(j / state.per) + 1;
+  if (page !== state.page) { setPage(page); renderGrid(); } // keep the grid behind on the same game
+  const fromBtn = document.activeElement?.dataset?.dstep;
+  openDetail(nav.list[j].head.id, d);
+  const again = document.querySelector(`[data-dstep="${d}"]`);
+  (fromBtn && again && !again.disabled ? again : $("d-close"))?.focus({ preventScroll: true });
+}
+// Swipe left or right on a game's details to see the next or previous game.
+let swipe = null;
+$("modal").addEventListener("touchstart", (e) => { swipe = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() } : null; }, { passive: true });
+$("modal").addEventListener("touchend", (e) => {
+  if (!swipe) return; const t = e.changedTouches[0], dx = t.clientX - swipe.x, dy = t.clientY - swipe.y, quick = Date.now() - swipe.t < 800; swipe = null;
+  if (quick && Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) stepDetail(dx < 0 ? 1 : -1);
+}, { passive: true });
 
 /* ---------- Export to Excel ---------- */
 const EXCELJS_URL = "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js";
@@ -1458,6 +1507,7 @@ document.addEventListener("click", (e) => {
     document.querySelectorAll(".kid-of-" + CSS.escape(t.dataset.trow)).forEach((r) => r.hidden = !open); }
   else if (t.dataset.best) { const n = Number(t.dataset.best); state.best = state.best === n ? null : n; changed(); }
   else if (t.dataset.open) openDetail(t.dataset.open);
+  else if (t.dataset.dstep) stepDetail(Number(t.dataset.dstep));
   else if (t.dataset.toggle) { const ul = $("add-" + t.dataset.toggle); const open = ul.hidden; ul.hidden = !open; t.setAttribute("aria-expanded", String(open)); }
   else if (t.dataset.page) { setPage(Number(t.dataset.page)); renderGrid(); $("toolbar").scrollIntoView({ behavior: "smooth" }); }
   if (!$("mech-dd").contains(t)) closeMech();
@@ -1540,7 +1590,9 @@ function openDrawer() { $("filters").classList.add("open"); $("scrim").hidden = 
 function closeDrawer() { $("filters").classList.remove("open"); $("scrim").hidden = true; $("open-filters").setAttribute("aria-expanded", "false"); document.body.style.overflow = ""; }
 $("open-filters").onclick = openDrawer; $("close-filters").onclick = closeDrawer; $("scrim").onclick = closeDrawer; $("drawer-done").onclick = closeDrawer;
 $("drawer-reset").onclick = () => { Object.assign(state, { best: null, mechs: new Set(), col: { ...COLF_EMPTY } }); $("mech-q").value = ""; changed(); };
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (!$("modal").hidden) closeDetail(); else if ($("filters").classList.contains("open")) closeDrawer(); else closeMech(); } });
+document.addEventListener("keydown", (e) => {
+  if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !$("modal").hidden && !e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) { e.preventDefault(); stepDetail(e.key === "ArrowRight" ? 1 : -1); return; }
+  if (e.key === "Escape") { if (!$("modal").hidden) closeDetail(); else if ($("filters").classList.contains("open")) closeDrawer(); else closeMech(); } });
 new IntersectionObserver(([e]) => $("toolbar").classList.toggle("stuck", e.intersectionRatio < 1), { threshold: [1], rootMargin: "-1px 0px 0px 0px" }).observe($("toolbar"));
 const shortPh = matchMedia("(max-width: 760px)");
 const setPh = () => { $("q").placeholder = shortPh.matches ? "Search the shelf" : "Search by title, mechanic, designer or publisher"; };
