@@ -654,44 +654,9 @@
     .rhead h3 { font-size: 1.12rem; }
   }
 
-  /* Game night planner and notes */
-  .gnbtn { margin-top: 14px; }
-  .modal.gn { z-index: 55; }
-  .gnsheet { position: relative; width: min(680px, 100%); max-height: calc(100vh - 48px); overflow: auto; background: var(--surface); border: 3px solid var(--outline); border-radius: 26px;
-    box-shadow: 10px 10px 0 var(--outline); padding: 24px 26px 26px; animation: rise .22s ease; }
-  .gnsheet .close { position: absolute; top: 14px; right: 14px; width: 38px; height: 38px; border-radius: 50%; border: var(--edge); background: var(--surface); box-shadow: var(--pop-sm); font-weight: 800; font-size: 1.2rem; }
-  .gnsheet h2 { margin: 0 44px 4px 0; font: 700 1.7rem/1.15 Fredoka, ui-rounded, sans-serif; }
-  .gnsub { margin: 0 0 14px; color: var(--ink-2); font-weight: 600; }
-  .gnfs { border: 0; padding: 0; margin: 0 0 16px; }
-  .gnfs legend { padding: 0; margin-bottom: 8px; font: 600 .82rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-2); }
-  .gnfs legend span { text-transform: none; letter-spacing: 0; font: 600 .82rem Nunito, sans-serif; color: var(--muted); margin-left: 6px; }
-  .gnchips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .gnweights { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-  .gnw { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 10px 12px; border: var(--edge); border-radius: 14px; background: var(--surface); box-shadow: var(--pop-sm); text-align: left; }
-  .gnw b { font: 600 1rem Fredoka, ui-rounded, sans-serif; } .gnw small { color: var(--ink-2); font-weight: 700; }
-  .gnw[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; } .gnw[aria-pressed="true"] small { color: #3d2a4f; }
-  .gnout { border-top: 2.5px dashed var(--line); padding-top: 14px; }
-  .gnhint, .gnsum { margin: 0 0 10px; font-weight: 700; color: var(--ink-2); } .gnsum b { color: var(--ink); }
-  .gnpicks { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-  .gnpick { all: unset; box-sizing: border-box; width: 100%; cursor: pointer; display: flex; align-items: center; gap: 14px; padding: 10px; border: 2px solid var(--outline); border-radius: 16px; background: var(--surface); box-shadow: var(--pop-sm); transition: transform .12s, box-shadow .12s; }
-  .gnpick:hover, .gnpick:focus-visible { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
-  .gnpick:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-  .gnart { width: 70px; height: 70px; flex: none; border: 2px solid var(--outline); border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 4px;
-    background: linear-gradient(135deg, hsl(var(--h) 90% 88%), hsl(calc(var(--h) + 35) 80% 77%)); position: relative; }
-  .gnart img { max-width: 100%; max-height: 100%; object-fit: contain; } .gnart > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .gninfo { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-  .gnname { font: 600 1.12rem/1.2 Fredoka, ui-rounded, sans-serif; } .gnwhy { color: var(--ink-2); font-size: .85rem; font-weight: 700; }
-  .gnstar { flex: none; align-self: flex-start; background: var(--mint-soft); border: 2px solid var(--outline); border-radius: 999px; padding: 1px 9px; font-size: .75rem; font-weight: 800; }
-  .gnbtns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
   .notes .note { border: 2px solid var(--line); border-radius: 14px; padding: 8px 12px; background: var(--yellow-soft); margin-bottom: 8px; }
   .notes .nby { display: flex; align-items: center; gap: 8px; } .notes .non { font-size: .8rem; font-weight: 700; color: var(--ink-2); }
   .notes p { margin: 4px 0 0; white-space: pre-line; font-weight: 600; }
-  @media (max-width: 760px) {
-    .modal.gn { padding: 0; place-items: end stretch; }
-    .gnsheet { border-radius: 22px 22px 0 0; border-width: 3px 0 0; box-shadow: none; max-height: 92vh; padding: 20px 16px 24px; }
-    .gnweights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .gnart { width: 56px; height: 56px; }
-  }
 
   /* Mechanics / Categories column filter */
   .colfdd { display: flex; align-items: center; justify-content: space-between; gap: 4px; text-align: left; cursor: pointer; padding: 0 6px 0 8px; }
@@ -781,7 +746,6 @@
       <div class="welcome-text">
         <h2 id="welcome-h">Welcome to our game shelf!</h2>
         <p>Pull up a chair! Whatever kind of night you're in the mood for, there's something here for you. We have epic fantasy campaigns like Gloomhaven, brain-burning strategy like Ark Nova and Twilight Imperium, friendly hour-long favorites, cooperative games where we all win (or lose) together, and quick party picks like Flip&nbsp;7. Most games shine at 2–4 players, and plenty play solo too. Take a look around, find something that catches your eye, and let's play!</p>
-        <button class="btn gnbtn" id="gn-open">🎲 Plan game night</button>
       </div>
       <svg class="welcome-art" viewBox="0 0 170 130" aria-hidden="true">
         <ellipse cx="88" cy="118" rx="74" ry="8" fill="var(--outline)" opacity=".12"/>
@@ -891,7 +855,6 @@
 <div class="scrim" id="scrim" hidden></div>
 <div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="d-title"></div>
 <div class="colpop" id="colpop" hidden role="dialog"></div>
-<div class="modal gn" id="gn" hidden role="dialog" aria-modal="true" aria-labelledby="gn-title"></div>
 
 <script>
 /* ---------- Helpers ---------- */
@@ -1963,89 +1926,6 @@ new IntersectionObserver(([e]) => $("toolbar").classList.toggle("stuck", e.inter
 const shortPh = matchMedia("(max-width: 760px)");
 const setPh = () => { $("q").placeholder = shortPh.matches ? "Search the shelf" : "Search by title, mechanic, category, designer or publisher"; };
 setPh(); shortPh.addEventListener("change", setPh);
-
-/* ---------- Game night planner: pick a player count and how heavy, get a few suggestions ---------- */
-const GN_WEIGHTS = [["light", "Light", "under 2"], ["medium", "Medium", "2–3"], ["mheavy", "Medium-heavy", "3–3.8"], ["heavy", "Heavy", "3.8+"]];
-const gn = { players: null, weights: [], picks: [], seen: new Set(), ...(() => { const v = store.get("localStorage", "game-night", {}); return { players: Number.isInteger(v.players) ? v.players : null, weights: Array.isArray(v.weights) ? v.weights.filter((w) => WEIGHT_BANDS[w]) : [] }; })() };
-let gnReturn = null;
-const gnPlays = (g, n) => g.minPlayers && (n === TEN ? (g.maxPlayers || g.minPlayers) >= TEN : g.minPlayers <= n && n <= (g.maxPlayers || g.minPlayers));
-const gnBest = (g, n) => (g.bestPlayers || []).some((b) => n === TEN ? b >= TEN : b === n);
-function gnCandidates() {
-  if (!gn.players) return [];
-  return tileGroups.filter((x) => !x.loose).map((x) => x.head)
-    .filter((g) => gnPlays(g, gn.players) && (!gn.weights.length || (g.weight && gn.weights.some((w) => WEIGHT_BANDS[w].test(g.weight)))));
-}
-// Three picks at random, leaning toward games BGG says are best at this count and higher-rated ones;
-// shuffling again avoids repeats until every option has had a turn.
-function gnDeal() {
-  const all = gnCandidates();
-  let pool = all.filter((g) => !gn.seen.has(g.id));
-  if (pool.length < Math.min(3, all.length)) { gn.seen.clear(); pool = all; }
-  const weight = (g) => (gnBest(g, gn.players) ? 3 : 1) * Math.pow(Math.max(g.rating || 6.5, 5) - 4, 2);
-  const picks = [];
-  while (picks.length < 3 && pool.length) {
-    let r = Math.random() * pool.reduce((s, g) => s + weight(g), 0), i = 0;
-    while (i < pool.length - 1 && (r -= weight(pool[i])) > 0) i++;
-    picks.push(pool[i]); gn.seen.add(pool[i].id); pool = pool.filter((_, j) => j !== i);
-  }
-  gn.picks = picks.sort((a, b) => gnBest(b, gn.players) - gnBest(a, gn.players));
-}
-function gnHtml() {
-  const counts = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, TEN]);
-  const all = gnCandidates(), bestN = all.filter((g) => gnBest(g, gn.players)).length;
-  const why = (g) => [gnBest(g, gn.players) ? `BGG says it's best with ${esc(bestShort(g))}` : `Plays ${players(g)}`,
-    g.weight && `${weightLabel(g.weight)} (${g.weight.toFixed(1)})`, timeText(g), g.rating && `★ ${g.rating.toFixed(1)}`].filter(Boolean).join(" · ");
-  const out = !gn.players ? `<p class="gnhint">Pick how many people are playing to get suggestions.</p>`
-    : !all.length ? `<p class="gnhint">Nothing on the shelf fits that. Try another weight, or a different player count.</p>`
-    : `<p class="gnsum"><b>${all.length}</b> game${all.length === 1 ? "" : "s"} on the shelf fit${all.length === 1 ? "s" : ""}${bestN ? `, and BGG says <b>${bestN}</b> ${bestN === 1 ? "is" : "are"} best at this count` : ""}. Here ${gn.picks.length === 1 ? "is a pick" : `are ${gn.picks.length} picks`}:</p>
-      <ul class="gnpicks">${gn.picks.map((g) => `<li><button class="gnpick" data-gnopen="${esc(g.id)}">
-        <span class="gnart" style="--h:${hueOf(g)}">${g.thumbnail ? imgTag(g, g.thumbnail) : doodle(g)}</span>
-        <span class="gninfo"><span class="gnname">${esc(g.name)}</span><span class="gnwhy">${why(g)}</span></span>
-        ${gnBest(g, gn.players) ? `<span class="gnstar" title="Best at this player count">★ Best fit</span>` : ""}</button></li>`).join("")}</ul>
-      <div class="gnbtns">${all.length > 3 ? `<button class="btn" data-gnshuffle="1">🎲 Shuffle</button>` : ""}
-        <button class="btn ghost" data-gnall="1">${gn.weights.length > 1 ? `Show every game for ${bestLabel(gn.players)} player${gn.players === 1 ? "" : "s"}` : `Show all ${all.length} on the shelf`}</button></div>`;
-  return `<div class="gnsheet">
-    <button class="close" data-gnclose="1" aria-label="Close">×</button>
-    <h2 id="gn-title">Plan game night</h2>
-    <p class="gnsub">Tell us who's coming and how heavy you want it, and we'll pull a few games off the shelf.</p>
-    <fieldset class="gnfs"><legend>How many players?</legend><div class="gnchips">${[...counts].map((n) =>
-      `<button class="pchip" data-gnp="${n}" aria-pressed="${gn.players === n}" aria-label="${n === TEN ? "10 or more" : n} player${n === 1 ? "" : "s"}"><span class="pnum">${bestLabel(n)}</span></button>`).join("")}</div></fieldset>
-    <fieldset class="gnfs"><legend>How heavy? <span>Pick any; none means any weight</span></legend><div class="gnweights">${GN_WEIGHTS.map(([k, l, r]) =>
-      `<button class="gnw" data-gnw="${k}" aria-pressed="${gn.weights.includes(k)}">${weightBar({ light: 1.5, medium: 2.5, mheavy: 3.4, heavy: 4.5 }[k])}<b>${l}</b><small>${r}</small></button>`).join("")}</div></fieldset>
-    <div class="gnout" aria-live="polite">${out}</div></div>`;
-}
-function gnRender(focusSel) { $("gn").innerHTML = gnHtml(); if (focusSel) $("gn").querySelector(focusSel)?.focus(); }
-function gnSave() { store.set("localStorage", "game-night", { players: gn.players, weights: gn.weights }); }
-function openGn() {
-  if (status !== "ok") return;
-  gnReturn = document.activeElement; gn.seen.clear(); if (gn.players) gnDeal();
-  gnRender(); $("gn").hidden = false; document.body.style.overflow = "hidden";
-  $("gn").querySelector(gn.players ? `[data-gnp="${gn.players}"]` : "[data-gnp]")?.focus();
-}
-function closeGn(restore = true) { $("gn").hidden = true; $("gn").innerHTML = ""; document.body.style.overflow = ""; if (restore) gnReturn?.focus?.(); }
-$("gn").addEventListener("click", (e) => {
-  if (e.target.id === "gn") return closeGn();
-  const t = e.target.closest("button"); if (!t) return;
-  if (t.dataset.gnclose) closeGn();
-  else if (t.dataset.gnp) { const n = Number(t.dataset.gnp); gn.players = gn.players === n ? null : n; gn.seen.clear(); gnSave(); if (gn.players) gnDeal(); gnRender(`[data-gnp="${n}"]`); }
-  else if (t.dataset.gnw) { const k = t.dataset.gnw; gn.weights = gn.weights.includes(k) ? gn.weights.filter((x) => x !== k) : [...gn.weights, k]; gn.seen.clear(); gnSave(); if (gn.players) gnDeal(); gnRender(`[data-gnw="${k}"]`); }
-  else if (t.dataset.gnshuffle) { gnDeal(); gnRender("[data-gnshuffle]"); }
-  else if (t.dataset.gnopen) { closeGn(false); openDetail(t.dataset.gnopen); lastFocus = $("gn-open"); }
-  else if (t.dataset.gnall) {
-    closeGn(false);
-    Object.assign(state, { q: "", best: null, mechs: new Set(), col: { ...COLF_EMPTY, players: String(gn.players), weight: gn.weights.length === 1 ? gn.weights[0] : "" } });
-    $("q").value = ""; rowAll = null; changed();
-    $("toolbar").scrollIntoView({ behavior: "smooth" });
-  }
-});
-document.addEventListener("keydown", (e) => {
-  if ($("gn").hidden) return;
-  if (e.key === "Escape") { e.stopImmediatePropagation(); closeGn(); }
-  else if (e.key === "Tab") { const f = [...$("gn").querySelectorAll("button")]; if (!f.length) return;
-    if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
-    else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); } }
-}, true);
-$("gn-open").onclick = openGn;
 
 /* ---------- Mechanics / Categories column filter: type to find, pick several ---------- */
 let colPop = null, colPopQ = "";

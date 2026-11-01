@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Game Night Planner</title>
+<meta name="description" content="Find games that suit everyone playing tonight.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#fff3e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1528" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Game Shelf">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
+    --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
+    --yellow: #ffd45c; --yellow-soft: #fff1c2; --mint: #8be0bd; --mint-soft: #ddf6ea;
+    --ok: #24a26b; --danger: #d43c41; --warn: #a35a00; --warn-soft: #ffe8cc;
+    --edge: 2.5px solid var(--outline); --pop: 4px 4px 0 var(--outline); --pop-sm: 3px 3px 0 var(--outline);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+      --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+      --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+    --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+    --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; color: var(--ink); font: 16px/1.5 Nunito, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header (matches the other pages) */
+  header.top { padding: 36px 0 8px; }
+  .titlebar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .brand { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+  .logo { width: 72px; height: 72px; flex: none; transform: rotate(-5deg); filter: drop-shadow(4px 4px 0 var(--outline)); transition: transform .3s; }
+  .logo:hover { transform: rotate(4deg) scale(1.05); }
+  h1 { font: 700 clamp(2rem, 4vw, 2.9rem)/1.05 Fredoka, ui-rounded, system-ui, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  h1 .hl { background: linear-gradient(transparent 62%, var(--hl, var(--yellow)) 62% 92%, transparent 92%); padding: 0 2px; }
+  .tagline { margin: 6px 0 0; color: var(--ink-2); font-size: 1.05rem; font-weight: 600; }
+  .pagenav { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); }
+  .pagenav a { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-decoration: none; }
+  .pagenav a:hover { color: var(--ink); background: var(--surface-2); }
+  .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+
+  /* Shared bits */
+  .card { background: var(--surface); border: var(--edge); border-radius: 22px; box-shadow: var(--pop); padding: 18px 20px; min-width: 0; display: grid; gap: 14px; align-content: start; }
+  h2 { font: 700 1.3rem/1.2 Fredoka, ui-rounded, sans-serif; margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  h2 small { font: 700 .88rem Nunito, sans-serif; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm);
+    background: var(--surface); color: var(--ink); font: 600 1rem Fredoka, ui-rounded, sans-serif; transition: transform .12s, box-shadow .12s; text-decoration: none; }
+  .btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.yellow { background: var(--yellow); color: #3d2a4f; }
+  .btn.big { min-height: 52px; font-size: 1.15rem; padding: 0 22px; }
+  .btn.sm { min-height: 34px; padding: 0 12px; font-size: .9rem; border-radius: 11px; }
+  .link { border: 0; background: none; padding: 4px 2px; color: var(--accent); font-weight: 800; font-size: .92rem; }
+  .link:hover { text-decoration: underline; }
+  .link.danger { color: var(--danger); }
+  input[type=text], input[type=number] { height: 44px; border: var(--edge); border-radius: 13px; background: var(--surface); padding: 0 12px; font-weight: 700; min-width: 0; box-shadow: var(--pop-sm); }
+  input:focus { outline: none; box-shadow: 0 0 0 4px var(--yellow), 3px 3px 0 4px var(--outline); }
+  input[readonly] { opacity: .65; }
+  .note { margin: 0; font-size: .88rem; color: var(--ink-2); font-weight: 600; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 2px solid var(--outline); border-radius: 12px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: none; min-height: 30px; padding: 0 12px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+  .ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ctl > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+
+  .crumbs { margin-top: 18px; } .crumbs a { color: var(--accent); font-weight: 800; text-decoration: none; } .crumbs a:hover { text-decoration: underline; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 22px; align-items: start; margin-top: 12px; }
+  .sub { margin: -6px 0 0; color: var(--ink-2); font-weight: 600; font-size: .92rem; }
+  .people { display: flex; flex-wrap: wrap; gap: 8px; }
+  .person { display: inline-flex; align-items: center; border: var(--edge); border-radius: 999px; background: var(--surface); box-shadow: var(--pop-sm); overflow: hidden; }
+  .person button { border: 0; background: none; min-height: 38px; font-weight: 800; color: var(--ink); }
+  .person .pick { padding: 0 6px 0 14px; display: inline-flex; align-items: center; gap: 6px; }
+  .person .pick::before { content: ""; width: 16px; height: 16px; border-radius: 5px; border: 2px solid var(--outline); background: var(--surface); flex: none; }
+  .person.on { background: var(--yellow); } .person.on button { color: #3d2a4f; }
+  .person.on .pick::before { background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m5 12 5 5 9-10' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat; }
+  .person .edit { padding: 0 12px 0 6px; font-size: .82rem; color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; }
+  .person .tags { font-size: .72rem; font-weight: 800; color: var(--ink-2); margin-left: 2px; }
+  .person.on .tags { color: #3d2a4f; }
+  .guests { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-weight: 700; }
+  .stepper { display: inline-flex; align-items: center; border: var(--edge); border-radius: 12px; overflow: hidden; box-shadow: var(--pop-sm); background: var(--surface); }
+  .stepper button { width: 36px; height: 36px; border: 0; background: none; font-size: 1.2rem; font-weight: 800; color: var(--ink); }
+  .stepper button:disabled { opacity: .3; cursor: default; }
+  .stepper output { min-width: 2.2em; text-align: center; font: 700 1.1rem Fredoka, ui-rounded, sans-serif; }
+  .count { font: 700 1.05rem Fredoka, ui-rounded, sans-serif; }
+  .editor { display: grid; gap: 12px; background: var(--yellow-soft); border: 2px dashed var(--outline); border-radius: 18px; padding: 14px 16px; }
+  .editor h3 { margin: 0; font: 700 1.1rem Fredoka, ui-rounded, sans-serif; }
+  .field { display: grid; gap: 6px; }
+  .field > span, .flabel { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+  .field small { text-transform: none; letter-spacing: 0; font: 600 .8rem Nunito, sans-serif; color: var(--muted); }
+  .wchips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .wchip { min-height: 34px; padding: 0 12px; border: 2px solid var(--outline); border-radius: 999px; background: var(--surface); font-weight: 800; font-size: .88rem; color: var(--ink); }
+  .wchip[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: 2px 2px 0 var(--outline); }
+  .taginput { display: flex; gap: 8px; } .taginput input { flex: 1; height: 40px; }
+  .tlist { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tlist span { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px 2px 10px; border-radius: 999px; border: 2px solid var(--outline); font-weight: 800; font-size: .82rem; background: var(--surface); }
+  .tlist.love span { background: var(--mint-soft); } .tlist.no span { background: var(--accent-soft); }
+  .tlist button { border: 0; background: none; width: 22px; height: 22px; border-radius: 50%; font-weight: 800; color: var(--ink-2); }
+  select { height: 40px; border: var(--edge); border-radius: 12px; box-shadow: var(--pop-sm); background: var(--surface); font-weight: 700; padding: 0 10px; color: var(--ink); }
+  select:focus { outline: none; box-shadow: 0 0 0 4px var(--yellow), 3px 3px 0 4px var(--outline); }
+  .edfoot { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .tonight { display: grid; gap: 12px; }
+  .switch { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; cursor: pointer; }
+  .switch input { width: 20px; height: 20px; accent-color: var(--accent); }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+  .summary { margin: 0; font-weight: 700; color: var(--ink-2); } .summary b { color: var(--ink); }
+  .picks { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .pickcard { display: flex; gap: 14px; align-items: flex-start; padding: 12px; border: var(--edge); border-radius: 18px; background: var(--surface); box-shadow: var(--pop-sm); }
+  .art { --h: 30; width: 84px; height: 84px; flex: none; border: 2px solid var(--outline); border-radius: 14px; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 5px;
+    background: linear-gradient(135deg, hsl(var(--h) 90% 88%), hsl(calc(var(--h) + 35) 80% 77%)); font-size: 2rem; }
+  .art img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .pinfo { min-width: 0; flex: 1; display: grid; gap: 4px; }
+  .pname { font: 700 1.2rem/1.2 Fredoka, ui-rounded, sans-serif; color: var(--ink); text-decoration: none; } .pname:hover { color: var(--accent); text-decoration: underline; }
+  .pfacts { color: var(--ink-2); font-weight: 700; font-size: .86rem; }
+  .why { display: flex; flex-wrap: wrap; gap: 6px; }
+  .why span { font-size: .76rem; font-weight: 800; border-radius: 999px; padding: 1px 9px; border: 1.5px solid var(--outline); background: var(--mint-soft); }
+  .why span.meh { background: var(--warn-soft); border-style: dashed; }
+  .badge { flex: none; align-self: flex-start; background: var(--yellow); color: #3d2a4f; border: 2px solid var(--outline); border-radius: 999px; padding: 1px 9px; font-size: .75rem; font-weight: 800; }
+  .btns { display: flex; flex-wrap: wrap; gap: 10px; }
+  .alllist { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 420px; overflow: auto; border-top: 2px dashed var(--line); padding-top: 10px; }
+  .alllist li { display: flex; gap: 10px; align-items: baseline; padding: 4px 6px; border-radius: 10px; font-weight: 700; }
+  .alllist li:nth-child(odd) { background: var(--surface-2); }
+  .alllist a { color: var(--ink); text-decoration: none; flex: 1; min-width: 0; } .alllist a:hover { color: var(--accent); text-decoration: underline; }
+  .alllist small { color: var(--ink-2); font-weight: 700; white-space: nowrap; }
+  .empty { text-align: center; color: var(--ink-2); font-weight: 700; padding: 22px 12px; border: 2.5px dashed var(--line); border-radius: 18px; }
+  .left { display: grid; gap: 22px; }
+  #results { display: grid; gap: 12px; }
+  footer { margin: 48px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
+  @media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 760px) {
+    .wrap { padding: 0 16px; } header.top { padding-top: 24px; } .logo { width: 54px; height: 54px; } .brand { gap: 12px; }
+    .card { box-shadow: var(--pop-sm); padding: 16px; border-radius: 18px; } .art { width: 64px; height: 64px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <a class="brand" href="/">
+        <svg class="logo" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="3" y="3" width="66" height="66" rx="18" fill="var(--yellow)" stroke="var(--outline)" stroke-width="3"/>
+          <g transform="translate(36 10) rotate(14)"><rect x="0" y="0" width="22" height="22" rx="5" fill="#fff" stroke="var(--outline)" stroke-width="2.5"/>
+            <circle cx="6" cy="6" r="2.2" fill="var(--outline)"/><circle cx="11" cy="11" r="2.2" fill="var(--outline)"/><circle cx="16" cy="16" r="2.2" fill="var(--outline)"/></g>
+          <g transform="translate(9 20) scale(1.75)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.4" stroke-linejoin="round"/></g>
+        </svg>
+        <div>
+          <h1>Game Night <span class="hl">Planner</span></h1>
+          <p class="tagline">Who's coming, what they like, how long you have. We'll find the game.</p>
+        </div>
+      </a>
+      <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats">Charts</a><a href="/tools" aria-current="page">Tools</a></nav>
+    </div>
+  </header>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools">‹ All tools</a></nav>
+  <div class="layout">
+    <div class="left">
+      <section class="card" aria-labelledby="whoH">
+        <h2 id="whoH">Who's playing? <span class="count" id="countTag"></span></h2>
+        <p class="sub">Tap people to bring them tonight. Each person's likes, dealbreakers, favorite weights and time limit shape the picks.</p>
+        <div class="people" id="people"></div>
+        <div class="row"><button class="btn sm" type="button" id="addPerson">+ Add a person</button></div>
+        <div class="guests"><span>Guests without a profile</span>
+          <span class="stepper"><button type="button" id="gMinus" aria-label="One fewer guest">−</button><output id="guests" aria-live="polite">0</output><button type="button" id="gPlus" aria-label="One more guest">+</button></span></div>
+        <div id="editor"></div>
+      </section>
+      <section class="card tonight" aria-labelledby="tonightH">
+        <h2 id="tonightH">Tonight</h2>
+        <label class="field"><span>Time we have</span>
+          <select id="groupTime"></select></label>
+        <div class="row">
+          <label class="switch"><input type="checkbox" id="recentOn"> Skip games we played recently</label>
+          <select id="recentDays" aria-label="How recently"><option value="14">in the last 2 weeks</option><option value="30">in the last month</option><option value="90">in the last 3 months</option></select>
+        </div>
+        <p class="sub" id="recentNote"></p>
+      </section>
+    </div>
+    <section class="card" aria-labelledby="picksH">
+      <h2 id="picksH">Tonight's picks</h2>
+      <div id="results" aria-live="polite"><p class="summary">Loading the shelf…</p></div>
+    </section>
+  </div>
+  <footer>People and their preferences are saved in this browser. "Played recently" uses Remy's logged plays on BoardGameGeek.</footer>
+</div>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const KEY = "game-shelf:game-night-v2";
+  const WEIGHTS = [["light", "Light", (w) => w < 2], ["medium", "Medium", (w) => w >= 2 && w < 3], ["mheavy", "Medium-heavy", (w) => w >= 3 && w < 3.8], ["heavy", "Heavy", (w) => w >= 3.8]];
+  const TIMES = [[0, "Any length"], [30, "30 minutes"], [45, "45 minutes"], [60, "1 hour"], [90, "1½ hours"], [120, "2 hours"], [180, "3 hours"], [240, "4 hours"]];
+  const timeLabel = (m) => (TIMES.find(([v]) => v === m) || [0, `${m} min`])[1];
+  const newId = () => "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const person = (name) => ({ id: newId(), name, weights: [], likes: [], avoid: [], time: 0 });
+
+  let S;
+  try { S = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { S = null; }
+  if (!S || !Array.isArray(S.people)) { const r = person("Remy"), j = person("Jonathan"); S = { people: [r, j], selected: [r.id, j.id], guests: 0, time: 0, recentOn: false, recentDays: 30 }; }
+  S.selected = (S.selected || []).filter((id) => S.people.some((p) => p.id === id));
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+  let games = [], plays = null, tags = [], editing = null, seen = new Set(), picks = [], showAll = false, status = "loading";
+  const playTime = (g) => g.playTime || g.maxTime || g.minTime || null;
+  const hue = (g) => (Number(String(g.id).replace(/\D/g, "")) * 47) % 360;
+  const supports = (g, n) => g.minPlayers && g.minPlayers <= n && n <= (g.maxPlayers || g.minPlayers);
+  const bestAt = (g, n) => (g.bestPlayers || []).some((b) => b === n || (n >= 10 && b >= 10));
+  const tagsOf = (g) => [...(g.mechanics || []), ...(g.categories || [])];
+  const weightOk = (p, g) => !p.weights.length || (g.weight && p.weights.some((k) => WEIGHTS.find((w) => w[0] === k)[2](g.weight)));
+  const lighter = (p, g) => g.weight && p.weights.length && p.weights.every((k) => { const i = WEIGHTS.findIndex((w) => w[0] === k); return g.weight >= [2, 3, 3.8, 9][i]; });
+
+  /* ---------- Matching ---------- */
+  function tonight() {
+    const who = S.people.filter((p) => S.selected.includes(p.id));
+    const n = who.length + S.guests;
+    const limits = [S.time, ...who.map((p) => p.time)].filter((t) => t > 0);
+    const limit = limits.length ? Math.min(...limits) : 0;
+    const limitBy = limit ? [S.time === limit ? "the group" : null, ...who.filter((p) => p.time === limit).map((p) => p.name)].filter(Boolean) : [];
+    const cutoff = S.recentOn ? new Date(Date.now() - S.recentDays * 864e5).toISOString().slice(0, 10) : null;
+    const recent = new Map();
+    if (cutoff && plays) for (const pl of plays) if (pl.date >= cutoff && (!recent.has(pl.game) || pl.date > recent.get(pl.game))) recent.set(pl.game, pl.date);
+    const out = { who, n, limit, limitBy, fits: [], close: [], cut: { players: 0, time: 0, avoid: 0, recent: 0 } };
+    if (!n) return out;
+    for (const g of games) {
+      if (!supports(g, n)) { out.cut.players++; continue; }
+      const t = playTime(g);
+      if (limit && (!t || t > limit)) { out.cut.time++; continue; }
+      const nos = who.flatMap((p) => p.avoid.filter((a) => tagsOf(g).includes(a)).map((a) => ({ p, a })));
+      if (nos.length) { out.cut.avoid++; continue; }
+      if (recent.has(g.id)) { out.cut.recent++; continue; }
+      const loves = who.flatMap((p) => p.likes.filter((a) => tagsOf(g).includes(a)).map((a) => ({ p, a })));
+      const misses = who.filter((p) => !weightOk(p, g));
+      const score = (bestAt(g, n) ? 3 : 0) + loves.length * 2.5 + Math.max(0, (g.rating || 6.5) - 6) * 1.5 - misses.length * 4;
+      (misses.length ? out.close : out.fits).push({ g, loves, misses, score, best: bestAt(g, n) });
+    }
+    out.fits.sort((a, b) => b.score - a.score || a.g.name.localeCompare(b.g.name));
+    out.close.sort((a, b) => a.misses.length - b.misses.length || b.score - a.score);
+    return out;
+  }
+  // Three picks at random, leaning hard toward the best matches; a reroll avoids repeats until every option has had a turn.
+  function deal(res) {
+    const pool0 = res.fits.length >= 3 || !res.close.length ? res.fits : [...res.fits, ...res.close.slice(0, 12)];
+    let pool = pool0.filter((m) => !seen.has(m.g.id));
+    if (pool.length < Math.min(3, pool0.length)) { seen.clear(); pool = pool0.slice(); }
+    const top = Math.max(...pool.map((m) => m.score), 0);
+    const wt = (m) => Math.exp((m.score - top) / 3);
+    picks = [];
+    while (picks.length < 3 && pool.length) {
+      let r = Math.random() * pool.reduce((s, m) => s + wt(m), 0), i = 0;
+      while (i < pool.length - 1 && (r -= wt(pool[i])) > 0) i++;
+      picks.push(pool[i].g.id); seen.add(pool[i].g.id); pool.splice(i, 1);
+    }
+  }
+
+  /* ---------- Rendering ---------- */
+  function renderPeople() {
+    $("people").innerHTML = S.people.map((p) => {
+      const on = S.selected.includes(p.id), bits = [p.weights.length && "weights", p.likes.length && `${p.likes.length} ♥`, p.avoid.length && `${p.avoid.length} ✕`, p.time && timeLabel(p.time)].filter(Boolean);
+      return `<span class="person${on ? " on" : ""}"><button class="pick" type="button" data-toggle="${p.id}" aria-pressed="${on}">${esc(p.name)}${bits.length ? `<span class="tags">· ${esc(bits.join(" · "))}</span>` : ""}</button>
+        <button class="edit" type="button" data-edit="${p.id}" aria-label="Edit ${esc(p.name)}'s preferences">Edit</button></span>`;
+    }).join("") || `<p class="sub">Add the people you play with.</p>`;
+    const n = S.selected.length + S.guests;
+    $("countTag").textContent = n ? `${n} player${n === 1 ? "" : "s"}` : "";
+    $("guests").textContent = S.guests; $("gMinus").disabled = S.guests <= 0; $("gPlus").disabled = S.guests >= 12;
+  }
+  function renderEditor() {
+    const p = S.people.find((x) => x.id === editing);
+    if (!p) { $("editor").innerHTML = ""; return; }
+    const tagList = (key, cls) => `<div class="tlist ${cls}">${p[key].map((t) => `<span>${esc(t)}<button type="button" data-untag="${key}" data-tag="${esc(t)}" aria-label="Remove ${esc(t)}">×</button></span>`).join("")}</div>`;
+    const tagInput = (key, label) => `<div class="taginput"><input type="text" list="taglist" id="in-${key}" placeholder="Type a mechanic or category" aria-label="${label}" autocomplete="off"><button class="btn sm" type="button" data-addtag="${key}">Add</button></div>`;
+    $("editor").innerHTML = `<div class="editor" role="group" aria-label="${esc(p.name)}'s preferences">
+      <h3>${esc(p.name)}'s preferences</h3>
+      <label class="field"><span>Name</span><input type="text" id="ed-name" maxlength="30" value="${esc(p.name)}"></label>
+      <div class="field"><span>Likes these weights <small>· none picked means any</small></span><div class="wchips">${WEIGHTS.map(([k, l]) =>
+        `<button class="wchip" type="button" data-weight="${k}" aria-pressed="${p.weights.includes(k)}">${l}</button>`).join("")}</div></div>
+      <div class="field"><span>Loves <small>· games with these rank higher</small></span>${tagList("likes", "love")}${tagInput("likes", "Add something they love")}</div>
+      <div class="field"><span>Won't play <small>· games with these are left out</small></span>${tagList("avoid", "no")}${tagInput("avoid", "Add a dealbreaker")}</div>
+      <label class="field"><span>Time they usually have</span><select id="ed-time">${TIMES.map(([v, l]) => `<option value="${v}"${v === p.time ? " selected" : ""}>${v ? l : "No limit"}</option>`).join("")}</select></label>
+      <div class="edfoot"><button class="btn sm yellow" type="button" id="ed-done">Done</button><button class="link danger" type="button" id="ed-del">Remove ${esc(p.name)}</button><span class="sub" id="ed-msg" role="status"></span></div>
+    </div>`;
+  }
+  function factLine(g) {
+    const pl = !g.minPlayers ? "" : g.maxPlayers && g.maxPlayers !== g.minPlayers ? `${g.minPlayers}–${g.maxPlayers} players` : `${g.minPlayers} players`;
+    const wl = g.weight ? WEIGHTS.find((w) => w[2](g.weight))[1] : "";
+    return [pl, playTime(g) && `${playTime(g)} min`, wl && `${wl} (${g.weight.toFixed(1)})`, g.rating && `★ ${g.rating.toFixed(1)}`].filter(Boolean).join(" · ");
+  }
+  function renderResults(redeal) {
+    if (status !== "ok") return;
+    const res = tonight(), box = $("results");
+    if (!res.n) { box.innerHTML = `<div class="empty">Pick who's playing, or add guests, to get suggestions.</div>`; return; }
+    if (redeal) deal(res);
+    const byId = new Map([...res.fits, ...res.close].map((m) => [m.g.id, m]));
+    picks = picks.filter((id) => byId.has(id)); if (!picks.length) deal(res);
+    const total = res.fits.length + res.close.length;
+    const cutBits = [res.cut.time && `${res.cut.time} too long`, res.cut.avoid && `${res.cut.avoid} with a dealbreaker`, res.cut.recent && `${res.cut.recent} played recently`].filter(Boolean);
+    if (!total) { box.innerHTML = `<div class="empty">Nothing on the shelf fits ${res.n} player${res.n === 1 ? "" : "s"}${res.limit ? ` in ${timeLabel(res.limit).toLowerCase()}` : ""}${cutBits.length ? ` (${cutBits.join(", ")})` : ""}. Try more time, or loosen a dealbreaker.</div>`; return; }
+    const card = (m) => { const g = m.g;
+      const why = [m.best && `<span>BGG: best with ${res.n}</span>`, ...m.loves.map(({ p, a }) => `<span>${esc(p.name)} loves ${esc(a)}</span>`),
+        res.limit && `<span>Fits ${esc(timeLabel(res.limit).toLowerCase())}</span>`,
+        ...m.misses.map((p) => `<span class="meh">${lighter(p, g) ? "Heavier" : "Lighter"} than ${esc(p.name)} likes</span>`)].filter(Boolean).join("");
+      return `<li class="pickcard"><span class="art" style="--h:${hue(g)}">${g.thumbnail ? `<img src="${esc(g.thumbnail)}" alt="" referrerpolicy="no-referrer" onerror="this.replaceWith('🎲')">` : "🎲"}</span>
+        <div class="pinfo"><a class="pname" href="${esc(g.url)}" target="_blank" rel="noopener">${esc(g.name)}</a><div class="pfacts">${esc(factLine(g))}</div>${why ? `<div class="why">${why}</div>` : ""}</div>
+        ${!m.misses.length && m.best ? `<span class="badge">★ Best fit</span>` : ""}</li>`; };
+    box.innerHTML = `<p class="summary"><b>${res.fits.length}</b> game${res.fits.length === 1 ? "" : "s"} suit everyone for ${res.n} player${res.n === 1 ? "" : "s"}${res.limit ? ` in ${esc(timeLabel(res.limit).toLowerCase())}${res.limitBy.length && !res.limitBy.includes("the group") ? ` (${esc(res.limitBy.join(" & "))}'s limit)` : ""}` : ""}${res.close.length ? `, and ${res.close.length} more are close` : ""}.${cutBits.length ? ` Left out: ${esc(cutBits.join(", "))}.` : ""}</p>
+      ${!res.fits.length ? `<p class="sub">No game suits everyone's favorite weights, so these are the closest.</p>` : ""}
+      <ul class="picks">${picks.map((id) => card(byId.get(id))).join("")}</ul>
+      <div class="btns">${total > picks.length ? `<button class="btn primary" type="button" id="reroll">🎲 Reroll</button>` : ""}
+        <button class="btn" type="button" id="toggleAll" aria-expanded="${showAll}">${showAll ? "Hide the full list" : `See all ${total} matches`}</button></div>
+      ${showAll ? `<ol class="alllist">${[...res.fits, ...res.close].map((m) => `<li><a href="${esc(m.g.url)}" target="_blank" rel="noopener">${esc(m.g.name)}</a><small>${m.misses.length ? "close · " : ""}${esc(factLine(m.g))}</small></li>`).join("")}</ol>` : ""}`;
+  }
+  function renderTonight() {
+    $("groupTime").innerHTML = TIMES.map(([v, l]) => `<option value="${v}"${v === S.time ? " selected" : ""}>${l}</option>`).join("");
+    $("recentOn").checked = !!S.recentOn; $("recentDays").value = String(S.recentDays); $("recentDays").disabled = !S.recentOn;
+    $("recentNote").textContent = !S.recentOn ? "" : plays ? `Based on Remy's logged plays (latest ${plays.length ? new Date(plays.reduce((a, p) => p.date > a ? p.date : a, "") + "T12:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—"}).` : "Recent plays aren't available right now, so nothing is skipped.";
+  }
+  const all = (redeal = true) => { renderPeople(); renderEditor(); renderTonight(); renderResults(redeal); };
+
+  /* ---------- Events ---------- */
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.toggle) { const id = b.dataset.toggle; S.selected = S.selected.includes(id) ? S.selected.filter((x) => x !== id) : [...S.selected, id]; save(); seen.clear(); renderPeople(); renderResults(true); document.querySelector(`[data-toggle="${id}"]`)?.focus(); }
+    else if (b.dataset.edit) { editing = editing === b.dataset.edit ? null : b.dataset.edit; renderEditor(); $("ed-name")?.focus(); }
+    else if (b.id === "addPerson") { const p = person(`Player ${S.people.length + 1}`); S.people.push(p); S.selected.push(p.id); editing = p.id; save(); all(); $("ed-name").select(); }
+    else if (b.id === "gMinus" || b.id === "gPlus") { S.guests = Math.max(0, Math.min(12, S.guests + (b.id === "gPlus" ? 1 : -1))); save(); seen.clear(); renderPeople(); renderResults(true); }
+    else if (b.dataset.weight) { const p = S.people.find((x) => x.id === editing), k = b.dataset.weight; p.weights = p.weights.includes(k) ? p.weights.filter((x) => x !== k) : [...p.weights, k]; save(); renderPeople(); renderEditor(); renderResults(true); document.querySelector(`[data-weight="${k}"]`)?.focus(); }
+    else if (b.dataset.addtag) addTag(b.dataset.addtag);
+    else if (b.dataset.untag) { const p = S.people.find((x) => x.id === editing), k = b.dataset.untag; p[k] = p[k].filter((t) => t !== b.dataset.tag); save(); renderPeople(); renderEditor(); renderResults(true); $(`in-${k}`)?.focus(); }
+    else if (b.id === "ed-done") { const id = editing; editing = null; renderEditor(); document.querySelector(`[data-edit="${id}"]`)?.focus(); }
+    else if (b.id === "ed-del") { S.people = S.people.filter((x) => x.id !== editing); S.selected = S.selected.filter((x) => x !== editing); editing = null; save(); all(); $("addPerson").focus(); }
+    else if (b.id === "reroll") { renderResults(true); $("reroll")?.focus(); }
+    else if (b.id === "toggleAll") { showAll = !showAll; renderResults(false); $("toggleAll").focus(); }
+  });
+  function addTag(key) {
+    const p = S.people.find((x) => x.id === editing), input = $(`in-${key}`), v = input.value.trim();
+    const match = tags.find((t) => t.toLowerCase() === v.toLowerCase());
+    if (!match) { $("ed-msg").textContent = v ? `“${v}” isn't a mechanic or category on the shelf. Pick one from the list.` : ""; return; }
+    if (!p[key].includes(match)) p[key].push(match);
+    const other = key === "likes" ? "avoid" : "likes"; p[other] = p[other].filter((t) => t !== match);
+    save(); renderPeople(); renderEditor(); renderResults(true); $(`in-${key}`).focus();
+  }
+  document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.id?.startsWith("in-")) { e.preventDefault(); addTag(e.target.id.slice(3)); } });
+  document.addEventListener("input", (e) => { if (e.target.id === "ed-name") { const p = S.people.find((x) => x.id === editing); p.name = e.target.value.trim().slice(0, 30) || p.name; save(); renderPeople(); renderResults(false); } });
+  document.addEventListener("change", (e) => {
+    const t = e.target;
+    if (t.id === "ed-time") { S.people.find((x) => x.id === editing).time = Number(t.value); save(); renderPeople(); renderResults(true); }
+    else if (t.id === "groupTime") { S.time = Number(t.value); save(); renderResults(true); }
+    else if (t.id === "recentOn") { S.recentOn = t.checked; save(); renderTonight(); renderResults(true); }
+    else if (t.id === "recentDays") { S.recentDays = Number(t.value); save(); renderTonight(); renderResults(true); }
+  });
+
+  /* ---------- Load ---------- */
+  renderPeople(); renderTonight();
+  Promise.all([fetch("/api/collection").then((r) => r.json()), fetch("/api/plays").then((r) => r.ok ? r.json() : null).catch(() => null)]).then(([d, p]) => {
+    if (!Array.isArray(d?.games)) throw new Error("no games");
+    games = d.games.filter((g) => g.type === "Base game");
+    tags = [...new Set(games.flatMap(tagsOf))].sort((a, b) => a.localeCompare(b));
+    const dl = document.createElement("datalist"); dl.id = "taglist"; dl.innerHTML = tags.map((t) => `<option value="${esc(t)}">`).join(""); document.body.appendChild(dl);
+    plays = p?.plays || null; status = "ok"; all();
+  }).catch(() => { status = "error"; $("results").innerHTML = `<div class="empty">Couldn't load the shelf right now. <button class="link" type="button" onclick="location.reload()">Try again</button></div>`; });
+})();
+</script>
+<script src="/pwa.js" defer></script>
+</body>
+</html>
