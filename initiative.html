@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Initiative Tracker</title>
+<meta name="description" content="Roll or enter initiative, track turns, and share a party with a code.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
+    --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
+    --yellow: #ffd45c; --yellow-soft: #fff1c2; --mint: #8be0bd; --mint-soft: #ddf6ea;
+    --ok: #24a26b; --danger: #d43c41; --warn: #a35a00; --warn-soft: #ffe8cc;
+    --edge: 2.5px solid var(--outline); --pop: 4px 4px 0 var(--outline); --pop-sm: 3px 3px 0 var(--outline);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+      --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+      --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+    --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+    --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; color: var(--ink); font: 16px/1.5 Nunito, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header (matches the other pages) */
+  header.top { padding: 36px 0 8px; }
+  .titlebar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .brand { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+  .logo { width: 72px; height: 72px; flex: none; transform: rotate(-5deg); filter: drop-shadow(4px 4px 0 var(--outline)); transition: transform .3s; }
+  .logo:hover { transform: rotate(4deg) scale(1.05); }
+  h1 { font: 700 clamp(2rem, 4vw, 2.9rem)/1.05 Fredoka, ui-rounded, system-ui, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  h1 .hl { background: linear-gradient(transparent 62%, var(--hl, var(--yellow)) 62% 92%, transparent 92%); padding: 0 2px; }
+  .tagline { margin: 6px 0 0; color: var(--ink-2); font-size: 1.05rem; font-weight: 600; }
+  .pagenav { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); }
+  .pagenav a { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-decoration: none; }
+  .pagenav a:hover { color: var(--ink); background: var(--surface-2); }
+  .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+
+  /* Shared bits */
+  .card { background: var(--surface); border: var(--edge); border-radius: 22px; box-shadow: var(--pop); padding: 18px 20px; min-width: 0; display: grid; gap: 14px; align-content: start; }
+  h2 { font: 700 1.3rem/1.2 Fredoka, ui-rounded, sans-serif; margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  h2 small { font: 700 .88rem Nunito, sans-serif; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm);
+    background: var(--surface); color: var(--ink); font: 600 1rem Fredoka, ui-rounded, sans-serif; transition: transform .12s, box-shadow .12s; text-decoration: none; }
+  .btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.yellow { background: var(--yellow); color: #3d2a4f; }
+  .btn.big { min-height: 52px; font-size: 1.15rem; padding: 0 22px; }
+  .btn.sm { min-height: 34px; padding: 0 12px; font-size: .9rem; border-radius: 11px; }
+  .link { border: 0; background: none; padding: 4px 2px; color: var(--accent); font-weight: 800; font-size: .92rem; }
+  .link:hover { text-decoration: underline; }
+  .link.danger { color: var(--danger); }
+  input[type=text], input[type=number] { height: 44px; border: var(--edge); border-radius: 13px; background: var(--surface); padding: 0 12px; font-weight: 700; min-width: 0; box-shadow: var(--pop-sm); }
+  input:focus { outline: none; box-shadow: 0 0 0 4px var(--yellow), 3px 3px 0 4px var(--outline); }
+  input[readonly] { opacity: .65; }
+  .note { margin: 0; font-size: .88rem; color: var(--ink-2); font-weight: 600; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 2px solid var(--outline); border-radius: 12px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: none; min-height: 30px; padding: 0 12px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+  .ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ctl > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+
+  /* Party bar */
+  .party { margin-top: 22px; display: grid; gap: 12px; }
+  .prow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .pick { position: relative; flex: 1 1 260px; min-width: 0; }
+  .pick select { width: 100%; height: 48px; appearance: none; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); background: var(--surface); padding: 0 40px 0 14px;
+    font: 700 1.15rem Fredoka, ui-rounded, sans-serif; color: var(--ink); }
+  .pick select:focus { outline: none; box-shadow: 0 0 0 4px var(--yellow), 3px 3px 0 4px var(--outline); }
+  .pick svg { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+  .pbtns { display: flex; flex-wrap: wrap; gap: 8px; }
+  .share { display: grid; gap: 10px; background: var(--yellow-soft); border: 2px dashed var(--outline); border-radius: 16px; padding: 14px 16px; }
+  .code { font: 700 2.2rem/1 Fredoka, ui-rounded, sans-serif; letter-spacing: .18em; font-variant-numeric: tabular-nums; background: var(--surface); border: var(--edge); border-radius: 14px;
+    box-shadow: var(--pop-sm); padding: 8px 14px 8px 20px; display: inline-block; }
+  .sharerow { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .join { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .join input { width: 9.5em; text-transform: uppercase; letter-spacing: .14em; font-family: Fredoka, ui-rounded, sans-serif; }
+  .status { font-size: .85rem; font-weight: 700; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
+  .status .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); }
+  .status.off .dot { background: var(--warn); }
+  .msg { margin: 0; font-weight: 700; font-size: .9rem; }
+  .msg.err { color: var(--danger); }
+  .rename { display: flex; gap: 8px; flex: 1 1 260px; }
+  .rename input { flex: 1; }
+
+  /* Layout */
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: 22px; align-items: start; margin-top: 22px; }
+  .round-tag { font: 700 1.1rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .round-tag b { color: var(--accent); }
+
+  form.add { display: flex; gap: 8px; }
+  form.add input { flex: 1; }
+  ul.roster { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  ul.roster li { display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 14px; border: 2px solid var(--outline); border-radius: 14px; background: var(--surface); min-width: 0; font-weight: 700; }
+  ul.roster li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  ul.roster li input[type=number] { width: 5em; height: 38px; text-align: center; font-variant-numeric: tabular-nums; box-shadow: none; border-width: 2px; }
+  ul.roster li .x { width: 32px; height: 32px; border-radius: 50%; border: 0; background: none; color: var(--ink-2); font-size: 1.2rem; font-weight: 800; flex: none; }
+  ul.roster li .x:hover { background: var(--accent-soft); color: var(--danger); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+  .confirm { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: .9rem; font-weight: 700; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+
+  ol.order { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: turn; }
+  ol.order li { counter-increment: turn; display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 14px; border: 2px solid var(--outline); background: var(--surface); min-width: 0; font-weight: 700; transition: background .2s, color .2s; }
+  ol.order li::before { content: counter(turn); flex: none; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; border: 2px solid var(--outline); background: var(--surface-2);
+    font: 700 1rem Fredoka, ui-rounded, sans-serif; font-variant-numeric: tabular-nums; }
+  ol.order li span.nm { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  ol.order li.done { color: var(--muted); border-style: dashed; border-color: var(--line); background: transparent; }
+  ol.order li.done::before { background: transparent; border-color: var(--line); }
+  ol.order li.done span.nm { text-decoration: line-through; text-decoration-thickness: 2px; }
+  ol.order li.current { background: var(--yellow); color: #3d2a4f; box-shadow: var(--pop-sm); transform: translate(-2px, -2px); }
+  ol.order li.current::before { background: var(--accent); color: #fff; }
+  .chip { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 800; font-style: normal; }
+  .chip.now { background: var(--surface); border: 2px solid var(--outline); border-radius: 999px; padding: 1px 8px; color: #3d2a4f; }
+  .chip.tie { color: var(--warn); background: var(--warn-soft); border-radius: 999px; padding: 2px 8px; }
+  .score { font: 700 1rem Fredoka, ui-rounded, sans-serif; font-variant-numeric: tabular-nums; min-width: 2.4em; text-align: center; padding: 2px 6px; border-radius: 9px; border: 2px solid var(--outline); background: var(--surface); flex: none; color: var(--ink); }
+  ol.order li.tied { border-color: var(--warn); }
+  .mv { display: flex; gap: 4px; flex: none; }
+  .mv button { width: 30px; height: 30px; border-radius: 9px; border: 2px solid var(--outline); background: var(--surface); font-weight: 800; padding: 0; }
+  .mv button:disabled { opacity: .3; cursor: default; }
+  .missing { font-size: .92rem; color: var(--warn); margin: 0; font-weight: 700; }
+  .hint { font-size: .9rem; color: var(--ink-2); margin: 0; font-weight: 600; }
+  .stage { border: var(--edge); border-radius: 20px; background: var(--yellow-soft); padding: 28px 18px; text-align: center; display: grid; gap: 6px; justify-items: center; box-shadow: var(--pop-sm); }
+  .stage .label { font: 600 .8rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-2); }
+  .stage .who { font: 700 clamp(2.2rem, 7vw, 3.4rem)/1.1 Fredoka, ui-rounded, sans-serif; color: var(--ink); overflow-wrap: anywhere; max-width: 100%; }
+  .stage .count { font-variant-numeric: tabular-nums; color: var(--ink-2); font-weight: 700; }
+  .stage.flip .who { animation: flip .35s ease-out; }
+  @keyframes flip { from { transform: rotateX(80deg) scale(.9); opacity: .2; } to { transform: none; opacity: 1; } }
+  .trail { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .trail span { font-size: .85rem; font-weight: 700; color: var(--muted); border: 2px dashed var(--line); border-radius: 999px; padding: 2px 10px; text-decoration: line-through; }
+  .empty { text-align: center; color: var(--ink-2); font-weight: 700; padding: 24px 12px; border: 2.5px dashed var(--line); border-radius: 18px; display: grid; gap: 12px; justify-items: center; }
+  .empty p { margin: 0; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .actions .primary { flex: 1; min-width: 180px; }
+  .endcap { text-align: center; padding: 12px; border-radius: 14px; background: var(--mint-soft); border: 2px solid var(--outline); font: 700 1.1rem Fredoka, ui-rounded, sans-serif; }
+  .stack { display: grid; gap: 14px; }
+
+  footer { margin: 48px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
+
+  @media (max-width: 820px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 760px) {
+    .wrap { padding: 0 16px; }
+    header.top { padding-top: 24px; }
+    .logo { width: 54px; height: 54px; } .brand { gap: 12px; }
+    .card { box-shadow: var(--pop-sm); padding: 16px; border-radius: 18px; }
+    .code { font-size: 1.8rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <a class="brand" href="/">
+        <svg class="logo" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="3" y="3" width="66" height="66" rx="18" fill="var(--yellow)" stroke="var(--outline)" stroke-width="3"/>
+          <g transform="translate(36 10) rotate(14)"><rect x="0" y="0" width="22" height="22" rx="5" fill="#fff" stroke="var(--outline)" stroke-width="2.5"/>
+            <circle cx="6" cy="6" r="2.2" fill="var(--outline)"/><circle cx="11" cy="11" r="2.2" fill="var(--outline)"/><circle cx="16" cy="16" r="2.2" fill="var(--outline)"/></g>
+          <g transform="translate(9 20) scale(1.75)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.4" stroke-linejoin="round"/></g>
+        </svg>
+        <div>
+          <h1>Initiative <span class="hl">Tracker</span></h1>
+          <p class="tagline">Roll for it, or type in the numbers. Then take turns.</p>
+        </div>
+      </a>
+      <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats">Charts</a><a href="/initiative" aria-current="page">Initiative</a></nav>
+    </div>
+  </header>
+
+  <section class="card party" aria-labelledby="partyH">
+    <h2 id="partyH">Party <span class="status" id="syncStatus" hidden><span class="dot"></span><span id="syncText"></span></span></h2>
+    <div class="prow" id="partyRow"></div>
+    <div class="share" id="sharePanel" hidden></div>
+    <div class="join" id="joinRow">
+      <label for="joinCode" class="note">Have a code from a friend?</label>
+      <input type="text" id="joinCode" maxlength="6" placeholder="ABC234" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Party code">
+      <button class="btn sm" id="joinBtn" type="button">Open party</button>
+      <p class="msg" id="joinMsg" role="status"></p>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="card" aria-labelledby="rosterH">
+      <h2 id="rosterH">Combatants <small id="countTag"></small></h2>
+      <form class="add" id="addForm" autocomplete="off">
+        <input type="text" id="nameInput" placeholder="Add a name, e.g. Goblin 2" aria-label="Combatant name" maxlength="40">
+        <button type="submit" class="btn primary">Add</button>
+      </form>
+      <p class="note" id="exampleNote" hidden>These are example names. Remove them and add your own party.</p>
+      <p class="note" id="numNote" hidden>Type each player's initiative number in the box beside their name.</p>
+      <ul class="roster" id="roster"></ul>
+      <div class="row">
+        <p class="note" id="savedNote">Saved in this browser.</p>
+        <div id="clearArea"><button class="link danger" id="clearBtn" type="button">Clear all</button></div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="orderH">
+      <h2 id="orderH">Turn order <span class="round-tag" id="roundTag"></span></h2>
+      <div class="controls">
+        <div class="ctl"><span>Order by</span>
+          <div class="seg" role="group" aria-label="Order by">
+            <button type="button" id="methodRandom" aria-pressed="true">Random</button>
+            <button type="button" id="methodNumber" aria-pressed="false">Number</button>
+          </div>
+        </div>
+        <div class="ctl"><span>Show</span>
+          <div class="seg" role="group" aria-label="View mode">
+            <button type="button" id="modeFull" aria-pressed="true">Full order</button>
+            <button type="button" id="modeOne" aria-pressed="false">One at a time</button>
+          </div>
+        </div>
+      </div>
+      <div id="tracker" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <footer>Each party and its turns are saved in this browser. A shared party's list of names is kept on this site so anyone with its code can open it; turns and initiative numbers stay on each device.</footer>
+</div>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  /* ---------- Parties: several saved lists, each optionally shared by a code ---------- */
+  const DB_KEY = 'game-shelf:initiative';
+  const EXAMPLES = ['Thorne', 'Mira', 'Grub', 'Goblin 1', 'Goblin 2'];
+  let seq = 0;
+  const newId = (p = 'p') => p + Date.now().toString(36) + (seq++).toString(36) + Math.random().toString(36).slice(2, 5);
+  const person = name => ({ id: newId(), name, num: null });
+  const freshState = (examples) => ({
+    people: examples ? EXAMPLES.map(person) : [], example: !!examples,
+    method: 'random', dir: 'high', mode: 'full', order: [], pos: 0, round: 0, startAs: 1, tieOrder: []
+  });
+  const newParty = (name, examples) => ({ id: newId('party'), name, code: null, syncedSig: null, updatedAt: null, st: freshState(examples) });
+
+  let db;
+  try { db = JSON.parse(localStorage.getItem(DB_KEY) || 'null'); } catch (e) { db = null; }
+  if (!db || !Array.isArray(db.parties) || !db.parties.length) db = { current: null, parties: [newParty('My party', true)] };
+  db.parties.forEach(p => { p.st = Object.assign(freshState(false), p.st || {}); });
+  if (!db.parties.some(p => p.id === db.current)) db.current = db.parties[0].id;
+
+  const party = () => db.parties.find(p => p.id === db.current);
+  let state = party().st;
+  normalize();
+
+  function normalize() {
+    if (!['full', 'one'].includes(state.mode)) state.mode = 'full';
+    if (!['random', 'number'].includes(state.method)) state.method = 'random';
+    if (!['high', 'low'].includes(state.dir)) state.dir = 'high';
+    syncTieOrder();
+  }
+  function persist() { try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch (e) {} }
+  // What's shared: the party's name and its names. Numbers and turns stay on each device.
+  const shareSig = p => JSON.stringify([p.name, p.st.people.map(x => [x.id, x.name])]);
+  function save() { persist(); schedulePush(); }
+
+  /* ---------- Talking to the site ---------- */
+  let pushTimer = null, pulling = false, online = true, lastSyncAt = null;
+  function schedulePush() {
+    const p = party(); if (!p.code || shareSig(p) === p.syncedSig) return renderSync();
+    clearTimeout(pushTimer); pushTimer = setTimeout(push, 700); renderSync('Saving…');
+  }
+  async function push() {
+    const p = party(); if (!p.code) return;
+    const sig = shareSig(p);
+    try {
+      const r = await fetch(`/api/party?code=${p.code}`, { method: 'PUT', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ name: p.name, people: p.st.people.map(x => ({ id: x.id, name: x.name })) }) });
+      if (r.status === 404) { p.code = null; p.syncedSig = null; persist(); renderParty(); msg('That party is no longer on the site, so it\'s now saved only here.', true); return; }
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json(); p.updatedAt = d.updatedAt; p.syncedSig = sig; online = true; lastSyncAt = Date.now(); persist();
+    } catch (e) { online = false; clearTimeout(pushTimer); pushTimer = setTimeout(push, 8000); }
+    renderSync();
+  }
+  // Bring in changes someone else made to a shared party.
+  async function pull() {
+    const p = party(); if (!p.code || pulling || document.hidden) return;
+    if (shareSig(p) !== p.syncedSig) return; // our own edit is still on its way; it wins
+    pulling = true;
+    try {
+      const r = await fetch(`/api/party?code=${p.code}`, { cache: 'no-store' });
+      if (r.status === 404) { p.code = null; p.syncedSig = null; persist(); renderParty(); msg('That party is no longer on the site, so it\'s now saved only here.', true); return; }
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json(); online = true; lastSyncAt = Date.now();
+      if (p.id === party().id && shareSig(p) === p.syncedSig && (!p.updatedAt || d.updatedAt > p.updatedAt)) { applyRemote(p, d); render(false); renderParty(); }
+    } catch (e) { online = false; }
+    finally { pulling = false; renderSync(); }
+  }
+  function applyRemote(p, d) {
+    const old = new Map(p.st.people.map(x => [x.id, x]));
+    p.name = d.name;
+    p.st.people = d.people.map(x => ({ id: x.id, name: x.name, num: old.get(x.id)?.num ?? null }));
+    p.st.example = false;
+    if (p.st === state) {
+      // Newcomers join a running round like any other addition; people who left drop out.
+      const fresh = p.st.people.filter(x => !old.has(x.id));
+      syncTieOrderFor(p.st);
+      if (state.order.length && state.pos < state.order.length) fresh.forEach(x => placeInRound(x.id));
+    } else syncTieOrderFor(p.st);
+    p.updatedAt = d.updatedAt; p.syncedSig = shareSig(p); persist();
+  }
+  setInterval(pull, 15000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) pull(); });
+  addEventListener('online', () => { schedulePush(); pull(); });
+
+  async function shareParty() {
+    const p = party();
+    $('sharePanel').hidden = false; $('sharePanel').innerHTML = `<p class="note">Making a code…</p>`;
+    try {
+      const r = await fetch('/api/party', { method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ name: p.name, people: p.st.people.map(x => ({ id: x.id, name: x.name })) }) });
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json();
+      p.code = d.code; p.updatedAt = d.updatedAt; p.syncedSig = shareSig(p); p.st.example = false; online = true; lastSyncAt = Date.now(); persist();
+      showShare = true; renderParty(); render(false);
+      $('sharePanel').querySelector('[data-copy]')?.focus();
+    } catch (e) { $('sharePanel').innerHTML = `<p class="msg err">Couldn't make a code right now. Check your connection and try again.</p>`; }
+  }
+  async function joinCode(raw) {
+    const code = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (code.length !== 6) return msg('Codes are 6 letters and numbers, like ABC234.', true);
+    const have = db.parties.find(p => p.code === code);
+    if (have) { switchTo(have.id); msg(`Opened “${have.name}”.`); return pull(); }
+    msg('Opening…');
+    try {
+      const r = await fetch(`/api/party?code=${code}`, { cache: 'no-store' });
+      if (r.status === 404 || r.status === 400) return msg(`No party found for ${code}. Check the code and try again.`, true);
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json();
+      const p = newParty(d.name, false); p.code = code;
+      p.st.people = d.people.map(x => ({ id: x.id, name: x.name, num: null })); syncTieOrderFor(p.st);
+      p.updatedAt = d.updatedAt; p.syncedSig = shareSig(p);
+      db.parties.push(p); db.current = p.id; state = p.st; normalize(); persist();
+      $('joinCode').value = ''; msg(`Opened “${d.name}”. It stays in sync with everyone using code ${code}.`);
+      renderParty(); render(false);
+    } catch (e) { msg('Couldn\'t reach the site. Check your connection and try again.', true); }
+  }
+  const msg = (t, err) => { $('joinMsg').textContent = t || ''; $('joinMsg').className = 'msg' + (err ? ' err' : ''); };
+
+  /* ---------- Party bar ---------- */
+  let showShare = false, renaming = false, confirmDel = false;
+  function switchTo(id) {
+    if (!db.parties.some(p => p.id === id)) return;
+    db.current = id; state = party().st; normalize(); showShare = false; renaming = false; confirmDel = false; persist();
+    renderParty(); render(false); pull();
+  }
+  function renderParty() {
+    const p = party();
+    if (renaming) {
+      $('partyRow').innerHTML = `<form class="rename" id="renameForm"><input type="text" id="renameInput" maxlength="60" value="${esc(p.name)}" aria-label="Party name"><button class="btn sm yellow" type="submit">Save</button><button class="btn sm" type="button" data-pact="cancel">Cancel</button></form>`;
+    } else {
+      $('partyRow').innerHTML = `<div class="pick"><select id="partySel" aria-label="Choose a party">${db.parties.map(x =>
+          `<option value="${x.id}"${x.id === p.id ? ' selected' : ''}>${esc(x.name)}${x.code ? ` · ${x.code}` : ''}</option>`).join('')}</select>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+        <div class="pbtns">
+          <button class="btn sm" type="button" data-pact="new">+ New party</button>
+          <button class="btn sm" type="button" data-pact="rename">Rename</button>
+          <button class="btn sm ${p.code ? '' : 'yellow'}" type="button" data-pact="share" aria-expanded="${showShare}">${p.code ? 'Share code' : 'Share'}</button>
+          ${confirmDel ? `<span class="confirm">${p.code ? 'Remove from this device? Others with the code keep it.' : 'Delete this party?'} <button class="link danger" type="button" data-pact="delyes">Yes</button><button class="link" type="button" data-pact="delno">Cancel</button></span>`
+            : `<button class="link danger" type="button" data-pact="del">${p.code ? 'Remove' : 'Delete'}</button>`}
+        </div>`;
+    }
+    const link = p.code ? `${location.origin}/initiative?party=${p.code}` : '';
+    $('sharePanel').hidden = !showShare;
+    if (showShare && p.code) $('sharePanel').innerHTML = `<div class="sharerow"><span class="code" aria-label="Party code ${p.code.split('').join(' ')}">${p.code}</span>
+        <div class="pbtns"><button class="btn sm yellow" type="button" data-copy="${esc(link)}">Copy link</button><button class="btn sm" type="button" data-copy="${p.code}">Copy code</button></div></div>
+      <p class="note">Anyone with this code can open “${esc(p.name)}” here and add or remove names. Each person rolls and tracks turns on their own device. <span id="copyMsg" role="status"></span></p>
+      <div><button class="link" type="button" data-pact="unshare">Stop syncing on this device</button></div>`;
+    else if (showShare) $('sharePanel').innerHTML = `<p class="note">Get a code so others can open this party on their phone or computer. The party's name and names are kept on this site; anyone with the code can see and change them.</p>
+      <div><button class="btn sm yellow" type="button" data-pact="makecode">Get a share code</button></div>`;
+    $('savedNote').textContent = p.code ? `Shared with code ${p.code}. Names sync; numbers and turns stay on this device.` : 'Saved in this browser.';
+    renderSync();
+  }
+  function renderSync(text) {
+    const p = party(), s = $('syncStatus');
+    s.hidden = !p.code; if (!p.code) return;
+    const pending = shareSig(p) !== p.syncedSig;
+    s.classList.toggle('off', !online);
+    $('syncText').textContent = text || (!online ? 'Offline · will sync when back' : pending ? 'Saving…' : `Synced · code ${p.code}`);
+  }
+  $('partyRow').addEventListener('change', e => { if (e.target.id === 'partySel') switchTo(e.target.value); });
+  $('partyRow').addEventListener('submit', e => {
+    e.preventDefault(); const v = $('renameInput').value.trim().slice(0, 60);
+    if (v) { party().name = v; save(); }
+    renaming = false; renderParty(); $('partyRow').querySelector('[data-pact="rename"]').focus();
+  });
+  document.querySelector('.party').addEventListener('click', async e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.copy) {
+      try { await navigator.clipboard.writeText(b.dataset.copy); $('copyMsg').textContent = 'Copied!'; }
+      catch (err) { $('copyMsg').textContent = `Copy this: ${b.dataset.copy}`; }
+      return;
+    }
+    const a = b.dataset.pact; if (!a) return;
+    if (a === 'new') {
+      let n = db.parties.length + 1; while (db.parties.some(p => p.name === `Party ${n}`)) n++; const name = `Party ${n}`;
+      const p = newParty(name, false); db.parties.push(p); switchTo(p.id); renaming = true; renderParty(); $('renameInput').select();
+    } else if (a === 'rename') { renaming = true; renderParty(); $('renameInput').select(); }
+    else if (a === 'cancel') { renaming = false; renderParty(); }
+    else if (a === 'share') { showShare = !showShare; renderParty(); }
+    else if (a === 'makecode') shareParty();
+    else if (a === 'unshare') { const p = party(); p.code = null; p.syncedSig = null; showShare = false; persist(); renderParty(); }
+    else if (a === 'del') { confirmDel = true; renderParty(); $('partyRow').querySelector('[data-pact="delno"]').focus(); }
+    else if (a === 'delno') { confirmDel = false; renderParty(); }
+    else if (a === 'delyes') {
+      msg('');
+      db.parties = db.parties.filter(p => p.id !== db.current);
+      if (!db.parties.length) db.parties.push(newParty('My party', false));
+      confirmDel = false; switchTo(db.parties[0].id);
+    }
+  });
+  $('joinBtn').addEventListener('click', () => joinCode($('joinCode').value));
+  $('joinCode').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); joinCode($('joinCode').value); } });
+
+  /* ---------- Turn tracking (per party, on this device) ---------- */
+  function syncTieOrderFor(st) {
+    const ids = st.people.map(p => p.id);
+    st.tieOrder = (st.tieOrder || []).filter(id => ids.includes(id));
+    ids.forEach(id => { if (!st.tieOrder.includes(id)) st.tieOrder.push(id); });
+    const before = st.order.slice(0, st.pos).filter(id => ids.includes(id)).length;
+    st.order = st.order.filter(id => ids.includes(id)); st.pos = Math.min(before, st.order.length);
+    if (!st.people.length) { st.order = []; st.pos = 0; st.round = 0; st.startAs = 1; }
+  }
+  function syncTieOrder() { syncTieOrderFor(state); }
+
+  function rand(n) {
+    try { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; }
+    catch (e) { return Math.floor(Math.random() * n); }
+  }
+  function shuffle(list) {
+    const a = list.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+
+  const byId = id => state.people.find(p => p.id === id);
+  const fmt = n => (n === null || n === undefined) ? '–' : String(n);
+  const active = () => state.order.length > 0 && state.pos < state.order.length;
+  const finished = () => state.order.length > 0 && state.pos >= state.order.length;
+
+  function numberSort() {
+    const withNum = state.people.filter(p => p.num !== null);
+    const rank = id => state.tieOrder.indexOf(id);
+    withNum.sort((a, b) => (a.num !== b.num) ? (state.dir === 'high' ? b.num - a.num : a.num - b.num) : rank(a.id) - rank(b.id));
+    return withNum;
+  }
+  function startRandom(newRound) {
+    if (!state.people.length) return;
+    state.order = shuffle(state.people.map(p => p.id)); state.pos = 0;
+    state.round = newRound ? state.round + 1 : (state.round || 1);
+    save(); render(true);
+  }
+  function startNumbered() {
+    const sorted = numberSort();
+    if (!sorted.length || sorted.length < state.people.length) return;
+    state.order = sorted.map(p => p.id); state.pos = 0; state.round = state.startAs || 1;
+    save(); render(true);
+  }
+  function next() { if (state.pos < state.order.length) state.pos++; save(); render(true); }
+  function resetRound() { state.order = []; state.pos = 0; }
+  function placeInRound(id) {
+    if (state.method === 'random') state.order.splice(state.pos + rand(state.order.length - state.pos + 1), 0, id); // a random spot among those still to act
+    else state.order.push(id); // no number yet, so last this round
+  }
+  function addName(n) {
+    const p = person(n);
+    state.people.push(p); state.tieOrder.push(p.id);
+    if (active()) placeInRound(p.id);
+  }
+  function removeId(id) {
+    state.people = state.people.filter(p => p.id !== id);
+    const k = state.order.indexOf(id);
+    if (k > -1) { state.order.splice(k, 1); if (k < state.pos) state.pos--; }
+    syncTieOrder();
+  }
+
+  function renderRoster() {
+    const numMode = state.method === 'number';
+    const lock = numMode && (active() || finished());
+    $('roster').innerHTML = state.people.map(p => `<li>
+        <span>${esc(p.name)}</span>
+        ${numMode ? `<input type="number" inputmode="decimal" step="any" data-id="${p.id}" value="${p.num === null ? '' : p.num}" aria-label="Initiative for ${esc(p.name)}" placeholder="#" ${lock ? 'readonly' : ''}>` : ''}
+        <button type="button" class="x" data-rm="${p.id}" aria-label="Remove ${esc(p.name)}">×</button>
+      </li>`).join('');
+    $('countTag').textContent = state.people.length ? `${state.people.length} in the fight` : '';
+    $('exampleNote').hidden = !state.example;
+    $('numNote').hidden = !(numMode && !lock && state.people.length);
+    $('clearArea').hidden = !state.people.length;
+  }
+  function orderRow(p, cls, extra) {
+    const score = state.method === 'number' ? `<span class="score">${fmt(p.num)}</span>` : '';
+    return `<li class="${cls}"><span class="nm">${esc(p.name)}</span>${extra || ''}${score}</li>`;
+  }
+  function renderSetup() {
+    const sorted = numberSort(), missing = state.people.filter(p => p.num === null), counts = {};
+    sorted.forEach(p => { counts[p.num] = (counts[p.num] || 0) + 1; });
+    let html = `<div class="stack"><div class="ctl"><span>Who goes first</span>
+        <div class="seg" role="group" aria-label="Who goes first">
+          <button type="button" data-dir="high" aria-pressed="${state.dir === 'high'}">Highest</button>
+          <button type="button" data-dir="low" aria-pressed="${state.dir === 'low'}">Lowest</button></div></div>`;
+    if (sorted.length) {
+      html += '<ol class="order">' + sorted.map((p, i) => {
+        if (counts[p.num] < 2) return orderRow(p, '');
+        const prevSame = i > 0 && sorted[i - 1].num === p.num, nextSame = i < sorted.length - 1 && sorted[i + 1].num === p.num;
+        return orderRow(p, 'tied', `<em class="chip tie">Tie</em><span class="mv">
+            <button type="button" data-up="${i}" ${prevSame ? '' : 'disabled'} aria-label="Move ${esc(p.name)} earlier">↑</button>
+            <button type="button" data-down="${i}" ${nextSame ? '' : 'disabled'} aria-label="Move ${esc(p.name)} later">↓</button></span>`);
+      }).join('') + '</ol>';
+    } else html += `<div class="empty"><p>Enter numbers next to each name and the order builds here.</p></div>`;
+    if (Object.values(counts).some(c => c > 1)) html += `<p class="hint">Tied players are marked. Use the arrows to choose who goes first.</p>`;
+    if (missing.length && sorted.length) html += `<p class="missing">Still needs a number: ${missing.map(p => esc(p.name)).join(', ')}</p>`;
+    const ready = state.people.length && !missing.length;
+    html += `<div class="actions"><button class="btn primary big" type="button" data-act="start" ${ready ? '' : 'disabled'}>Start round ${state.startAs || 1}</button></div></div>`;
+    return html;
+  }
+  function renderTracker(animate) {
+    const t = $('tracker'), numMode = state.method === 'number';
+    $('modeFull').setAttribute('aria-pressed', state.mode === 'full');
+    $('modeOne').setAttribute('aria-pressed', state.mode === 'one');
+    $('methodRandom').setAttribute('aria-pressed', !numMode);
+    $('methodNumber').setAttribute('aria-pressed', numMode);
+    $('roundTag').innerHTML = state.round && state.order.length ? `Round <b>${state.round}</b>` : '';
+    if (!state.people.length) { t.innerHTML = `<div class="empty"><p>Add at least one combatant to set the turn order.</p></div>`; return; }
+    if (!state.order.length) {
+      t.innerHTML = numMode ? renderSetup() : `<div class="empty"><p>${state.people.length} combatant${state.people.length > 1 ? 's' : ''} ready.</p>
+           <button class="btn primary big" type="button" data-act="roll">🎲 Roll initiative</button></div>`;
+      return;
+    }
+    const total = state.order.length, done = finished();
+    let html = '';
+    if (state.mode === 'full') {
+      html += '<ol class="order">' + state.order.map((id, i) => {
+        const p = byId(id), cls = i < state.pos ? 'done' : (i === state.pos ? 'current' : '');
+        return orderRow(p, cls, i === state.pos ? '<em class="chip now">Up now</em>' : '');
+      }).join('') + '</ol>';
+    } else if (!done) {
+      const cur = byId(state.order[state.pos]), gone = state.order.slice(0, state.pos).map(byId);
+      html += `<div class="stage${animate ? ' flip' : ''}"><div class="label">Now acting</div><div class="who">${esc(cur.name)}</div>
+        <div class="count">Turn ${state.pos + 1} of ${total}${numMode && cur.num !== null ? ` · initiative ${esc(fmt(cur.num))}` : ''}</div></div>`;
+      if (gone.length) html += `<div class="trail" aria-label="Already acted">${gone.map(p => `<span>${esc(p.name)}</span>`).join('')}</div>`;
+    }
+    if (done) {
+      html += `<div class="endcap">Round ${state.round} complete 🎉</div>
+        <div class="actions"><button class="btn primary big" type="button" data-act="newround">Start round ${state.round + 1} · ${numMode ? 'new numbers' : 'reshuffle'}</button></div>`;
+    } else {
+      const isLast = state.pos === total - 1;
+      html += `<div class="actions"><button class="btn primary big" type="button" data-act="next">${isLast ? 'End round' : (state.mode === 'one' ? 'Reveal next' : 'Next turn')}</button>
+        <button class="btn" type="button" data-act="${numMode ? 'edit' : 'reroll'}">${numMode ? 'Edit numbers' : 'Reroll'}</button></div>`;
+    }
+    t.innerHTML = `<div class="stack">${html}</div>`;
+  }
+  function render(animate) { renderRoster(); renderTracker(animate); }
+
+  $('addForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const raw = $('nameInput').value.trim(); if (!raw) return;
+    if (state.example) { state.people = []; resetRound(); state.round = 0; state.startAs = 1; state.example = false; syncTieOrder(); }
+    addName(raw); $('nameInput').value = '';
+    save(); render(false); $('nameInput').focus();
+  });
+  $('roster').addEventListener('click', e => {
+    const b = e.target.closest('button[data-rm]'); if (!b) return;
+    state.example = false; removeId(b.dataset.rm); save(); render(false);
+  });
+  $('roster').addEventListener('input', e => {
+    const el = e.target; if (!el.dataset.id || el.readOnly) return;
+    const p = byId(el.dataset.id); if (!p) return;
+    const v = el.value.trim() === '' ? null : parseFloat(el.value);
+    p.num = (v === null || Number.isNaN(v)) ? null : v;
+    state.example = false; save(); renderTracker(false);
+  });
+  $('roster').addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || !e.target.dataset.id) return;
+    e.preventDefault();
+    const inputs = [...$('roster').querySelectorAll('input[type="number"]')], nxt = inputs[inputs.indexOf(e.target) + 1];
+    if (nxt) nxt.focus(); else $('tracker').querySelector('[data-act="start"]:not(:disabled)')?.focus();
+  });
+  $('clearArea').addEventListener('click', e => {
+    const id = e.target.id;
+    if (id === 'clearBtn') {
+      $('clearArea').innerHTML = `<span class="confirm">Remove everyone? <button class="link danger" type="button" id="yesClear">Yes, clear</button><button class="link" type="button" id="noClear">Cancel</button></span>`;
+      $('noClear').focus();
+    } else if (id === 'yesClear' || id === 'noClear') {
+      if (id === 'yesClear') { state.people = []; resetRound(); state.round = 0; state.startAs = 1; state.example = false; syncTieOrder(); save(); }
+      $('clearArea').innerHTML = `<button class="link danger" id="clearBtn" type="button">Clear all</button>`;
+      render(false);
+    }
+  });
+  $('modeFull').addEventListener('click', () => { state.mode = 'full'; save(); render(false); });
+  $('modeOne').addEventListener('click', () => { state.mode = 'one'; save(); render(false); });
+  function setMethod(m) { if (state.method === m) return; state.method = m; resetRound(); state.round = 0; state.startAs = 1; save(); render(false); }
+  $('methodRandom').addEventListener('click', () => setMethod('random'));
+  $('methodNumber').addEventListener('click', () => setMethod('number'));
+  $('tracker').addEventListener('click', e => {
+    const dirB = e.target.closest('button[data-dir]');
+    if (dirB) { state.dir = dirB.dataset.dir; save(); renderTracker(false); return; }
+    const up = e.target.closest('button[data-up]'), down = e.target.closest('button[data-down]');
+    if (up || down) {
+      const sorted = numberSort(), i = +(up ? up.dataset.up : down.dataset.down), j = up ? i - 1 : i + 1;
+      const a = state.tieOrder.indexOf(sorted[i].id), b = state.tieOrder.indexOf(sorted[j].id);
+      [state.tieOrder[a], state.tieOrder[b]] = [state.tieOrder[b], state.tieOrder[a]];
+      save(); renderTracker(false);
+      const again = $('tracker').querySelector(`button[data-${up ? 'up' : 'down'}="${j}"]`); if (again && !again.disabled) again.focus();
+      return;
+    }
+    const b = e.target.closest('button[data-act]'); if (!b) return;
+    const a = b.dataset.act;
+    if (a === 'roll' || a === 'reroll') startRandom(false);
+    else if (a === 'start') startNumbered();
+    else if (a === 'next') next();
+    else if (a === 'edit') { state.startAs = state.round || 1; resetRound(); save(); render(false); }
+    else if (a === 'newround') {
+      if (state.method === 'random') startRandom(true);
+      else {
+        state.startAs = state.round + 1; state.people.forEach(p => { p.num = null; });
+        resetRound(); save(); render(false);
+        $('roster').querySelector('input[type="number"]')?.focus(); return;
+      }
+    }
+    $('tracker').querySelector('button.primary:not(:disabled)')?.focus();
+  });
+
+  renderParty(); render(false);
+  // Opening a shared link (…/initiative?party=CODE) joins that party.
+  const fromLink = new URLSearchParams(location.search).get('party');
+  if (fromLink) { history.replaceState(null, '', location.pathname); joinCode(fromLink); }
+  else pull();
+})();
+</script>
+</body>
+</html>

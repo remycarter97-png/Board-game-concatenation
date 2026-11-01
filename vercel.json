@@ -2,7 +2,8 @@
   "cleanUrls": true,
   "functions": {
     "api/sync.js": { "maxDuration": 300 },
-    "api/collection.js": { "maxDuration": 15 }
+    "api/collection.js": { "maxDuration": 15 },
+    "api/party.js": { "maxDuration": 10 }
   },
   "crons": [
     { "path": "/api/sync", "schedule": "0 10 * * *" }
