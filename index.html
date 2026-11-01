@@ -728,7 +728,7 @@
           <button class="iconbtn" id="dir" aria-label="Sort direction"></button>
         </div>
         <label class="perpage">Per page
-          <select id="per" aria-label="Games per page"><option>24</option><option>36</option><option>48</option></select>
+          <select id="per" aria-label="Games per page"><option>10</option><option>25</option><option>50</option><option>100</option><option>200</option><option>300</option></select>
         </label>
       </div>
     </div>
@@ -844,10 +844,10 @@ function buildTileGroups(strict) {
 }
 
 /* ---------- State ---------- */
-const PER = [24, 36, 48];
+const PER = [10, 25, 50, 100, 200, 300];
 const state = { q: "", best: null, mechs: new Set(), sorts: [{ key: "name", dir: 1 }],
   page: Number(store.get("sessionStorage", "page", 1)) || 1,
-  per: PER.includes(store.get("localStorage", "per-page", 24)) ? store.get("localStorage", "per-page", 24) : 24 };
+  per: PER.includes(store.get("localStorage", "per-page", 25)) ? store.get("localStorage", "per-page", 25) : 25 };
 state.view = store.get("localStorage", "view", "cards") === "table" ? "table" : "cards";
 // Per-column filters from the table's filter row. They also apply in card view and show as chips.
 const COLF_EMPTY = { name: "", rating: "", rank: "", players: "", time: "", weight: "", year: "", mech: "", owner: "" };
