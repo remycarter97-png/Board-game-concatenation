@@ -80,7 +80,8 @@
   .ctl > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
 
   /* Party bar */
-  .party { margin-top: 22px; display: grid; gap: 12px; }
+  .party { margin-top: 12px; display: grid; gap: 12px; }
+  .crumbs { margin-top: 18px; } .crumbs a { color: var(--accent); font-weight: 800; text-decoration: none; } .crumbs a:hover { text-decoration: underline; }
   .prow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
   .pick { position: relative; flex: 1 1 260px; min-width: 0; }
   .pick select { width: 100%; height: 48px; appearance: none; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); background: var(--surface); padding: 0 40px 0 14px;
@@ -183,10 +184,11 @@
           <p class="tagline">Roll for it, or type in the numbers. Then take turns.</p>
         </div>
       </a>
-      <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats">Charts</a><a href="/initiative" aria-current="page">Initiative</a></nav>
+      <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats">Charts</a><a href="/tools" aria-current="page">Tools</a></nav>
     </div>
   </header>
 
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools">‹ All tools</a></nav>
   <section class="card party" aria-labelledby="partyH">
     <h2 id="partyH">Party <span class="status" id="syncStatus" hidden><span class="dot"></span><span id="syncText"></span></span></h2>
     <div class="prow" id="partyRow"></div>
@@ -382,7 +384,7 @@
             : `<button class="link danger" type="button" data-pact="del">${p.code ? 'Remove' : 'Delete'}</button>`}
         </div>`;
     }
-    const link = p.code ? `${location.origin}/initiative?party=${p.code}` : '';
+    const link = p.code ? `${location.origin}/tools/initiative?party=${p.code}` : '';
     $('sharePanel').hidden = !showShare;
     if (showShare && p.code) $('sharePanel').innerHTML = `<div class="sharerow"><span class="code" aria-label="Party code ${p.code.split('').join(' ')}">${p.code}</span>
         <div class="pbtns"><button class="btn sm yellow" type="button" data-copy="${esc(link)}">Copy link</button><button class="btn sm" type="button" data-copy="${p.code}">Copy code</button></div></div>

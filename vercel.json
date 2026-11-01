@@ -1,5 +1,8 @@
 {
   "cleanUrls": true,
+  "redirects": [
+    { "source": "/initiative", "destination": "/tools/initiative", "permanent": true }
+  ],
   "functions": {
     "api/sync.js": { "maxDuration": 300 },
     "api/collection.js": { "maxDuration": 15 },
