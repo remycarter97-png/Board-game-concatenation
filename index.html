@@ -466,6 +466,29 @@
   .sthen { color: var(--muted); font-weight: 600; }
   .sadd { height: 30px; border: 2px dashed var(--outline); border-radius: 999px; background: var(--surface); color: var(--ink); font: 700 .82rem Nunito, sans-serif; padding: 0 8px; }
   .shint { margin-left: auto; color: var(--muted); font-weight: 600; font-size: .78rem; }
+  .svwrap { position: relative; }
+  .svbtn { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border: 2px solid var(--outline); border-radius: 999px; background: var(--surface);
+    font: 700 .82rem Nunito, sans-serif; color: var(--ink); box-shadow: 2px 2px 0 var(--outline); max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .svbtn.on { background: var(--yellow); color: #3d2a4f; }
+  .svbtn svg { flex: none; }
+  .svpanel { position: absolute; right: 0; top: calc(100% + 8px); z-index: 25; width: 300px; max-width: calc(100vw - 40px); background: var(--surface); border: var(--edge);
+    border-radius: 16px; box-shadow: var(--pop); padding: 12px; text-align: left; }
+  .svform label { display: block; font: 600 .78rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-2); margin-bottom: 6px; }
+  .svrow { display: flex; gap: 6px; }
+  .svrow input, .svrename input { flex: 1; min-width: 0; height: 36px; border: 2px solid var(--line); border-radius: 10px; padding: 0 10px; background: var(--bg); font: 600 .9rem Nunito, sans-serif; color: var(--ink); }
+  .svrow input:focus, .svrename input:focus { outline: none; border-color: var(--outline); box-shadow: 0 0 0 3px var(--yellow); }
+  .svrow .btn { height: 36px; padding: 0 14px; font-size: .9rem; }
+  .svnote { margin: 6px 0 0; font-size: .8rem; color: var(--ink-2); font-weight: 600; }
+  .svlist { list-style: none; margin: 10px 0 0; padding: 10px 0 0; border-top: 2px dashed var(--line); display: grid; gap: 2px; max-height: 260px; overflow: auto; }
+  .svlist li { display: flex; align-items: center; gap: 2px; border-radius: 10px; }
+  .svlist li.on { background: var(--yellow-soft); }
+  .svapply { all: unset; cursor: pointer; flex: 1; min-width: 0; padding: 7px 8px; border-radius: 10px; font-weight: 700; font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .svapply:hover, .svapply:focus-visible { background: var(--surface-2); }
+  .svicon { border: 0; background: none; width: 28px; height: 28px; border-radius: 8px; color: var(--ink-2); font-size: .95rem; flex: none; }
+  .svicon:hover { background: var(--surface-2); color: var(--ink); }
+  .svrename { display: flex; gap: 6px; align-items: center; flex: 1; padding: 3px 0; }
+  .svempty { margin: 10px 0 0; font-size: .82rem; color: var(--muted); font-weight: 600; }
+  .tablewrap { overflow: visible; } .gtable-scroll { overflow-x: auto; border-radius: 0 0 18px 18px; }
   @media (hover: none), (max-width: 760px) { .shint { display: none; } }
   .gtable td { padding: 7px 8px; border-bottom: 1.5px solid var(--line); vertical-align: middle; }
   .gtable tbody tr.head-row:hover td { background: color-mix(in srgb, var(--yellow) 14%, var(--surface)); }
@@ -1044,6 +1067,61 @@ function th(key, label, cls = "") {
   return `<th scope="col" class="${cls}"${aria}><button class="thsort${on ? " on" : ""}" data-sorth="${key}"
     title="Sort by ${label.toLowerCase()} (Shift-click to add it as another sort level)">${label}<span class="arr" aria-hidden="true">${on ? (d === 1 ? "▲" : "▼") : "↕"}</span>${on && multi ? `<span class="prio" aria-label="sort level ${i + 1}">${i + 1}</span>` : ""}</button></th>`;
 }
+/* ---------- Saved views (sort order + filters), kept in this browser ---------- */
+const SV_KEY = "saved-views", SV_MAX = 10;
+let svOpen = false, svRenaming = null, svNote = "";
+const loadViews = () => { const v = store.get("localStorage", SV_KEY, []); return Array.isArray(v) ? v.filter((x) => x && x.id && x.name && Array.isArray(x.sorts)) : []; };
+const saveViews = (v) => store.set("localStorage", SV_KEY, v);
+function snapshotView() {
+  return { sorts: state.sorts.map((x) => ({ key: x.key, dir: x.dir })), q: state.q, best: state.best, mechs: [...state.mechs].sort(),
+    col: Object.fromEntries(Object.entries(state.col).filter(([, v]) => v)) };
+}
+const viewSig = (v) => JSON.stringify([v.sorts, v.q || "", v.best ?? null, [...(v.mechs || [])].sort(), Object.entries(v.col || {}).filter(([, x]) => x).sort()]);
+function suggestName() {
+  const parts = state.sorts.map((x) => `${SORTS[x.key].label} ${x.dir === 1 ? "↑" : "↓"}`);
+  const n = activeFilters().length;
+  return parts.join(", ") + (n ? ` · ${n} filter${n === 1 ? "" : "s"}` : "");
+}
+function applyView(v) {
+  state.sorts = v.sorts.filter((x) => SORTS[x.key]).map((x) => ({ key: x.key, dir: x.dir === -1 ? -1 : 1 }));
+  if (!state.sorts.length) state.sorts = [{ key: "name", dir: 1 }];
+  state.q = v.q || ""; $("q").value = state.q;
+  state.best = typeof v.best === "number" ? v.best : null;
+  state.mechs = new Set(v.mechs || []);
+  state.col = { ...COLF_EMPTY, ...Object.fromEntries(Object.entries(v.col || {}).filter(([k]) => k in COLF_EMPTY)) };
+  $("mech-q").value = "";
+  changed();
+}
+function savedViewsUI() {
+  const views = loadViews(), cur = viewSig(snapshotView());
+  const active = views.find((v) => viewSig(v) === cur);
+  const panel = svOpen ? `<div class="svpanel" role="dialog" aria-label="Saved views">
+      <form class="svform" data-svform="1"><label for="sv-name">Save this sort${activeFilters().length ? " and its filters" : ""} as</label>
+        <div class="svrow"><input id="sv-name" data-svname="1" maxlength="40" autocomplete="off" value="${esc(active ? active.name : suggestName())}">
+        <button class="btn" type="submit">Save</button></div>
+        ${svNote ? `<p class="svnote" role="status">${esc(svNote)}</p>` : ""}</form>
+      ${views.length ? `<ul class="svlist">${views.map((v) => `<li class="${viewSig(v) === cur ? "on" : ""}">${svRenaming === v.id
+          ? `<form class="svrename" data-svrenform="${v.id}"><input data-svrename="${v.id}" maxlength="40" value="${esc(v.name)}" aria-label="New name for ${esc(v.name)}"><button class="linkbtn" type="submit">Done</button></form>`
+          : `<button class="svapply" data-svapply="${v.id}" title="Apply this view">${esc(v.name)}</button>
+             <button class="svicon" data-svren="${v.id}" aria-label="Rename ${esc(v.name)}" title="Rename">✎</button>
+             <button class="svicon" data-svdel="${v.id}" aria-label="Delete ${esc(v.name)}" title="Delete">×</button>`}</li>`).join("")}</ul>`
+        : `<p class="svempty">No saved views yet. They're kept in this browser.</p>`}
+    </div>` : "";
+  return `<span class="svwrap"><button class="svbtn${active ? " on" : ""}" data-svtoggle="1" aria-expanded="${svOpen}" title="Save or apply a view">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="${active ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21Z"/></svg>
+    ${active ? esc(active.name) : `Saved views${views.length ? ` (${views.length})` : ""}`}</button>${panel}</span>`;
+}
+function svSave(name) {
+  name = name.trim().slice(0, 40);
+  if (!name) { svNote = "Give it a name first."; return renderGrid(); }
+  const views = loadViews(), snap = snapshotView();
+  const i = views.findIndex((v) => v.name.toLowerCase() === name.toLowerCase());
+  if (i >= 0) { views[i] = { ...views[i], ...snap, name }; svNote = `Updated “${name}”.`; }
+  else if (views.length >= SV_MAX) { svNote = `You can keep up to ${SV_MAX}. Delete one to save another.`; return renderGrid(); }
+  else { views.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, ...snap }); svNote = `Saved “${name}”.`; }
+  saveViews(views); renderGrid();
+}
+
 function sortBar() {
   const dirWord = (k, d) => ["name", "mech", "owner"].includes(k) ? (d === 1 ? "A–Z" : "Z–A") : k === "rank" ? (d === 1 ? "best first" : "worst first") : (d === 1 ? "low–high" : "high–low");
   const free = Object.keys(SORTS).filter((k) => !state.sorts.some((x) => x.key === k));
@@ -1052,7 +1130,7 @@ function sortBar() {
       <button class="sdir" data-sdir="${i}" title="Reverse" aria-label="${SORTS[x.key].label}: ${dirWord(x.key, x.dir)}. Reverse">${x.dir === 1 ? "▲" : "▼"} ${dirWord(x.key, x.dir)}</button>
       ${state.sorts.length > 1 ? `<button class="srem" data-srem="${i}" aria-label="Stop sorting by ${SORTS[x.key].label}">×</button>` : ""}</span>${i < state.sorts.length - 1 ? '<span class="sthen" aria-hidden="true">then</span>' : ""}`).join("")}
     ${state.sorts.length < MAX_SORTS && free.length ? `<select class="sadd" data-sadd="1" aria-label="Add another sort level"><option value="">+ Then by…</option>${free.map((k) => `<option value="${k}">${SORTS[k].label}</option>`).join("")}</select>` : ""}
-    <span class="shint">Tip: Shift-click a column header to add it</span></div>`;
+    <span class="shint">Tip: Shift-click a column header to add it</span>${savedViewsUI()}</div>`;
 }
 function tableRows({ head: g, kids }) {
   const id = esc(g.id);
@@ -1089,12 +1167,12 @@ function bestCell() {
 function renderTable(rows) {
   // Keep typing focus in a text filter across re-renders.
   const ae = document.activeElement, keep = ae?.dataset?.colf ? { k: ae.dataset.colf, s: ae.selectionStart, e: ae.selectionEnd } : null;
-  $("tablewrap").innerHTML = `${sortBar()}<table class="gtable">
+  $("tablewrap").innerHTML = `${sortBar()}<div class="gtable-scroll"><table class="gtable">
     <caption class="sr">Games, ${state.page > 1 ? `page ${state.page}` : "first page"}. Use the second header row to filter each column. Select a game's name to see its details.</caption>
     <thead><tr>${th("", '<span class="sr">Cover</span>', "c-img")}${th("name", "Name")}${th("rating", "Rating", "c-num")}${th("rank", "BGG rank", "c-num")}
       ${th("players", "Players", "c-num")}${th("best", "Best with", "c-num")}${th("time", "Time", "c-num c-time")}${th("weight", "Complexity", "c-num")}${th("year", "Year", "c-num")}${th("mech", "Mechanics", "c-mech")}${th("owner", "Owner")}</tr>
       <tr class="frow"><td class="c-img"><span class="sr">No filter</span>${ICON.filter}</td>${colfCell("name")}${colfCell("rating")}${colfCell("rank")}${colfCell("players")}${bestCell()}${colfCell("time")}${colfCell("weight")}${colfCell("year")}${colfCell("mech")}${colfCell("owner")}</tr></thead>
-    <tbody>${rows.length ? rows.map(tableRows).join("") : `<tr><td colspan="11" class="tempty">${SLEEPY}<div><b>No games match these filters.</b> Change a filter above, or <button class="linkbtn" data-reset="1">reset all filters</button>.</div></td></tr>`}</tbody></table>`;
+    <tbody>${rows.length ? rows.map(tableRows).join("") : `<tr><td colspan="11" class="tempty">${SLEEPY}<div><b>No games match these filters.</b> Change a filter above, or <button class="linkbtn" data-reset="1">reset all filters</button>.</div></td></tr>`}</tbody></table></div>`;
   if (keep) {
     const el = $("tablewrap").querySelector(`[data-colf="${keep.k}"]`);
     if (el) { el.focus({ preventScroll: true }); if (el.setSelectionRange && keep.s != null) try { el.setSelectionRange(keep.s, keep.e); } catch {} }
@@ -1296,6 +1374,10 @@ document.addEventListener("click", (e) => {
   else if (t.dataset.sorth) { setSort(t.dataset.sorth, { add: e.shiftKey }); changed(); }
   else if (t.dataset.sdir) { state.sorts[Number(t.dataset.sdir)].dir *= -1; changed(); }
   else if (t.dataset.srem) { state.sorts.splice(Number(t.dataset.srem), 1); changed(); }
+  else if (t.dataset.svtoggle) { svOpen = !svOpen; svNote = ""; svRenaming = null; renderGrid(); if (svOpen) $("sv-name")?.select(); }
+  else if (t.dataset.svapply) { const v = loadViews().find((x) => x.id === t.dataset.svapply); if (v) { svOpen = false; applyView(v); } }
+  else if (t.dataset.svdel) { saveViews(loadViews().filter((x) => x.id !== t.dataset.svdel)); svNote = ""; renderGrid(); }
+  else if (t.dataset.svren) { svRenaming = t.dataset.svren; renderGrid(); const el = document.querySelector(`[data-svrename="${CSS.escape(svRenaming)}"]`); el?.focus(); el?.select(); }
   else if (t.dataset.trow) { const open = t.getAttribute("aria-expanded") !== "true"; t.setAttribute("aria-expanded", String(open));
     document.querySelectorAll(".kid-of-" + CSS.escape(t.dataset.trow)).forEach((r) => r.hidden = !open); }
   else if (t.dataset.best) { const n = Number(t.dataset.best); state.best = state.best === n ? null : n; changed(); }
@@ -1311,6 +1393,20 @@ $("mech-opts").addEventListener("change", (e) => { const v = e.target.value; e.t
 $("mech-clear").onclick = () => { state.mechs.clear(); changed(); };
 // Column filters in the table
 let cft;
+$("tablewrap").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const f = e.target;
+  if (f.dataset.svform) svSave(f.querySelector("[data-svname]").value);
+  else if (f.dataset.svrenform) {
+    const name = f.querySelector("input").value.trim().slice(0, 40);
+    const views = loadViews(), v = views.find((x) => x.id === f.dataset.svrenform);
+    if (v && name && !views.some((x) => x !== v && x.name.toLowerCase() === name.toLowerCase())) { v.name = name; saveViews(views); svNote = ""; }
+    else if (v && name) svNote = `There's already a view called “${name}”.`;
+    svRenaming = null; renderGrid();
+  }
+});
+document.addEventListener("click", (e) => { if (svOpen && !e.target.closest(".svwrap")) { svOpen = false; svRenaming = null; if (state.view === "table" && status === "ok") renderGrid(); } });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && svOpen) { svOpen = false; svRenaming = null; renderGrid(); } });
 $("tablewrap").addEventListener("input", (e) => {
   const el = e.target.closest("[data-colf]"); if (!el || el.tagName !== "INPUT") return;
   clearTimeout(cft); cft = setTimeout(() => { state.col[el.dataset.colf] = el.value.trim(); setPage(1); renderMechOpts(); renderBest(); renderActive(); renderGrid(); }, 180);
