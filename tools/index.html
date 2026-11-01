@@ -64,24 +64,48 @@
   .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
 
 
-  h2.sec { font: 700 1.5rem/1.2 Fredoka, ui-rounded, sans-serif; margin: 28px 0 4px; }
-  .secnote { margin: 0 0 18px; color: var(--ink-2); font-weight: 600; }
-  /* One card per tool. To add a tool: put its page in /tools and add an entry to TOOLS below. */
-  .tools { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px; }
+  /* The hub: three stops on a game night, each a section of tool cards. To add a tool: put its page in
+     /tools and add it to the right section in SECTIONS below (or swap it in for one of that section's ideas). */
+  .hubintro { margin-top: 26px; display: grid; gap: 14px; }
+  .hubintro p { margin: 0; color: var(--ink-2); font-weight: 600; font-size: 1.05rem; max-width: 64ch; }
+  .jump { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; margin: 0; padding: 0; }
+  .jump a { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 14px 0 6px; border: var(--edge); border-radius: 999px; background: var(--surface);
+    box-shadow: var(--pop-sm); color: var(--ink); text-decoration: none; font: 600 1rem Fredoka, ui-rounded, sans-serif; transition: transform .12s; }
+  .jump a:hover, .jump a:focus-visible { transform: translate(-2px, -2px); }
+  .jump .n { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--outline); background: var(--sc); color: #3d2a4f; font-weight: 700; }
+  .jump small { color: var(--muted); font: 700 .8rem Nunito, sans-serif; }
+  .stop { position: relative; margin-top: 34px; padding-left: 74px; scroll-margin-top: 16px; }
+  .stop::before { content: ""; position: absolute; left: 27px; top: 60px; bottom: -34px; border-left: 4px dotted var(--line); }
+  .stop:last-of-type::before { display: none; }
+  .stophead { display: flex; gap: 14px; align-items: center; margin: 0 0 16px -74px; }
+  .token { width: 58px; height: 58px; flex: none; border-radius: 50%; display: grid; place-items: center; border: var(--edge); background: var(--sc); box-shadow: var(--pop-sm);
+    font-size: 1.6rem; position: relative; z-index: 1; }
+  .token b { position: absolute; right: -6px; top: -6px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); border: 2px solid var(--outline);
+    font: 700 .8rem Fredoka, ui-rounded, sans-serif; color: var(--ink); }
+  .stophead h2 { margin: 0; font: 700 1.6rem/1.15 Fredoka, ui-rounded, sans-serif; }
+  .stophead p { margin: 2px 0 0; color: var(--ink-2); font-weight: 600; }
+  .tools { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; align-items: stretch; }
   .tool { display: flex; flex-direction: column; gap: 10px; padding: 20px; background: var(--surface); border: var(--edge); border-radius: 22px; box-shadow: var(--pop);
     color: inherit; text-decoration: none; transition: transform .16s, box-shadow .16s; }
   a.tool:hover, a.tool:focus-visible { transform: translate(-3px, -3px) rotate(-.6deg); box-shadow: 7px 7px 0 var(--outline); }
-  .tool .icon { width: 64px; height: 64px; border: var(--edge); border-radius: 18px; display: grid; place-items: center; font-size: 2rem; box-shadow: var(--pop-sm); transform: rotate(-5deg); }
-  .tool h3 { margin: 4px 0 0; font: 700 1.35rem/1.2 Fredoka, ui-rounded, sans-serif; }
+  .tool .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .tool .icon { width: 60px; height: 60px; border: var(--edge); border-radius: 18px; display: grid; place-items: center; font-size: 1.9rem; box-shadow: var(--pop-sm); transform: rotate(-5deg); }
+  .tool .where { font: 700 .75rem Nunito, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); border: 2px solid var(--line); border-radius: 999px; padding: 2px 9px; }
+  .tool h3 { margin: 2px 0 0; font: 700 1.3rem/1.2 Fredoka, ui-rounded, sans-serif; }
   .tool p { margin: 0; color: var(--ink-2); font-weight: 600; flex: 1; }
   .tool .go { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 14px; border: var(--edge); border-radius: 12px; background: var(--yellow); color: #3d2a4f;
     box-shadow: var(--pop-sm); font: 600 .98rem Fredoka, ui-rounded, sans-serif; }
-  .tool.soon { border-style: dashed; box-shadow: none; background: transparent; }
-  .tool.soon .icon { box-shadow: none; border-style: dashed; background: transparent; }
+  .ideas { display: flex; flex-direction: column; gap: 14px; }
+  .tool.idea { border-style: dashed; box-shadow: none; background: transparent; padding: 16px; gap: 6px; }
+  .tool.idea .icon { width: 44px; height: 44px; font-size: 1.3rem; border-radius: 14px; box-shadow: none; border-style: dashed; background: transparent; transform: none; }
+  .tool.idea h3 { font-size: 1.1rem; } .tool.idea p { font-size: .92rem; }
+  .tool.idea .where { border-style: dashed; }
   footer { margin: 48px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
   @media (max-width: 760px) {
     .wrap { padding: 0 16px; } header.top { padding-top: 24px; } .logo { width: 54px; height: 54px; } .brand { gap: 12px; }
     .tool { box-shadow: var(--pop-sm); }
+    .stop { padding-left: 0; } .stop::before { display: none; } .stophead { margin-left: 0; } .token { width: 50px; height: 50px; font-size: 1.4rem; }
+    .stophead h2 { font-size: 1.35rem; }
   }
 </style>
 </head>
@@ -105,27 +129,48 @@
     </div>
   </header>
   <main>
-    <h2 class="sec">Tools</h2>
-    <p class="secnote">Little helpers for game night.</p>
-    <div class="tools" id="tools"></div>
+    <section class="hubintro" aria-label="About these tools">
+      <p>Little helpers for every part of game night: picking what to play, running the game at the table, and looking back afterwards.</p>
+      <ul class="jump" id="jump"></ul>
+    </section>
+    <div id="stops"></div>
   </main>
-  <footer>More tools will show up here as we add them.</footer>
+  <footer>Dashed cards are ideas for tools we might add next.</footer>
 </div>
 <script>
-// The tools on this page. Add new ones here (and their page under /tools).
-const TOOLS = [
-  { href: "/tools/game-night", icon: "🍿", color: "var(--mint-soft)", name: "Game night planner",
-    text: "Pick who's playing and how long you have. It matches games to everyone's favorite weights, likes and dealbreakers, can skip recent plays, and rerolls on demand." },
-  { href: "/tools/quiz", icon: "🧠", color: "#d6c4ff", name: "Gamer personality quiz",
-    text: "Are you a Strategist, Tactician, Social Gamer, Explorer, Competitor or Collector? Ten quick questions, then the games on our shelf that suit you." },
-  { href: "/tools/initiative", icon: "🎲", color: "var(--accent-soft)", name: "Initiative tracker",
-    text: "Roll or enter initiative, then step through turns round by round. Save several parties and share one with a code." },
+// The Tools hub: three stops on a game night. Add a tool to the section where it's used (and its page under
+// /tools); ideas are dashed placeholders, so swap one out when its tool is built.
+const SECTIONS = [
+  { id: "before", icon: "🗓️", color: "var(--mint)", name: "Before you play", note: "Decide what to play, and who it's for.",
+    tools: [
+      { href: "/tools/game-night", icon: "🍿", color: "var(--mint-soft)", name: "Game night planner",
+        text: "Pick who's playing and how long you have. It matches games to everyone's favorite weights, likes and dealbreakers, can skip recent plays, and rerolls on demand." },
+      { href: "/tools/quiz", icon: "🧠", color: "#d6c4ff", name: "Gamer personality quiz",
+        text: "Are you a Strategist, Tactician, Social Gamer, Explorer, Competitor or Collector? Ten quick questions, then the games on our shelf that suit you." }],
+    ideas: [{ icon: "📋", name: "Teach notes", text: "Short rules teach scripts for the games we bring out most." }] },
+  { id: "table", icon: "🎲", color: "var(--yellow)", name: "At the table", note: "Keep the game moving once the box is open.",
+    tools: [
+      { href: "/tools/initiative", icon: "⚔️", color: "var(--accent-soft)", name: "Initiative tracker",
+        text: "Roll or enter initiative, then step through turns round by round. Keep core party members and clear scenario enemies. Save several parties and share one with a code." }],
+    ideas: [
+      { icon: "👆", name: "First player picker", text: "Everyone puts a finger on the phone and it picks who goes first." },
+      { icon: "⏳", name: "Turn timer", text: "A gentle chess clock for the slow thinkers at the table." }] },
+  { id: "after", icon: "🏆", color: "#ffbf8f", name: "After the game", note: "Add up the score and remember the night.",
+    tools: [
+      { href: "/stats#recap", icon: "📆", color: "var(--yellow-soft)", name: "Our year recap", where: "On Charts",
+        text: "Our year and each quarter at the table from Remy's logged plays: favorites, new-to-us games and fun facts." }],
+    ideas: [{ icon: "🧮", name: "Score pad", text: "Add up end-game points by category for any game, with a running total per player." }] },
 ];
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-document.getElementById("tools").innerHTML = TOOLS.map((t) => `<a class="tool" href="${t.href}">
-    <span class="icon" style="background:${t.color}" aria-hidden="true">${t.icon}</span>
-    <h3>${esc(t.name)}</h3><p>${esc(t.text)}</p><span class="go">Open ›</span></a>`).join("")
-  + `<div class="tool soon"><span class="icon" aria-hidden="true">✨</span><h3>More on the way</h3><p>New game night tools will appear here.</p></div>`;
+const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+document.getElementById("jump").innerHTML = SECTIONS.map((s, i) => `<li><a href="#${s.id}" style="--sc:${s.color}"><span class="n">${i + 1}</span>${esc(s.name)} <small>${plural(s.tools.length, "tool")}</small></a></li>`).join("");
+document.getElementById("stops").innerHTML = SECTIONS.map((s, i) => `<section class="stop" id="${s.id}" aria-labelledby="${s.id}-h" style="--sc:${s.color}">
+    <div class="stophead"><span class="token" aria-hidden="true">${s.icon}<b>${i + 1}</b></span><div><h2 id="${s.id}-h">${esc(s.name)}</h2><p>${esc(s.note)}</p></div></div>
+    <div class="tools">${s.tools.map((t) => `<a class="tool" href="${t.href}">
+      <span class="top"><span class="icon" style="background:${t.color}" aria-hidden="true">${t.icon}</span>${t.where ? `<span class="where">${esc(t.where)}</span>` : ""}</span>
+      <h3>${esc(t.name)}</h3><p>${esc(t.text)}</p><span class="go">Open ›</span></a>`).join("")}
+    <div class="ideas">${s.ideas.map((t) => `<div class="tool idea"><span class="top"><span class="icon" aria-hidden="true">${t.icon}</span><span class="where">Idea</span></span>
+      <h3>${esc(t.name)}</h3><p>${esc(t.text)}</p></div>`).join("")}</div></div></section>`).join("");
 </script>
 <script src="/pwa.js" defer></script>
 </body>
