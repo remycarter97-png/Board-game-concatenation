@@ -168,6 +168,11 @@
   .dinfo a:hover { color: var(--accent); text-decoration: underline; }
   .dmeta { color: var(--ink-2); font-size: .82rem; font-weight: 700; }
   @media (max-width: 760px) { .drill { padding: 0; place-items: end stretch; } .dsheet { max-height: 88vh; border-radius: 22px 22px 0 0; border-width: 3px 0 0; box-shadow: none; } }
+  .ptiles { margin: 0 0 16px; }
+  .tile dd.sm { font-size: 1.3rem; line-height: 1.2; } .tile dd.sm small { font-size: .95rem; }
+  .plegend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-weight: 700; font-size: .85rem; color: var(--ink); }
+  .plegend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid var(--outline); margin-right: 6px; vertical-align: -1px; }
+  .plmore { align-self: flex-start; margin-top: 4px; }
   footer { margin: 48px 0 0; padding: 26px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600;
     display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
   .bgg { display: inline-block; background: #fff; border: var(--edge); box-shadow: var(--pop-sm); border-radius: 12px; padding: 6px 10px; line-height: 0; }
@@ -592,7 +597,7 @@ function renderAll() {
   const one = list.length === 1;
   const kinds = F.include === "base" ? (one ? "base game" : "base games") : F.include === "exp" ? (one ? "game or expansion" : "games and expansions") : (one ? "item" : "items");
   $("fcount").innerHTML = `Charting <b>${fmt(list.length)}</b> ${kinds}`;
-  renderTiles(list); renderDash(list); renderBuilder(); renderSaved(list);
+  renderTiles(list); renderDash(list); renderPlays(); renderBuilder(); renderSaved(list);
 }
 function buildPage() {
   let html = `<dl class="tiles" id="tiles"></dl><p class="hint">Tip: click any bar, point or dot to see the games that make it up.</p>`, open = false;
@@ -600,13 +605,71 @@ function buildPage() {
     if (c.section) { if (open) html += `</div>`; html += `<h2 class="sec"><span class="dot" aria-hidden="true"></span>${c.section}</h2><p class="secnote">${c.note}</p><div class="charts">`; open = true; }
     else html += cardHtml(c);
   }
-  html += `</div><h2 class="sec"><span class="dot" aria-hidden="true"></span>Make your own chart</h2>
+  html += `</div><h2 class="sec"><span class="dot" aria-hidden="true"></span>Games we've played</h2>
+    <p class="secnote">By the numbers, from Remy's logged plays on BoardGameGeek. This section doesn't use the filters at the top.</p>
+    <div id="plays"></div>
+    <h2 class="sec"><span class="dot" aria-hidden="true"></span>Make your own chart</h2>
     <p class="secnote">Pick a chart type and what to show. It uses the filters at the top. Save the ones you like to keep them below.</p>
     <section class="builder" id="builder" aria-label="Chart builder"></section>
     <h2 class="sec"><span class="dot" aria-hidden="true"></span>Your charts</h2><p class="secnote">Saved in this browser. They update with each sync and follow the filters at the top.</p>
     <div class="charts" id="saved"></div>`;
   $("main").innerHTML = html;
 }
+
+/* ---------- Games we've played: Remy's logged plays on BGG ---------- */
+let plays = null;
+const PL = { mode: store.get("plays-mode", "owned") === "all" ? "all" : "owned", expanded: false };
+const PL_TOP = 20;
+function playsList() {
+  const items = plays?.items || [];
+  return PL.mode === "all" ? items : items.filter((x) => x.owned);
+}
+// A played game as the drill-down list expects it: our shelf's copy when we own it.
+const playedGame = (p) => all.find((g) => g.id === p.id) || { id: p.id, name: p.name, year: p.year, thumbnail: p.thumbnail, type: "Base game", url: `https://boardgamegeek.com/boardgame/${p.id}` };
+function renderPlays() {
+  const box = $("plays"); if (!box) return;
+  if (!plays?.items?.length) { box.innerHTML = `<div class="card wide"><div class="noplot">No plays yet. They'll show here after the next daily sync from BoardGameGeek.</div></div>`; return; }
+  const list = playsList(), shown = PL.expanded ? list : list.slice(0, PL_TOP);
+  const total = list.reduce((s, x) => s + x.plays, 0), top = list[0];
+  const shelf = new Set((plays.items || []).map((x) => x.id));
+  const unplayed = all.filter((g) => g.type === "Base game" && !shelf.has(g.id)).length;
+  const others = (plays.items || []).filter((x) => !x.owned).length;
+  box.innerHTML = `<dl class="tiles ptiles">
+      <div class="tile"><dt>Plays logged</dt><dd>${fmt(total)}</dd></div>
+      <div class="tile"><dt>Games played</dt><dd>${fmt(list.length)}</dd></div>
+      <div class="tile"><dt>Most played</dt><dd class="sm">${top ? `${esc(top.name)} <small>${top.plays}×</small>` : "—"}</dd></div>
+      <div class="tile"><dt>On our shelf, not played yet</dt><dd>${fmt(unplayed)}</dd></div></dl>
+    <article class="card wide" id="c-plays-card">
+      <div class="chead"><div><h3 id="c-plays-h">Times played</h3><p class="sub">${PL.mode === "all" ? `Every game Remy has logged, including ${others} we don't own` : "Games on our shelf that Remy has logged plays of"}</p></div>
+        <div class="seg" role="group" aria-label="Which games"><button data-plmode="owned" aria-pressed="${PL.mode === "owned"}">On our shelf</button><button data-plmode="all" aria-pressed="${PL.mode === "all"}">Include games we don't own</button></div></div>
+      ${PL.mode === "all" ? `<div class="plegend"><span><i style="background:var(--s1)"></i>On our shelf</span><span><i style="background:var(--s2)"></i>Not ours</span></div>` : ""}
+      <div class="plot tall" id="c-plays"></div>
+      ${list.length > PL_TOP ? `<button class="linkbtn plmore" data-plmore="1">${PL.expanded ? `Show the top ${PL_TOP}` : `Show all ${list.length} games`}</button>` : ""}
+      <details class="data"><summary>Show the numbers</summary><div class="dtable"><table><thead><tr><th scope="col">Game</th><th scope="col">Plays</th><th scope="col">On our shelf</th></tr></thead><tbody>
+        ${list.map((p) => `<tr><th scope="row"><a href="https://boardgamegeek.com/boardgame/${esc(p.id)}" target="_blank" rel="noopener">${esc(p.name)}</a></th><td class="n">${p.plays}</td><td class="n">${p.owned ? "Yes" : "No"}</td></tr>`).join("")}</tbody></table></div></details>
+    </article>`;
+  const plot = $("c-plays"), T = chartTheme();
+  plot.style.height = Math.max(160, shown.length * 26 + 70) + "px";
+  charts.get("c-plays")?.destroy();
+  plot.innerHTML = `<canvas role="img" aria-label="Times played, one bar per game. Select a bar to see the game; the numbers are also in the table below."></canvas>`;
+  const color = (p) => css(PL.mode === "all" && !p.owned ? "--s2" : "--s1");
+  charts.set("c-plays", new Chart(plot.querySelector("canvas"), { type: "bar",
+    data: { labels: shown.map((p) => p.name), datasets: [{ label: "Plays", data: shown.map((p) => p.plays), backgroundColor: shown.map(color), borderColor: T.outline, borderWidth: 1.6, borderRadius: 5, borderSkipped: "start", maxBarThickness: 22 }] },
+    options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+      scales: { x: { ...axis(T, { label: "Times played", d: 0 }), beginAtZero: true, ticks: { ...axis(T, { d: 0 }).ticks, precision: 0 } },
+        y: { grid: { display: false }, border: { color: T.outline, width: 2 }, ticks: { color: T.ink2, font: { weight: 700 }, autoSkip: false, callback: function (v) { const l = this.getLabelForValue(v); return l.length > 30 ? l.slice(0, 29) + "…" : l; } } } },
+      plugins: { legend: { display: false },
+        tooltip: { backgroundColor: T.surface, titleColor: T.ink, bodyColor: T.ink, borderColor: T.outline, borderWidth: 2, cornerRadius: 10, padding: 10, titleFont: { family: "Fredoka", weight: 600, size: 14 }, bodyFont: { weight: 700 },
+          callbacks: { label: (c) => `${c.raw} play${c.raw === 1 ? "" : "s"}${shown[c.dataIndex].owned ? "" : " · not on our shelf"}` } } },
+      onClick: (evt, _e, chart) => { const el = chart.getElementsAtEventForMode(evt, "index", { intersect: false, axis: "y" }, true)[0]; if (!el) return;
+        const p = shown[el.index]; openDrill(p.name, `${p.plays} play${p.plays === 1 ? "" : "s"} logged by Remy${p.owned ? "" : " · not on our shelf"}`, [playedGame(p)]); },
+      onHover: (evt, els) => { evt.native.target.style.cursor = els.length ? "pointer" : "default"; } } }));
+}
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.plmode) { PL.mode = t.dataset.plmode; store.set("plays-mode", PL.mode); renderPlays(); document.querySelector(`[data-plmode="${PL.mode}"]`)?.focus(); }
+  else if (t.dataset.plmore) { PL.expanded = !PL.expanded; renderPlays(); document.querySelector("[data-plmore]")?.focus(); }
+});
 
 /* ---------- Events ---------- */
 const FIDS = { "f-include": "include", "f-best": "best", "f-weight": "weight", "f-time": "time", "f-decade": "decade" };
@@ -668,7 +731,7 @@ async function load() {
     const d = await r.json().catch(() => ({}));
     if (r.status === 503 && d.status === "syncing") { setSync("syncing", "Setting up"); $("loading").textContent = "The shelf is being set up. Check back in a few minutes."; return; }
     if (!r.ok || !Array.isArray(d.games)) throw new Error(d.message || `HTTP ${r.status}`);
-    all = d.games; updatedAt = d.updatedAt;
+    all = d.games; updatedAt = d.updatedAt; plays = d.plays || null;
     const when = updatedAt ? new Date(updatedAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
     setSync(d.lastSyncError ? "error" : "ok", d.lastSyncError ? `Showing last sync${when ? ` · ${when}` : ""}` : `Synced ${when}`);
     if (d.detailsComplete === false) banner("Some game details are still loading from BoardGameGeek, so a few charts may be missing games until the next sync.");

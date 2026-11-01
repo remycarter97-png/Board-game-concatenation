@@ -34,9 +34,9 @@ export default async function handler(req, res) {
   if (!token) return res.status(503).json({ status: "not_configured" });
 
   const prevDetails = (await readJson(DETAILS)) || {};
-  const prevHot = (await readJson(SNAPSHOT).catch(() => null))?.hot || null;
+  const prev = await readJson(SNAPSHOT).catch(() => null);
   try {
-    const { snapshot, details, stats } = await syncCollection({ token, prevDetails, prevHot });
+    const { snapshot, details, stats } = await syncCollection({ token, prevDetails, prevHot: prev?.hot || null, prevPlays: prev?.plays || null });
     await save(DETAILS, details);
     await save(SNAPSHOT, snapshot);
     return res.status(200).json({ status: "ok", ...stats });
