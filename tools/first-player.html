@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>First Player Picker</title>
+<meta name="description" content="Everyone puts a finger on the screen and it picks who goes first, or the whole turn order.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#fff3e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1528" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Game Shelf">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
+    --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
+    --yellow: #ffd45c; --yellow-soft: #fff1c2; --mint: #8be0bd; --mint-soft: #ddf6ea;
+    --ok: #24a26b; --danger: #d43c41; --warn: #a35a00; --warn-soft: #ffe8cc;
+    --edge: 2.5px solid var(--outline); --pop: 4px 4px 0 var(--outline); --pop-sm: 3px 3px 0 var(--outline);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+      --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+      --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+    --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+    --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; color: var(--ink); font: 16px/1.5 Nunito, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header (matches the other pages) */
+  header.top { padding: 36px 0 8px; }
+  .titlebar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .brand { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+  .logo { width: 72px; height: 72px; flex: none; transform: rotate(-5deg); filter: drop-shadow(4px 4px 0 var(--outline)); transition: transform .3s; }
+  .logo:hover { transform: rotate(4deg) scale(1.05); }
+  h1 { font: 700 clamp(2rem, 4vw, 2.9rem)/1.05 Fredoka, ui-rounded, system-ui, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  h1 .hl { background: linear-gradient(transparent 62%, var(--hl, var(--yellow)) 62% 92%, transparent 92%); padding: 0 2px; }
+  .tagline { margin: 6px 0 0; color: var(--ink-2); font-size: 1.05rem; font-weight: 600; }
+  .pagenav { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); }
+  .pagenav a { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-decoration: none; }
+  .pagenav a:hover { color: var(--ink); background: var(--surface-2); }
+  .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+
+  /* Shared bits */
+  .card { background: var(--surface); border: var(--edge); border-radius: 22px; box-shadow: var(--pop); padding: 18px 20px; min-width: 0; display: grid; gap: 14px; align-content: start; }
+  h2 { font: 700 1.3rem/1.2 Fredoka, ui-rounded, sans-serif; margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  h2 small { font: 700 .88rem Nunito, sans-serif; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm);
+    background: var(--surface); color: var(--ink); font: 600 1rem Fredoka, ui-rounded, sans-serif; transition: transform .12s, box-shadow .12s; text-decoration: none; }
+  .btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.yellow { background: var(--yellow); color: #3d2a4f; }
+  .btn.big { min-height: 52px; font-size: 1.15rem; padding: 0 22px; }
+  .btn.sm { min-height: 34px; padding: 0 12px; font-size: .9rem; border-radius: 11px; }
+  .link { border: 0; background: none; padding: 4px 2px; color: var(--accent); font-weight: 800; font-size: .92rem; }
+  .link:hover { text-decoration: underline; }
+  .link.danger { color: var(--danger); }
+  input[type=text], input[type=number] { height: 44px; border: var(--edge); border-radius: 13px; background: var(--surface); padding: 0 12px; font-weight: 700; min-width: 0; box-shadow: var(--pop-sm); }
+  input:focus { outline: none; box-shadow: 0 0 0 4px var(--yellow), 3px 3px 0 4px var(--outline); }
+  input[readonly] { opacity: .65; }
+  .note { margin: 0; font-size: .88rem; color: var(--ink-2); font-weight: 600; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 2px solid var(--outline); border-radius: 12px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: none; min-height: 30px; padding: 0 12px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+  .ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ctl > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .crumbs { margin-top: 18px; } .crumbs a { color: var(--accent); font-weight: 800; text-decoration: none; } .crumbs a:hover { text-decoration: underline; }
+  main { margin-top: 12px; display: grid; gap: 16px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; justify-content: space-between; }
+  .bar .grp { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-weight: 800; color: var(--ink-2); font-size: .9rem; }
+  /* Finger pad */
+  .pad { position: relative; height: max(340px, 68dvh); border: 3px solid var(--outline); border-radius: 28px; box-shadow: var(--pop); overflow: hidden;
+    background: radial-gradient(circle at 50% 50%, var(--surface) 0 40%, var(--surface-2) 100%); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    transition: background-color .3s; }
+  .pad:fullscreen { border: 0; border-radius: 0; box-shadow: none; height: 100%; }
+  .pad .hint { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 10px; text-align: center; padding: 24px; pointer-events: none; color: var(--ink-2); }
+  .pad .hint .hand { font-size: 3.4rem; animation: bob 1.6s ease-in-out infinite; }
+  .pad .hint b { font: 700 clamp(1.3rem, 4vw, 1.8rem)/1.2 Fredoka, ui-rounded, sans-serif; color: var(--ink); }
+  .pad .hint span { font-weight: 700; max-width: 32ch; }
+  .pad.busy .hint { opacity: 0; }
+  .fullbtn { position: absolute; right: 12px; bottom: 12px; z-index: 3; }
+  .pad:fullscreen .fullbtn { display: none; }
+  .pad .status { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); pointer-events: none; padding: 4px 14px; border: 2px solid var(--outline); border-radius: 999px; background: var(--surface);
+    font: 700 1rem Fredoka, ui-rounded, sans-serif; white-space: nowrap; opacity: 0; transition: opacity .2s; }
+  .pad.busy .status { opacity: 1; }
+  .padwrap { scroll-margin-top: 8px; }
+  .finger { position: absolute; width: 110px; height: 110px; margin: -55px 0 0 -55px; border-radius: 50%; pointer-events: none; display: grid; place-items: center;
+    background: var(--fc); border: 4px solid var(--outline); box-shadow: 0 0 0 8px color-mix(in srgb, var(--fc) 35%, transparent); animation: pop .22s ease-out;
+    transition: transform .35s cubic-bezier(.3,1.6,.5,1), opacity .35s; }
+  .finger svg { position: absolute; inset: -18px; width: calc(100% + 36px); height: calc(100% + 36px); transform: rotate(-90deg); }
+  .finger circle { fill: none; stroke: var(--outline); stroke-width: 6; stroke-linecap: round; stroke-dasharray: 440; stroke-dashoffset: 440; }
+  .pad.counting .finger circle { animation: fill var(--hold) linear forwards; }
+  .finger b { font: 700 2.6rem Fredoka, ui-rounded, sans-serif; color: #3d2a4f; opacity: 0; transform: scale(.4); transition: opacity .25s, transform .3s cubic-bezier(.3,1.6,.5,1); }
+  .finger.num b { opacity: 1; transform: scale(1); }
+  .finger.win { transform: scale(1.45); z-index: 2; box-shadow: 0 0 0 14px color-mix(in srgb, var(--fc) 45%, transparent), 0 0 0 9999px color-mix(in srgb, var(--fc) 30%, transparent); }
+  .finger.win b { opacity: 1; transform: scale(1); font-size: 2rem; }
+  .finger.lose { transform: scale(.55); opacity: .25; }
+  @keyframes pop { from { transform: scale(.3); } }
+  @keyframes fill { to { stroke-dashoffset: 0; } }
+  @keyframes bob { 50% { transform: translateY(-8px) rotate(-6deg); } }
+  /* Names */
+  .names { display: grid; gap: 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; margin: 0; padding: 0; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 48px; padding: 0 8px 0 16px; border: var(--edge); border-radius: 999px; background: var(--fc); color: #3d2a4f;
+    font: 700 1.1rem Fredoka, ui-rounded, sans-serif; box-shadow: var(--pop-sm); transition: transform .12s, opacity .2s; }
+  .chip .x { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #3d2a4f; background: #fffdf8; color: #3d2a4f; font-weight: 900; line-height: 1; display: grid; place-items: center; }
+  .chip.hot { transform: translateY(-4px) scale(1.08); box-shadow: 5px 6px 0 var(--outline); }
+  .chips.spinning .chip:not(.hot) { opacity: .5; }
+  .addrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .addrow input { flex: 1 1 180px; min-width: 0; min-height: 44px; padding: 0 14px; border: var(--edge); border-radius: 14px; background: var(--surface); color: var(--ink); font: 700 1rem Nunito, sans-serif; }
+  .addrow input:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .verdict { min-height: 1.5em; margin: 0; font: 700 clamp(1.4rem, 4vw, 2rem)/1.2 Fredoka, ui-rounded, sans-serif; }
+  .order { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; counter-reset: o; }
+  .order li { counter-increment: o; display: flex; align-items: center; gap: 12px; font: 700 1.2rem Fredoka, ui-rounded, sans-serif; }
+  .order li::before { content: counter(o); width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--outline); background: var(--fc); color: #3d2a4f; }
+  .msg { font-weight: 700; color: var(--ink-2); font-size: .9rem; margin: 0; }
+  footer { margin: 40px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
+  @media (max-width: 760px) {
+    .wrap { padding: 0 16px; } header.top { padding-top: 20px; } .logo { width: 54px; height: 54px; } .brand { gap: 12px; }
+    .card { box-shadow: var(--pop-sm); padding: 16px; border-radius: 18px; } .pad { box-shadow: var(--pop-sm); border-radius: 22px; }
+    .bar { gap: 8px; } .bar .grp > span { display: none; } .long { display: none; } .seg button { padding: 0 10px; }
+    .finger { width: 92px; height: 92px; margin: -46px 0 0 -46px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .pad .hint .hand { animation: none; } .finger { animation: none; transition: opacity .2s; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <a class="brand" href="/">
+        <svg class="logo" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="3" y="3" width="66" height="66" rx="18" fill="var(--yellow)" stroke="var(--outline)" stroke-width="3"/>
+          <g transform="translate(36 10) rotate(14)"><rect x="0" y="0" width="22" height="22" rx="5" fill="#fff" stroke="var(--outline)" stroke-width="2.5"/>
+            <circle cx="6" cy="6" r="2.2" fill="var(--outline)"/><circle cx="11" cy="11" r="2.2" fill="var(--outline)"/><circle cx="16" cy="16" r="2.2" fill="var(--outline)"/></g>
+          <g transform="translate(9 20) scale(1.75)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.4" stroke-linejoin="round"/></g>
+        </svg>
+        <div>
+          <h1>First <span class="hl">Player</span></h1>
+          <p class="tagline">Fingers on the screen. Who goes first?</p>
+        </div>
+      </a>
+      <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats">Charts</a><a href="/tools" aria-current="page">Tools</a></nav>
+    </div>
+  </header>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools">‹ All tools</a></nav>
+  <main>
+    <div class="bar">
+      <div class="grp"><span>Use</span><div class="seg" role="group" aria-label="How to pick"><button type="button" id="mFingers">👆 Fingers</button><button type="button" id="mNames">📝 Names</button></div></div>
+      <div class="grp"><span>Pick</span><div class="seg" role="group" aria-label="What to pick"><button type="button" id="pFirst">First<span class="long"> player</span></button><button type="button" id="pOrder">Turn order</button></div></div>
+    </div>
+
+    <section id="fingerView" aria-label="Finger picker">
+      <div class="pad" id="pad">
+        <div class="hint"><span class="hand" aria-hidden="true">👆</span><b>Everyone put a finger on the screen</b><span>Hold still for a moment and one finger gets picked. Lift all fingers to go again.</span></div>
+        <div class="status" id="status" role="status" aria-live="polite"></div>
+        <button class="btn sm fullbtn" type="button" id="full" hidden aria-label="Full screen">⛶</button>
+      </div>
+      <p class="msg" style="margin-top:10px">Works with up to 10 fingers on most phones and tablets. No touch screen? Switch to Names.</p>
+    </section>
+
+    <section class="card names" id="nameView" aria-labelledby="nameH" hidden>
+      <h2 class="sec" id="nameH" style="margin:0;font:700 1.35rem Fredoka,ui-rounded,sans-serif">Who's playing?</h2>
+      <ul class="chips" id="chips"></ul>
+      <form class="addrow" id="addForm"><label class="vh" for="addName">Add a player</label><input id="addName" placeholder="Add a player" maxlength="30" autocomplete="off"><button class="btn" type="submit">Add</button></form>
+      <div><button class="btn yellow big" type="button" id="go">Pick the first player</button></div>
+      <div aria-live="polite" id="out"><p class="verdict" id="verdict"></p></div>
+    </section>
+  </main>
+  <footer>Picks are random every time. The names list is saved in this browser.</footer>
+</div>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const KEY = "game-shelf:first-player", HOLD = 2000;
+  const COLORS = ["#ffd45c", "#8be0bd", "#ff9fb8", "#9cc9ff", "#ffb27a", "#c9b3ff", "#b8e86b", "#7fe0e0", "#ff8f73", "#f0c6ff"];
+  const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const rand = (n) => { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; };
+  const shuffle = (xs) => { const a = [...xs]; for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const ord = (n) => n + (["th", "st", "nd", "rd"][(n % 100 - 20) % 10] || ["th", "st", "nd", "rd"][n % 100] || "th");
+
+  let S; try { S = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { S = null; }
+  if (!S || !Array.isArray(S.names)) S = { names: ["Remy", "Jonathan"], mode: matchMedia("(pointer: coarse)").matches ? "fingers" : "names", pick: "first" };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+  let setMode = function () {
+    $("mFingers").setAttribute("aria-pressed", S.mode === "fingers"); $("mNames").setAttribute("aria-pressed", S.mode === "names");
+    $("pFirst").setAttribute("aria-pressed", S.pick === "first"); $("pOrder").setAttribute("aria-pressed", S.pick === "order");
+    $("fingerView").hidden = S.mode !== "fingers"; $("nameView").hidden = S.mode !== "names";
+    $("full").hidden = S.mode !== "fingers" || !$("pad").requestFullscreen;
+    $("go").textContent = S.pick === "first" ? "Pick the first player" : "Pick the turn order";
+    resetFingers(); $("verdict").textContent = ""; $("out").querySelector(".order")?.remove(); renderChips();
+  };
+  $("mFingers").onclick = () => { S.mode = "fingers"; save(); setMode(); };
+  $("mNames").onclick = () => { S.mode = "names"; save(); setMode(); };
+  $("pFirst").onclick = () => { S.pick = "first"; save(); setMode(); };
+  $("pOrder").onclick = () => { S.pick = "order"; save(); setMode(); };
+  $("full").onclick = () => $("pad").requestFullscreen().catch(() => {});
+
+  /* ---------- Fingers ---------- */
+  const pad = $("pad"), fingers = new Map();
+  let phase = "wait", timer = null, resetTimer = null;
+  pad.style.setProperty("--hold", HOLD + "ms");
+  const status = (t) => { $("status").textContent = t; };
+  function place(f, e) { const r = pad.getBoundingClientRect(); f.el.style.left = (e.clientX - r.left) + "px"; f.el.style.top = (e.clientY - r.top) + "px"; }
+  function arm() {
+    clearTimeout(timer); pad.classList.remove("counting");
+    pad.classList.toggle("busy", fingers.size > 0);
+    if (phase === "picked") return;
+    phase = "wait";
+    if (fingers.size === 1) status("Waiting for more fingers…");
+    if (fingers.size >= 2) {
+      void pad.offsetWidth; pad.classList.add("counting"); phase = "counting";
+      status(`${fingers.size} players. Hold still…`);
+      timer = setTimeout(pickFingers, HOLD);
+    }
+  }
+  function pickFingers() {
+    phase = "picked"; pad.classList.remove("counting");
+    const order = shuffle([...fingers.keys()]);
+    if (S.pick === "first") {
+      order.forEach((id, i) => { const f = fingers.get(id); f.el.classList.add(i ? "lose" : "win"); if (!i) f.el.querySelector("b").textContent = "1st"; });
+      status("This player goes first!");
+    } else {
+      order.forEach((id, i) => { const f = fingers.get(id); f.el.querySelector("b").textContent = i + 1; setTimeout(() => f.el.classList.add("num"), calm ? 0 : i * 220); });
+      status("Turn order picked!");
+    }
+    navigator.vibrate?.(S.pick === "first" ? 120 : [60, 40, 60]);
+  }
+  function resetFingers() { clearTimeout(timer); clearTimeout(resetTimer); fingers.forEach((f) => f.el.remove()); fingers.clear(); phase = "wait"; pad.classList.remove("counting", "busy"); }
+  pad.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    if (phase === "picked" || fingers.size >= 10) return;
+    clearTimeout(resetTimer);
+    const used = new Set([...fingers.values()].map((f) => f.color));
+    const color = COLORS.find((c) => !used.has(c)) || COLORS[fingers.size % COLORS.length];
+    const el = document.createElement("div"); el.className = "finger"; el.style.setProperty("--fc", color);
+    el.innerHTML = `<svg viewBox="0 0 150 150" aria-hidden="true"><circle cx="75" cy="75" r="70"/></svg><b></b>`;
+    const f = { el, color }; fingers.set(e.pointerId, f); place(f, e); pad.appendChild(el);
+    try { pad.setPointerCapture(e.pointerId); } catch (err) {}
+    arm();
+  });
+  pad.addEventListener("pointermove", (e) => { const f = fingers.get(e.pointerId); if (f) place(f, e); });
+  const lift = (e) => {
+    const f = fingers.get(e.pointerId); if (!f) return;
+    if (phase === "picked") {
+      fingers.delete(e.pointerId);
+      if (!f.el.classList.contains("win") && !f.el.classList.contains("num")) f.el.remove();
+      if (!fingers.size) { status("Put fingers down to go again"); resetTimer = setTimeout(() => { pad.querySelectorAll(".finger").forEach((x) => x.remove()); phase = "wait"; pad.classList.remove("busy"); }, 1600); }
+      return;
+    }
+    f.el.remove(); fingers.delete(e.pointerId); arm();
+  };
+  pad.addEventListener("pointerup", lift); pad.addEventListener("pointercancel", lift);
+  pad.addEventListener("contextmenu", (e) => e.preventDefault());
+
+  /* ---------- Names ---------- */
+  let spinning = false;
+  function renderChips(hot) {
+    $("chips").innerHTML = S.names.map((n, i) => `<li class="chip${hot === i ? " hot" : ""}" style="--fc:${COLORS[i % COLORS.length]}">${esc(n)}<button class="x" type="button" data-del="${i}" aria-label="Remove ${esc(n)}">×</button></li>`).join("");
+    $("go").disabled = S.names.length < 2 || spinning;
+    if (S.names.length < 2 && !spinning) $("verdict").textContent = S.names.length ? "Add at least one more player." : "Add the players.";
+  }
+  $("addForm").onsubmit = (e) => {
+    e.preventDefault(); const n = $("addName").value.trim().slice(0, 30); if (!n || spinning) return;
+    S.names.push(n); save(); $("addName").value = ""; $("verdict").textContent = ""; renderChips(); $("addName").focus();
+  };
+  $("chips").onclick = (e) => { const b = e.target.closest("[data-del]"); if (!b || spinning) return; S.names.splice(Number(b.dataset.del), 1); save(); $("verdict").textContent = ""; renderChips(); };
+  $("go").onclick = () => {
+    if (S.names.length < 2 || spinning) return;
+    const order = shuffle(S.names.map((_, i) => i)), win = order[0];
+    $("out").querySelector(".order")?.remove(); $("verdict").textContent = "";
+    const finish = () => {
+      spinning = false; $("chips").classList.remove("spinning"); renderChips(win);
+      if (S.pick === "first") $("verdict").textContent = `${S.names[win]} goes first!`;
+      else {
+        $("verdict").textContent = "Turn order:";
+        $("out").insertAdjacentHTML("beforeend", `<ol class="order">${order.map((i) => `<li style="--fc:${COLORS[i % COLORS.length]}">${esc(S.names[i])}</li>`).join("")}</ol>`);
+      }
+      navigator.vibrate?.(100);
+    };
+    if (calm) return finish();
+    spinning = true; $("chips").classList.add("spinning"); renderChips();
+    // Bounce around the chips, slowing down, and land on the winner.
+    const n = S.names.length, steps = 14 + n + ((win - 14 - n) % n + n) % n; let k = 0, delay = 50;
+    (function tick() {
+      renderChips(k % n);
+      if (k++ >= steps) return finish();
+      delay *= 1.1; setTimeout(tick, delay);
+    })();
+  };
+
+  // Let the pad fill the rest of the screen so every finger has room.
+  function fit() {
+    if (S.mode !== "fingers" || document.fullscreenElement) return;
+    const top = pad.getBoundingClientRect().top + scrollY;
+    pad.style.height = Math.max(340, Math.min(innerHeight - top - 16, innerHeight * .8)) + "px";
+  }
+  addEventListener("resize", fit);
+  const setMode0 = setMode; setMode = () => { setMode0(); fit(); };
+  setMode();
+})();
+</script>
+<script src="/pwa.js" defer></script>
+</body>
+</html>
