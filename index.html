@@ -103,6 +103,7 @@
   .opt { display: flex; align-items: center; gap: 10px; padding: 7px 6px; border-radius: 8px; cursor: pointer; font-size: .93rem; }
   .opt:hover { background: var(--surface-2); }
   .opt input { accent-color: var(--accent); width: 16px; height: 16px; }
+  .okind { display: block; font-size: .72rem; font-weight: 700; color: var(--muted); line-height: 1.1; }
   .opt .n { margin-left: auto; color: var(--muted); font-size: .82rem; font-variant-numeric: tabular-nums; }
   .panel-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); margin-top: 6px; padding-top: 8px; font-size: .82rem; color: var(--muted); }
 
@@ -778,7 +779,7 @@
       <label class="search">
         <span class="sr">Search the collection</span>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="q" type="search" placeholder="Search by title, mechanic, designer or publisher" autocomplete="off">
+        <input id="q" type="search" placeholder="Search by title, mechanic, category, designer or publisher" autocomplete="off">
         <button class="clear" id="q-clear" aria-label="Clear search" hidden>×</button>
       </label>
       <button class="filter-btn" id="open-filters" aria-controls="filters" aria-expanded="false">
@@ -794,11 +795,11 @@
         <div class="pchips" role="group" aria-labelledby="best-l" id="best-chips"></div>
       </div>
       <div class="fgroup dd" id="mech-dd">
-        <span class="flabel" id="mech-l">Mechanics</span>
-        <button id="mech-btn" aria-expanded="false" aria-controls="mech-panel">Any mechanic <span class="count" id="mech-count" hidden></span>
+        <span class="flabel" id="mech-l">Mechanics &amp; categories</span>
+        <button id="mech-btn" aria-expanded="false" aria-controls="mech-panel">Any <span class="count" id="mech-count" hidden></span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></button>
         <div class="panel" id="mech-panel" hidden>
-          <input id="mech-q" type="search" placeholder="Find a mechanic" aria-label="Find a mechanic">
+          <input id="mech-q" type="search" placeholder="Find a mechanic or category" aria-label="Find a mechanic or category">
           <div class="opts" id="mech-opts" role="group" aria-labelledby="mech-l"></div>
           <div class="panel-foot"><span>Shows games with any selected</span><button class="linkbtn" id="mech-clear">Clear</button></div>
         </div>
@@ -1031,7 +1032,7 @@ function visibleGroups(source = state.view === "table" ? groups : tileGroups) {
     const h = grp.head;
     if (grp.loose && !q) continue; // add-ons without a game of ours only surface through search
     if (state.best !== null && !(h.bestPlayers || []).some((b) => state.best === TEN ? b >= TEN : b === state.best)) continue;
-    if (state.mechs.size && !(h.mechanics || []).some((m) => state.mechs.has(m))) continue;
+    if (state.mechs.size && ![...(h.mechanics || []), ...(h.categories || [])].some((m) => state.mechs.has(m))) continue;
     let kids = grp.kids;
     const c = state.col;
     if (c.rating && !(h.rating >= Number(c.rating))) continue;
@@ -1058,7 +1059,7 @@ function visibleGroups(source = state.view === "table" ? groups : tileGroups) {
       if (!headHit) kids = kidHits;
     }
     if (q) {
-      const hay = [h.name, ...(h.designers || []), ...(h.publishers || []), ...(h.mechanics || [])].join(" ").toLowerCase();
+      const hay = [h.name, ...(h.designers || []), ...(h.publishers || []), ...(h.mechanics || []), ...(h.categories || [])].join(" ").toLowerCase();
       const headHit = hay.includes(q);
       const kidHits = kids.filter((k) => k.name.toLowerCase().includes(q));
       if (!headHit && !kidHits.length) continue;
@@ -1109,11 +1110,11 @@ function renderBest() {
 function renderMechOpts() {
   const q = $("mech-q").value.trim().toLowerCase();
   const list = mechCounts.filter(([m]) => !q || m.toLowerCase().includes(q));
-  $("mech-opts").innerHTML = list.length ? list.map(([m, n]) => `<label class="opt"><input type="checkbox" value="${esc(m)}" ${state.mechs.has(m) ? "checked" : ""}><span>${esc(m)}</span><span class="n">${n}</span></label>`).join("")
-    : `<p style="color:var(--muted);padding:8px;margin:0">${mechCounts.length ? "No mechanics match." : "No mechanics yet."}</p>`;
+  $("mech-opts").innerHTML = list.length ? list.map(([m, n, kind]) => `<label class="opt"><input type="checkbox" value="${esc(m)}" ${state.mechs.has(m) ? "checked" : ""}><span>${esc(m)}<span class="okind">${kind}</span></span><span class="n">${n}</span></label>`).join("")
+    : `<p style="color:var(--muted);padding:8px;margin:0">${mechCounts.length ? "Nothing matches." : "None yet."}</p>`;
   const n = state.mechs.size;
   $("mech-count").hidden = !n; $("mech-count").textContent = n;
-  $("mech-btn").firstChild.textContent = n ? "Mechanics " : "Any mechanic ";
+  $("mech-btn").firstChild.textContent = n ? "Selected " : "Any ";
 }
 function renderSort() {
   $("sort").value = state.sorts[0].key; $("per").value = String(state.per);
@@ -1658,7 +1659,7 @@ function openDetail(id, dir = 0) {
       ${notesHtml(g, kids)}
       ${g.description ? `<p class="desc clamp" id="d-desc">${esc(g.description.trim())}</p><button class="linkbtn" id="d-more" hidden>Read more</button>` : ""}
       ${g.mechanics?.length ? `<div class="sec"><h4>Mechanics</h4><div class="tags">${g.mechanics.map((x) => `<button class="tag" data-mech="${esc(x)}" title="Show games with this mechanic">${esc(x)}</button>`).join("")}</div></div>` : ""}
-      ${g.categories?.length ? `<div class="sec"><h4>Categories</h4><div class="tags">${g.categories.map((x) => `<span class="tag">${esc(x)}</span>`).join("")}</div></div>` : ""}
+      ${g.categories?.length ? `<div class="sec"><h4>Categories</h4><div class="tags">${g.categories.map((x) => `<button class="tag" data-mech="${esc(x)}" title="Show games in this category">${esc(x)}</button>`).join("")}</div></div>` : ""}
       ${kids.length ? `<div class="sec"><h4>Expansions & accessories (${kids.length})</h4><div class="xlist">${kids.map((a) => `<a class="xitem" href="${esc(a.url)}" target="_blank" rel="noopener">
         <span class="mini">${a.thumbnail ? imgTag(a, a.thumbnail) : doodle(a)}</span><div style="min-width:0"><div class="nm">${esc(a.name)}</div><div class="ty">${[a.type, a.year].filter(Boolean).join(" · ")}</div>
         ${a.ownedBy !== g.ownedBy ? `<div class="diff">Owned by ${ownTiny(a.ownedBy)}</div>` : ""}</div></a>`).join("")}</div></div>` : ""}
@@ -1934,7 +1935,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") { if (!$("modal").hidden) closeDetail(); else if ($("filters").classList.contains("open")) closeDrawer(); else closeMech(); } });
 new IntersectionObserver(([e]) => $("toolbar").classList.toggle("stuck", e.intersectionRatio < 1), { threshold: [1], rootMargin: "-1px 0px 0px 0px" }).observe($("toolbar"));
 const shortPh = matchMedia("(max-width: 760px)");
-const setPh = () => { $("q").placeholder = shortPh.matches ? "Search the shelf" : "Search by title, mechanic, designer or publisher"; };
+const setPh = () => { $("q").placeholder = shortPh.matches ? "Search the shelf" : "Search by title, mechanic, category, designer or publisher"; };
 setPh(); shortPh.addEventListener("change", setPh);
 
 /* ---------- Game night planner: pick a player count and how heavy, get a few suggestions ---------- */
@@ -2037,9 +2038,11 @@ async function load() {
     byId = new Map(data.games.map((g) => [g.id, g]));
     hot = data.hot || null;
     mechNames = new Set(data.games.flatMap((g) => g.mechanics || [])); catNames = new Set(data.games.flatMap((g) => g.categories || []));
-    const counts = new Map();
-    for (const grp of groups) for (const m of grp.head.mechanics || []) counts.set(m, (counts.get(m) || 0) + 1);
-    mechCounts = [...counts].sort((a, b) => a[0].localeCompare(b[0]));
+    // One list of every mechanic and category, each with how many games have it.
+    const counts = new Map(), kinds = new Map();
+    for (const grp of groups) for (const [key, kind] of [["mechanics", "Mechanic"], ["categories", "Category"]])
+      for (const m of new Set(grp.head[key] || [])) { counts.set(m, (counts.get(m) || 0) + 1); kinds.set(m, kinds.has(m) && kinds.get(m) !== kind ? "Mechanic & category" : kind); }
+    mechCounts = [...counts].sort((a, b) => a[0].localeCompare(b[0])).map(([m, n]) => [m, n, kinds.get(m)]);
     status = "ok";
     lastUpdatedAt = data.updatedAt;
     setSync(data.lastSyncError ? "stale" : "ok", data.updatedAt, data.nextSyncAt);
