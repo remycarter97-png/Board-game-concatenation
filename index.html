@@ -563,6 +563,85 @@
     .tablewrap { border-radius: 16px; box-shadow: var(--pop-sm); }
   }
 
+
+  /* Rows view */
+  /* Rails run to the edges of the window; --gut lines the first tile up with the page content. */
+  #rowsview { --gut: max(24px, calc((100vw - 1232px) / 2)); }
+  body { overflow-x: clip; }
+  /* The sticky toolbar's background spans the window, so rows scrolling under it don't peek out at the sides. */
+  .toolbar::before { content: ""; position: absolute; z-index: -1; top: 0; bottom: 0; left: calc(50% - 50vw); right: calc(50% - 50vw); background: var(--bg); }
+  .rhero { position: relative; border: 3px solid var(--outline); border-radius: 28px; box-shadow: 8px 8px 0 var(--outline); overflow: hidden; min-height: 380px;
+    display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); background: #2b1f3d; color: #fff8ee; margin-bottom: 6px; }
+  .rhbg { position: absolute; inset: -40px; background-size: cover; background-position: center; filter: blur(34px) saturate(1.3) brightness(.55); transform: scale(1.1); }
+  .rhshade { position: absolute; inset: 0; background: linear-gradient(90deg, rgb(30 20 45 / .92) 0%, rgb(30 20 45 / .7) 45%, rgb(30 20 45 / .1) 100%); }
+  .rhtxt { position: relative; padding: 34px 38px 48px; display: flex; flex-direction: column; justify-content: center; gap: 12px; min-width: 0; }
+  .rbadge { align-self: flex-start; background: var(--yellow); color: #3d2a4f; border: 2px solid #0c0714; border-radius: 999px; padding: 3px 12px; font: 600 .88rem Fredoka, ui-rounded, sans-serif; box-shadow: 2px 2px 0 #0c0714; }
+  .rhero h2 { margin: 0; font: 700 clamp(2rem, 4vw, 3.3rem)/1.03 Fredoka, ui-rounded, sans-serif; text-wrap: balance; }
+  .rhfacts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .rhfacts span { background: rgb(255 255 255 / .14); border: 1.5px solid rgb(255 255 255 / .3); border-radius: 999px; padding: 2px 10px; font-weight: 800; font-size: .88rem; }
+  .rhtxt p { margin: 0; max-width: 60ch; color: rgb(255 248 238 / .88); font-weight: 600; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .rhbtns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+  .rhero .btn { border-color: #0c0714; box-shadow: 3px 3px 0 #0c0714; background: var(--yellow); color: #3d2a4f; }
+  .rhero .btn.ghost { background: #fff8ee; }
+  .rhart { position: relative; display: flex; align-items: center; justify-content: center; padding: 28px; min-width: 0; }
+  .rhart img { max-width: 100%; max-height: 320px; object-fit: contain; border-radius: 10px; transform: rotate(3deg); filter: drop-shadow(8px 10px 0 rgb(0 0 0 / .45)); }
+  .rhdots { position: absolute; left: 38px; bottom: 16px; display: flex; gap: 8px; }
+  .rhdots button { width: 12px; height: 12px; padding: 0; border-radius: 999px; border: 2px solid #fff8ee; background: transparent; }
+  .rhdots button[aria-current="true"] { width: 28px; background: var(--yellow); border-color: var(--yellow); }
+  .rdeal { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 26px 0 4px; color: var(--ink-2); font-weight: 700; }
+  .rdeal.bottom { justify-content: center; margin: 10px 0 0; }
+  .rrows { display: grid; grid-template-columns: minmax(0, 1fr); gap: 26px; margin-top: 18px; }
+  .rrow { min-width: 0; }
+  .rhead { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+  .rhead h3 { margin: 0; font: 700 1.35rem/1.2 Fredoka, ui-rounded, sans-serif; }
+  .rct { font-weight: 800; font-size: .85rem; color: var(--muted); }
+  .rall { margin-left: auto; border: 0; background: none; color: var(--accent); font: 800 .92rem Nunito, sans-serif; padding: 4px 2px; }
+  .rall:hover { text-decoration: underline; }
+  .rrail { position: relative; margin: 0 calc(-1 * var(--gut)); }
+  .rtrack { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding: 0 var(--gut); padding: 8px var(--gut) 16px; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .rtrack::-webkit-scrollbar { display: none; }
+  .rarrow { position: absolute; top: 8px; bottom: 16px; width: 54px; z-index: 3; border: 0; display: grid; place-items: center; opacity: 0; transition: opacity .15s; color: var(--ink); padding: 0; }
+  .rarrow span { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--surface); border: var(--edge); box-shadow: var(--pop-sm); font: 700 2rem/1 Fredoka, sans-serif; padding-bottom: 4px; }
+  .rarrow.l { left: 0; background: linear-gradient(90deg, var(--bg) 30%, transparent); } .rarrow.r { right: 0; background: linear-gradient(270deg, var(--bg) 30%, transparent); }
+  .rrail:hover .rarrow:not(:disabled) { opacity: 1; }
+  .rarrow:disabled { pointer-events: none; }
+  @media (hover: none) { .rarrow { display: none; } }
+  .rtile { all: unset; box-sizing: border-box; position: relative; flex: none; width: 196px; scroll-snap-align: start; cursor: pointer; }
+  .rart { position: relative; height: 168px; border: var(--edge); border-radius: 18px; box-shadow: var(--pop-sm); overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 12px;
+    background-color: hsl(var(--h) 90% 87%); background-image: radial-gradient(circle, rgb(255 255 255 / .55) 2px, transparent 2.4px), linear-gradient(135deg, hsl(var(--h) 90% 88%), hsl(calc(var(--h) + 35) 80% 77%));
+    background-size: 18px 18px, 100% 100%; transition: transform .16s, box-shadow .16s; }
+  .rart img { max-width: 100%; max-height: 100%; min-width: 0; min-height: 0; object-fit: contain; border-radius: 4px; filter: drop-shadow(3px 4px 0 rgb(61 42 79 / .3)); }
+  .rart > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .rtile:hover .rart, .rtile:focus-visible .rart { transform: translate(-3px, -3px) rotate(-1deg); box-shadow: 6px 6px 0 var(--outline); }
+  .rtile:focus-visible .rart { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .rown { position: absolute; top: 8px; left: 8px; z-index: 1; font-size: .68rem; font-weight: 800; padding: 1px 8px; border-radius: 999px; border: 2px solid var(--outline); box-shadow: 2px 2px 0 var(--outline); }
+  .rpeek { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding: 8px 10px; background: linear-gradient(transparent, rgb(30 20 45 / .9)); color: #fff8ee; font-size: .78rem; font-weight: 800;
+    transform: translateY(100%); transition: transform .16s; }
+  .rtile:hover .rpeek, .rtile:focus-visible .rpeek { transform: none; }
+  .rnm { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 9px 2px 0; font: 600 1rem/1.2 Fredoka, ui-rounded, sans-serif; color: var(--ink); }
+  .rmeta { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 2px 0; color: var(--ink-2); font-size: .8rem; font-weight: 700; }
+  .rmeta .r { color: var(--ink); } .rmeta .r::before { content: "★ "; color: var(--star); }
+  .ranked .rtile { width: 262px; padding-left: 84px; }
+  .rnum { position: absolute; left: 0; top: 66px; width: 104px; text-align: right; font: 700 10.5rem/.8 Fredoka, ui-rounded, sans-serif; color: var(--yellow);
+    -webkit-text-stroke: 4px var(--outline); paint-order: stroke fill; text-shadow: 5px 5px 0 var(--outline); letter-spacing: -.04em; }
+  .rnum.two { font-size: 8rem; letter-spacing: -.12em; top: 96px; }
+  .rbody { position: relative; z-index: 1; display: block; }
+  .ranked .rart { height: 220px; }
+  .rallhead { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 0 0 16px; }
+  .rallhead h2 { margin: 0; font: 700 1.5rem Fredoka, ui-rounded, sans-serif; }
+  .rallhead .btn { height: 38px; font-size: .95rem; padding: 0 14px; }
+  @media (max-width: 760px) {
+    #rowsview { --gut: 16px; }
+    .rhero { grid-template-columns: 1fr; min-height: 0; box-shadow: 5px 5px 0 var(--outline); border-radius: 22px; }
+    .rhart { display: none; } .rhshade { background: linear-gradient(180deg, rgb(30 20 45 / .55), rgb(30 20 45 / .9)); }
+    .rhtxt { padding: 22px 20px 42px; gap: 10px; } .rhtxt p { -webkit-line-clamp: 2; } .rhdots { left: 20px; }
+    .rhero h2 { font-size: 1.9rem; } .rhero .btn { height: 40px; padding: 0 14px; font-size: .95rem; }
+    .rtrack { gap: 12px; padding: 6px var(--gut) 14px; }
+    .rtile { width: 142px; } .rart { height: 124px; border-radius: 14px; padding: 8px; } .rnm { font-size: .92rem; }
+    .ranked .rtile { width: 190px; padding-left: 60px; } .rnum { width: 76px; font-size: 7.6rem; top: 50px; } .rnum.two { font-size: 5.8rem; top: 72px; }
+    .ranked .rart { height: 165px; }
+    .rhead h3 { font-size: 1.12rem; }
+  }
   /* Welcome */
   .welcome { position: relative; margin-top: 24px; display: flex; align-items: center; gap: 20px; padding: 20px 22px; border: var(--edge); border-radius: 22px;
     box-shadow: var(--pop); background-color: var(--welcome, var(--yellow-soft)); overflow: hidden;
@@ -708,10 +787,11 @@
           </div>
         </div>
         <div class="viewseg" role="group" aria-label="View">
+          <button data-view="rows" aria-pressed="false" title="Rows view"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3" y="4" width="5" height="6" rx="1.4"/><rect x="10" y="4" width="5" height="6" rx="1.4"/><rect x="17" y="4" width="4" height="6" rx="1.4"/><rect x="3" y="14" width="5" height="6" rx="1.4"/><rect x="10" y="14" width="5" height="6" rx="1.4"/><rect x="17" y="14" width="4" height="6" rx="1.4"/></svg><span>Rows</span></button>
           <button data-view="cards" aria-pressed="true" title="Card view"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg><span>Cards</span></button>
           <button data-view="table" aria-pressed="false" title="Table view"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>Table</span></button>
         </div>
-        <div class="sortbox">
+        <div class="sortbox" id="sortbox">
           <label for="sort">Sort</label>
           <select id="sort">
             <option value="name">Name</option>
@@ -727,11 +807,12 @@
           </select>
           <button class="iconbtn" id="dir" aria-label="Sort direction"></button>
         </div>
-        <label class="perpage">Per page
+        <label class="perpage" id="perpage">Per page
           <select id="per" aria-label="Games per page"><option>10</option><option>25</option><option>50</option><option>100</option><option>200</option><option>300</option></select>
         </label>
       </div>
     </div>
+    <div id="rowsview" hidden></div>
     <div class="grid" id="grid"></div>
     <div class="tablewrap" id="tablewrap" hidden></div>
     <div id="empty" hidden></div>
@@ -787,7 +868,7 @@ function doodle(g) {
     <rect width="240" height="240" fill="url(#g${id})"/><g transform="translate(0 38)">${motif}</g></svg>`;
 }
 // Swap a broken image for the doodle.
-window.artFail = (img) => { const g = byId.get(img.dataset.id); const box = img.closest(".art, .mini, .bigcover"); if (g && box) { if (box.classList.contains("art")) box.outerHTML = doodle(g); else box.innerHTML = doodle(g); } };
+window.artFail = (img) => { const g = byId.get(img.dataset.id); const box = img.closest(".art, .mini, .bigcover, .rart"); if (g && box) { if (box.classList.contains("art")) box.outerHTML = doodle(g); else box.innerHTML = doodle(g); } };
 const imgTag = (g, src, cls = "") => `<img ${cls ? `class="${cls}"` : ""} src="${esc(src)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-id="${esc(g.id)}" onerror="artFail(this)">`;
 
 const bestShort = (g) => (g.bestWith || "").replace(/^Best with\s+/i, "").replace(/\s+players?$/i, "");
@@ -848,7 +929,9 @@ const PER = [10, 25, 50, 100, 200, 300];
 const state = { q: "", best: null, mechs: new Set(), sorts: [{ key: "name", dir: 1 }],
   page: Number(store.get("sessionStorage", "page", 1)) || 1,
   per: PER.includes(store.get("localStorage", "per-page", 25)) ? store.get("localStorage", "per-page", 25) : 25 };
-state.view = store.get("localStorage", "view", "cards") === "table" ? "table" : "cards";
+// Rows is the default view. (A new storage key, so everyone starts on Rows once it ships.)
+const VIEWS = ["rows", "cards", "table"];
+state.view = VIEWS.includes(store.get("localStorage", "view-v2", "rows")) ? store.get("localStorage", "view-v2", "rows") : "rows";
 // Per-column filters from the table's filter row. They also apply in card view and show as chips.
 const COLF_EMPTY = { name: "", rating: "", rank: "", players: "", time: "", weight: "", year: "", mech: "", owner: "" };
 state.col = { ...COLF_EMPTY };
@@ -893,7 +976,7 @@ const colfLabel = (k, v) => {
 
 // Filters check the base game; its expansions and accessories follow it. Search and the owner
 // filter also look at nested items, so a game shows if something under it matches.
-function visibleGroups(source = state.view === "cards" ? tileGroups : groups) {
+function visibleGroups(source = state.view === "table" ? groups : tileGroups) {
   const out = [];
   const q = state.q.toLowerCase();
   for (const grp of source) {
@@ -1072,7 +1155,26 @@ function renderGrid() {
     $("retry").onclick = load;
     return;
   }
-  const list = sortGroups(visibleGroups());
+  const showRows = rowsMode();
+  $("rowsview").hidden = state.view !== "rows";
+  $("sortbox").hidden = showRows || (state.view === "rows" && !!rowAll);
+  $("perpage").hidden = showRows;
+  if (showRows) {
+    const heads = visibleGroups().map((x) => x.head);
+    $("rescount").innerHTML = heads.length ? `Browsing <b>${heads.length}</b> game${heads.length === 1 ? "" : "s"}` : "No games match";
+    $("grid").hidden = true; $("grid").innerHTML = ""; $("tablewrap").hidden = true; $("tablewrap").innerHTML = ""; $("pager").innerHTML = "";
+    $("empty").hidden = !!heads.length;
+    if (!heads.length) {
+      $("rowsview").innerHTML = "";
+      $("empty").innerHTML = `<div class="empty">${SLEEPY}<h2>No games here… yet!</h2><p>Nothing matches these filters. Try removing one, or start fresh.</p><button class="btn" id="empty-reset">Reset all filters</button></div>`;
+      $("empty-reset").onclick = resetAll; return;
+    }
+    renderRows(heads); return;
+  }
+  if (state.view === "rows") $("rowsview").innerHTML = rowAll ? `<div class="rallhead"><button class="btn ghost" data-rowback="1">‹ Back to rows</button><h2>${esc(rowAll.title)}</h2></div>`
+    : `<div class="rallhead"><h2>Search results</h2><button class="linkbtn" data-rowback="1">Clear search and go back to rows</button></div>`;
+  let list = sortGroups(visibleGroups());
+  if (state.view === "rows" && rowAll) { const ids = new Map(rowGames(rowAll, list.map((x) => x.head)).map((g, i) => [g.id, i])); list = list.filter((x) => ids.has(x.head.id)).sort((a, b) => ids.get(a.head.id) - ids.get(b.head.id)); }
   const pages = Math.max(1, Math.ceil(list.length / state.per));
   state.page = Math.min(Math.max(1, state.page), pages);
   const from = (state.page - 1) * state.per;
@@ -1285,17 +1387,173 @@ function renderPager(pages) {
     <button class="pn" data-page="${p + 1}" ${p >= pages ? "disabled" : ""} aria-label="Next page">Next ›</button>`;
 }
 
+/* ---------- Rows view: a featured banner, then rows of games to scroll sideways ---------- */
+let rowAll = null;        // a row opened with "See all"
+let dealt = null;         // rows from "Deal new rows"; null = our usual rows
+let hot = null;           // BGG's hotness list from the last sync
+const rowsMode = () => state.view === "rows" && !state.q && !rowAll;
+const byRating = (a, b) => (b.rating || 0) - (a.rating || 0) || a.name.localeCompare(b.name);
+const hasIn = (k, v) => (g) => (g[k] || []).includes(v);
+const yr = (g) => Number(g.year) || 0;
+const pt = (g) => g.playTime || g.maxTime || g.minTime || 0;
+// Our usual rows. Rows with fewer than 3 games (after filters) are skipped.
+const ROWS = [
+  { title: "Top 10 on BoardGameGeek", ranked: true, pick: (g) => g.rank, sort: (a, b) => a.rank - b.rank, max: 10 },
+  { title: "Perfect for two", pick: (g) => (g.bestPlayers || []).includes(2) },
+  { title: "Team up: cooperative games", pick: hasIn("mechanics", "Cooperative Game") },
+  { title: "Quick games, 30 minutes or less", pick: (g) => pt(g) && pt(g) <= 30 },
+  { title: "Party picks", pick: hasIn("categories", "Party Game") },
+  { title: "Epic campaigns", pick: hasIn("mechanics", "Scenario / Mission / Campaign Game") },
+  { title: "Play it solo", pick: hasIn("mechanics", "Solo / Solitaire Game") },
+  { title: "Brain burners", pick: (g) => g.weight >= 3.5, sort: (a, b) => b.weight - a.weight },
+  { title: "Big game night, 2+ hours", pick: (g) => pt(g) >= 120 },
+  { title: "Fantasy worlds", pick: hasIn("categories", "Fantasy") },
+  { title: "Into space", pick: (g) => (g.categories || []).some((c) => c === "Science Fiction" || c === "Space Exploration") },
+  { title: "Animal games", pick: hasIn("categories", "Animals") },
+  { title: "Card games", pick: hasIn("categories", "Card Game") },
+  { title: "Roll some dice", pick: hasIn("mechanics", "Dice Rolling") },
+  { title: "Whodunit: deduction", pick: hasIn("categories", "Deduction") },
+  { title: "Big groups, best with 6+", pick: (g) => (g.bestPlayers || []).some((n) => n >= 6) },
+  { title: "Fresh off the press", pick: (g) => yr(g) >= new Date().getFullYear() - 2, sort: (a, b) => yr(b) - yr(a) || byRating(a, b) },
+  { title: "Golden oldies, before 2000", pick: (g) => yr(g) && yr(g) < 2000, sort: (a, b) => yr(a) - yr(b) },
+];
+const ROW_MAX = 40, DEAL_N = 12;
+const rowGames = (r, games) => { const l = games.filter(r.pick); return r.shuffle ? l : l.sort(r.sort || byRating); };
+
+// "Deal new rows": build every row the collection can support (categories, mechanics, designers,
+// publishers, player counts, eras, lengths, weights, and mixes of them), then pick a random set.
+const shuffled = (a) => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const nounFor = (c) => /\bgame$/i.test(c) ? c.replace(/\bgame$/i, "games") : `${c} games`;
+function dealRows(games) {
+  const pool = [], counts = (k) => { const m = new Map(); for (const g of games) for (const v of g[k] || []) m.set(v, (m.get(v) || 0) + 1); return m; };
+  const add = (title, pick, min = 5) => { if (games.filter(pick).length >= min) pool.push({ title, pick }); };
+  const cats = [...counts("categories")].filter(([, n]) => n >= 5).map(([c]) => c);
+  const mechs = [...counts("mechanics")].filter(([, n]) => n >= 5).map(([m]) => m);
+  for (const c of cats) add(nounFor(c), hasIn("categories", c));
+  for (const m of mechs) add(`Games with ${m}`, hasIn("mechanics", m));
+  for (const [d, n] of counts("designers")) if (n >= 4 && d !== "(Uncredited)") add(`Designed by ${d}`, hasIn("designers", d), 4);
+  for (const [p, n] of counts("publishers")) if (n >= 6 && !/^\(/.test(p)) add(`Published by ${p}`, hasIn("publishers", p), 6);
+  for (let n = 1; n <= 8; n++) add(`Best with ${n}`, (g) => (g.bestPlayers || []).includes(n));
+  for (let d = 1970; d <= 2020; d += 10) add(`From the ${d}s`, (g) => yr(g) >= d && yr(g) < d + 10);
+  const MODS = [
+    ["light ones", (g) => g.weight && g.weight < 2], ["medium weight", (g) => g.weight >= 2 && g.weight < 3], ["the heavy ones", (g) => g.weight >= 3.5],
+    ["under 45 minutes", (g) => pt(g) && pt(g) <= 45], ["about an hour", (g) => pt(g) > 45 && pt(g) <= 90], ["2+ hours", (g) => pt(g) >= 120],
+    ["best with 2", (g) => (g.bestPlayers || []).includes(2)], ["best with 3", (g) => (g.bestPlayers || []).includes(3)], ["best with 4", (g) => (g.bestPlayers || []).includes(4)],
+    ["playable solo", (g) => g.minPlayers === 1], ["rated 7.5+", (g) => g.rating >= 7.5], ["from 2020 on", (g) => yr(g) >= 2020], ["before 2010", (g) => yr(g) && yr(g) < 2010],
+  ];
+  for (const [label, pick] of MODS) add(label[0].toUpperCase() + label.slice(1), pick);
+  for (const c of shuffled(cats).slice(0, 14)) for (const [label, pick] of shuffled(MODS).slice(0, 3)) add(`${nounFor(c)}, ${label}`, (g) => hasIn("categories", c)(g) && pick(g), 4);
+  for (const m of shuffled(mechs).slice(0, 14)) for (const [label, pick] of shuffled(MODS).slice(0, 3)) add(`Games with ${m}, ${label}`, (g) => hasIn("mechanics", m)(g) && pick(g), 4);
+  add("Hidden gems: loved, but not well known", (g) => g.rating >= 7.3 && g.votes && g.votes < 3000);
+  add("Crowd favorites: 50,000+ ratings", (g) => g.votes >= 50000);
+  // Pick rows that don't mostly repeat each other; some keep BGG's rating order, some get shuffled.
+  const out = [];
+  for (const r of shuffled(pool)) {
+    if (out.length >= DEAL_N) break;
+    const ids = new Set(games.filter(r.pick).map((g) => g.id));
+    if (out.some((o) => { const same = [...ids].filter((id) => o.ids.has(id)).length; return same / Math.min(ids.size, o.ids.size) > .7; })) continue;
+    out.push({ ...r, ids, shuffle: Math.random() < .5 });
+  }
+  return out.map((r) => r.shuffle ? { ...r, order: shuffled(games.filter(r.pick).map((g) => g.id)) } : r);
+}
+function rowList(r, games) {
+  if (r.order) { const by = new Map(games.map((g) => [g.id, g])); return r.order.map((id) => by.get(id)).filter(Boolean); }
+  return rowGames(r, games);
+}
+
+const addonCount = (id) => tileGroups.find((x) => x.head.id === id)?.kids.length || 0;
+function rtile(g, rank) {
+  const n = addonCount(g.id);
+  const art = `<span class="rart" style="--h:${hueOf(g)}">${rank ? "" : `<span class="rown own-${g.ownedBy}">${g.ownedBy}</span>`}
+      ${g.thumbnail ? imgTag(g, g.thumbnail) : doodle(g)}
+      <span class="rpeek">${[g.rating && `★ ${g.rating.toFixed(1)}`, bestShort(g) && `Best ${bestShort(g)}`, timeText(g)].filter(Boolean).map(esc).join(" · ")}</span></span>
+    <span class="rnm">${esc(g.name)}</span>
+    <span class="rmeta">${g.rating ? `<span class="r">${g.rating.toFixed(1)}</span>` : ""}${timeText(g) ? `<span>${timeText(g)}</span>` : ""}${n ? `<span>+${n} add-on${n === 1 ? "" : "s"}</span>` : ""}</span>`;
+  return `<button class="rtile${rank ? " rk" : ""}" data-open="${esc(g.id)}" aria-label="${rank ? `Number ${rank}: ` : ""}${esc(g.name)}${g.rating ? `, rated ${g.rating.toFixed(1)}` : ""}">${rank ? `<span class="rnum${rank > 9 ? " two" : ""}" aria-hidden="true">${rank}</span><span class="rbody">${art}</span>` : art}</button>`;
+}
+function renderRows(games) {
+  const defs = [ROWS[0], ...(dealt || ROWS.slice(1))];
+  const rowsHtml = defs.map((r, i) => {
+    const all = rowList(r, games); if (all.length < 3) return "";
+    const list = all.slice(0, r.max || ROW_MAX);
+    return `<section class="rrow${r.ranked ? " ranked" : ""}" aria-labelledby="rh${i}">
+      <div class="rhead"><h3 id="rh${i}">${esc(r.title)}</h3>${r.ranked ? "" : `<span class="rct">${all.length}</span>${all.length > list.length || all.length > 6 ? `<button class="rall" data-rowall="${i}">See all ›</button>` : ""}`}</div>
+      <div class="rrail"><button class="rarrow l" data-rscroll="-1" aria-label="Scroll ${esc(r.title)} left" tabindex="-1" disabled><span>‹</span></button>
+        <div class="rtrack" data-rowids="${list.map((g) => g.id).join(",")}">${list.map((g, j) => rtile(g, r.ranked ? j + 1 : 0)).join("")}</div>
+        <button class="rarrow r" data-rscroll="1" aria-label="Scroll ${esc(r.title)} right" tabindex="-1"><span>›</span></button></div></section>`;
+  }).join("");
+  $("rowsview").innerHTML = `${heroHtml()}
+    <div class="rdeal"><button class="btn" data-deal="1">🎲 Deal new rows</button>${dealt ? `<button class="linkbtn" data-undeal="1">Back to our usual rows</button>` : `<span>Mix things up with a random set of rows</span>`}</div>
+    <div class="rrows">${rowsHtml}</div>
+    ${dealt ? `<div class="rdeal bottom"><button class="btn ghost" data-deal="1">🎲 Deal again</button></div>` : ""}`;
+  $("rowsview").querySelectorAll(".rtrack").forEach((t) => { t.addEventListener("scroll", () => rowArrows(t), { passive: true }); rowArrows(t); });
+  startHero();
+}
+function rowArrows(t) {
+  const rail = t.parentElement;
+  rail.querySelector(".l").disabled = t.scrollLeft <= 4;
+  rail.querySelector(".r").disabled = t.scrollLeft + t.clientWidth >= t.scrollWidth - 4;
+}
+
+// Featured banner: games on our shelf that are on BGG's hotness list right now, hottest first.
+// If too few of ours are hot, it's topped up with our best-ranked games.
+let heroI = 0, heroTimer = null, heroPick = null, heroPaused = false;
+function heroList() {
+  const ours = new Map(tileGroups.map((x) => [x.head.id, x.head]));
+  const hotOnes = (hot?.items || []).filter((h) => ours.has(h.id)).map((h) => ({ g: ours.get(h.id), label: `🔥 #${h.rank} on BGG's hotness list` }));
+  const fill = [...ours.values()].filter((g) => g.rank && !hotOnes.some((h) => h.g.id === g.id)).sort((a, b) => a.rank - b.rank)
+    .slice(0, Math.max(0, 5 - hotOnes.length)).map((g) => ({ g, label: `#${g.rank} on BoardGameGeek` }));
+  return [...hotOnes.slice(0, 10), ...fill];
+}
+function heroHtml() {
+  const list = heroList(); if (!list.length) return "";
+  heroI = heroI % list.length;
+  const { g, label } = heroPick || list[heroI];
+  const pic = g.image || g.thumbnail;
+  return `<section class="rhero" id="rhero" aria-roledescription="carousel" aria-label="Featured games">
+    ${pic ? `<div class="rhbg" style="background-image:url('${esc(pic)}')"></div>` : ""}<div class="rhshade"></div>
+    <div class="rhtxt"><span class="rbadge">${esc(label)}</span><h2>${esc(g.name)}</h2>
+      <div class="rhfacts">${[g.year, players(g) && `${players(g)} players`, timeText(g), g.weight && `Complexity ${g.weight.toFixed(1)}`, g.rating && `★ ${g.rating.toFixed(1)}`].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join("")}</div>
+      ${g.description ? `<p>${esc(g.description.trim().slice(0, 400))}</p>` : ""}
+      <div class="rhbtns"><button class="btn" data-open="${esc(g.id)}">See details</button><button class="btn ghost" data-surprise="1">🎲 Surprise me</button></div></div>
+    <div class="rhart">${pic ? imgTag(g, pic) : ""}</div>
+    ${list.length > 1 ? `<div class="rhdots" role="group" aria-label="Choose a featured game">${list.map((x, i) => `<button data-hero="${i}" aria-label="Show ${esc(x.g.name)}" aria-current="${!heroPick && i === heroI}"></button>`).join("")}</div>` : ""}
+  </section>`;
+}
+function setHero(i) { heroPick = null; heroI = i; const h = $("rhero"); if (h) h.outerHTML = heroHtml(); }
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+function startHero() {
+  clearInterval(heroTimer);
+  if (reduceMotion.matches) return;
+  heroTimer = setInterval(() => {
+    if (document.hidden || heroPaused || heroPick || !rowsMode() || !$("modal").hidden || !$("rhero")) return;
+    setHero((heroI + 1) % Math.max(1, heroList().length));
+  }, 8000);
+}
+document.addEventListener("pointerover", (e) => { heroPaused = !!e.target.closest?.("#rhero"); });
+document.addEventListener("focusin", (e) => { heroPaused = !!e.target.closest?.("#rhero"); });
+
 /* ---------- Detail view ---------- */
 let lastFocus = null;
 let detailId = null, detailStart = null;
 // In card view, the games in the order they're showing (all pages), for browsing with arrows or swipes.
+// In rows view, a game opened from a row browses along that row.
+let detailCtx = null;
 function detailOrder(id) {
-  if (state.view !== "cards") return null;
-  const list = sortGroups(visibleGroups()), i = list.findIndex((x) => x.head.id === id);
+  if (state.view === "rows" && rowsMode()) {
+    if (!detailCtx) return null;
+    const tg = new Map(tileGroups.map((x) => [x.head.id, x]));
+    const list = detailCtx.map((x) => tg.get(x)).filter(Boolean), i = list.findIndex((x) => x.head.id === id);
+    return i < 0 ? null : { list, i, rows: true };
+  }
+  if (state.view === "table") return null;
+  let list = sortGroups(visibleGroups());
+  if (state.view === "rows" && rowAll) { const ids = new Map(rowGames(rowAll, list.map((x) => x.head)).map((g, i) => [g.id, i])); list = list.filter((x) => ids.has(x.head.id)).sort((a, b) => ids.get(a.head.id) - ids.get(b.head.id)); }
+  const i = list.findIndex((x) => x.head.id === id);
   return i < 0 ? null : { list, i };
 }
 function openDetail(id, dir = 0) {
-  const grp = (state.view === "cards" ? tileGroups : groups).find((x) => x.head.id === id) || groups.find((x) => x.head.id === id); if (!grp) return;
+  const grp = (state.view === "table" ? groups : tileGroups).find((x) => x.head.id === id) || groups.find((x) => x.head.id === id); if (!grp) return;
   const g = grp.head, kids = grp.kids;
   if (!dir) { lastFocus = document.activeElement; detailStart = id; }
   detailId = id;
@@ -1348,7 +1606,7 @@ function openDetail(id, dir = 0) {
 function closeDetail() {
   $("modal").hidden = true; $("modal").innerHTML = ""; document.body.style.overflow = "";
   // After browsing to another game, land on that game's card; otherwise go back where we were.
-  const card = detailId !== detailStart && document.querySelector(`.card [data-open="${CSS.escape(detailId || "")}"]`);
+  const card = detailId !== detailStart && document.querySelector(`.card [data-open="${CSS.escape(detailId || "")}"], .rtile[data-open="${CSS.escape(detailId || "")}"]`);
   (card || lastFocus)?.focus?.();
   detailId = detailStart = null;
 }
@@ -1356,7 +1614,7 @@ function stepDetail(d) {
   const nav = detailId && detailOrder(detailId); if (!nav) return;
   const j = nav.i + d; if (j < 0 || j >= nav.list.length) return;
   const page = Math.floor(j / state.per) + 1;
-  if (page !== state.page) { setPage(page); renderGrid(); } // keep the grid behind on the same game
+  if (!nav.rows && page !== state.page) { setPage(page); renderGrid(); } // keep the grid behind on the same game
   const fromBtn = document.activeElement?.dataset?.dstep;
   openDetail(nav.list[j].head.id, d);
   const again = document.querySelector(`[data-dstep="${d}"]`);
@@ -1488,7 +1746,7 @@ function banner(kind, html) {
 function setPage(p) { state.page = p; store.set("sessionStorage", "page", p); }
 function changed() { setPage(1); render(); }
 function render() { renderView(); renderBest(); renderMechOpts(); renderSort(); renderActive(); renderGrid(); }
-function resetAll() { Object.assign(state, { q: "", best: null, mechs: new Set(), col: { ...COLF_EMPTY } }); $("q").value = ""; $("mech-q").value = ""; changed(); }
+function resetAll() { rowAll = null; Object.assign(state, { q: "", best: null, mechs: new Set(), col: { ...COLF_EMPTY } }); $("q").value = ""; $("mech-q").value = ""; changed(); }
 
 let qt; $("q").addEventListener("input", (e) => { clearTimeout(qt); qt = setTimeout(() => { state.q = e.target.value.trim(); changed(); }, 150); });
 $("q-clear").onclick = () => { state.q = ""; $("q").value = ""; changed(); $("q").focus(); };
@@ -1496,7 +1754,7 @@ document.addEventListener("click", (e) => {
   const t = e.target.closest("button, a");
   if (!t) { if (!$("mech-dd").contains(e.target)) closeMech(); return; }
   if (t.dataset.reset) resetAll();
-  else if (t.dataset.view) { state.view = t.dataset.view; store.set("localStorage", "view", state.view); renderView(); renderGrid(); }
+  else if (t.dataset.view) { state.view = t.dataset.view; store.set("localStorage", "view-v2", state.view); rowAll = null; renderView(); renderGrid(); }
   else if (t.dataset.sorth) { setSort(t.dataset.sorth, { add: e.shiftKey }); changed(); }
   else if (t.dataset.sdir) { state.sorts[Number(t.dataset.sdir)].dir *= -1; changed(); }
   else if (t.dataset.srem) { state.sorts.splice(Number(t.dataset.srem), 1); changed(); }
@@ -1511,8 +1769,16 @@ document.addEventListener("click", (e) => {
   else if (t.dataset.trow) { const open = t.getAttribute("aria-expanded") !== "true"; t.setAttribute("aria-expanded", String(open));
     document.querySelectorAll(".kid-of-" + CSS.escape(t.dataset.trow)).forEach((r) => r.hidden = !open); }
   else if (t.dataset.best) { const n = Number(t.dataset.best); state.best = state.best === n ? null : n; changed(); }
-  else if (t.dataset.open) openDetail(t.dataset.open);
+  else if (t.dataset.open) { detailCtx = t.closest("[data-rowids]")?.dataset.rowids.split(",") || null; openDetail(t.dataset.open); }
   else if (t.dataset.dstep) stepDetail(Number(t.dataset.dstep));
+  else if (t.dataset.rscroll) { const tr = t.parentElement.querySelector(".rtrack"); tr.scrollBy({ left: Number(t.dataset.rscroll) * tr.clientWidth * .85, behavior: reduceMotion.matches ? "auto" : "smooth" }); }
+  else if (t.dataset.deal) { dealt = dealRows(visibleGroups().map((x) => x.head)); renderGrid(); $("rowsview").querySelector(".rdeal").scrollIntoView({ behavior: "smooth", block: "start" }); $("rowsview").querySelector("[data-deal]").focus({ preventScroll: true }); }
+  else if (t.dataset.undeal) { dealt = null; renderGrid(); $("rowsview").querySelector("[data-deal]")?.focus({ preventScroll: true }); }
+  else if (t.dataset.rowall) { const defs = [ROWS[0], ...(dealt || ROWS.slice(1))]; rowAll = defs[Number(t.dataset.rowall)]; setPage(1); renderGrid(); $("toolbar").scrollIntoView({ behavior: "smooth" }); $("rowsview").querySelector("[data-rowback]")?.focus({ preventScroll: true }); }
+  else if (t.dataset.rowback) { rowAll = null; if (state.q) { state.q = ""; $("q").value = ""; } changed(); }
+  else if (t.dataset.hero) { setHero(Number(t.dataset.hero)); startHero(); $("rhero")?.querySelector(`[data-hero="${t.dataset.hero}"]`)?.focus(); }
+  else if (t.dataset.surprise) { const pool = visibleGroups().map((x) => x.head); const g = pool[Math.floor(Math.random() * pool.length)];
+    if (g) { heroPick = { g, label: "🎲 How about this one?" }; $("rhero").outerHTML = heroHtml(); $("rhero").querySelector("[data-surprise]").focus(); } }
   else if (t.dataset.toggle) { const ul = $("add-" + t.dataset.toggle); const open = ul.hidden; ul.hidden = !open; t.setAttribute("aria-expanded", String(open)); }
   else if (t.dataset.page) { setPage(Number(t.dataset.page)); renderGrid(); $("toolbar").scrollIntoView({ behavior: "smooth" }); }
   if (!$("mech-dd").contains(t)) closeMech();
@@ -1618,6 +1884,7 @@ async function load() {
     groups = buildGroups(data.games);
     tileGroups = buildTileGroups(groups);
     byId = new Map(data.games.map((g) => [g.id, g]));
+    hot = data.hot || null;
     const counts = new Map();
     for (const grp of groups) for (const m of grp.head.mechanics || []) counts.set(m, (counts.get(m) || 0) + 1);
     mechCounts = [...counts].sort((a, b) => a[0].localeCompare(b[0]));
