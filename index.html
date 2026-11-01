@@ -1263,8 +1263,13 @@ function renderTable(rows) {
   }
 }
 function renderView() {
-  // The table has its own "Best with" column filter, so the dice row only shows with cards.
-  $("best-chips").closest(".fgroup").hidden = state.view === "table";
+  // The table has its own "Best with" and "Mechanics" column filters, so these only show with cards.
+  const table = state.view === "table";
+  $("best-chips").closest(".fgroup").hidden = table;
+  $("mech-dd").hidden = table;
+  if (table) closeMech();
+  $("open-filters").hidden = table; // nothing left in the phone filter drawer
+  if (table && $("filters").classList.contains("open")) closeDrawer();
   document.querySelectorAll(".viewseg [data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === state.view)));
 }
 const PAGE_NUMS = 10;
