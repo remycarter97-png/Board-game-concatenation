@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gamer Personality Quiz</title>
+<meta name="description" content="Find out what kind of board gamer you are, and which games on our shelf suit you.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#fff3e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1528" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Game Shelf">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
+    --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
+    --yellow: #ffd45c; --yellow-soft: #fff1c2; --mint: #8be0bd; --mint-soft: #ddf6ea;
+    --ok: #24a26b; --danger: #d43c41; --warn: #a35a00; --warn-soft: #ffe8cc;
+    --edge: 2.5px solid var(--outline); --pop: 4px 4px 0 var(--outline); --pop-sm: 3px 3px 0 var(--outline);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+      --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+      --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+    --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+    --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; color: var(--ink); font: 16px/1.5 Nunito, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header (matches the other pages) */
+  header.top { padding: 36px 0 8px; }
+  .titlebar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .brand { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+  .logo { width: 72px; height: 72px; flex: none; transform: rotate(-5deg); filter: drop-shadow(4px 4px 0 var(--outline)); transition: transform .3s; }
+  .logo:hover { transform: rotate(4deg) scale(1.05); }
+  h1 { font: 700 clamp(2rem, 4vw, 2.9rem)/1.05 Fredoka, ui-rounded, system-ui, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  h1 .hl { background: linear-gradient(transparent 62%, var(--hl, var(--yellow)) 62% 92%, transparent 92%); padding: 0 2px; }
+  .tagline { margin: 6px 0 0; color: var(--ink-2); font-size: 1.05rem; font-weight: 600; }
+  .pagenav { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); }
+  .pagenav a { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-decoration: none; }
+  .pagenav a:hover { color: var(--ink); background: var(--surface-2); }
+  .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+
+  /* Shared bits */
+  .card { background: var(--surface); border: var(--edge); border-radius: 22px; box-shadow: var(--pop); padding: 18px 20px; min-width: 0; display: grid; gap: 14px; align-content: start; }
+  h2 { font: 700 1.3rem/1.2 Fredoka, ui-rounded, sans-serif; margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  h2 small { font: 700 .88rem Nunito, sans-serif; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm);
+    background: var(--surface); color: var(--ink); font: 600 1rem Fredoka, ui-rounded, sans-serif; transition: transform .12s, box-shadow .12s; text-decoration: none; }
+  .btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.yellow { background: var(--yellow); color: #3d2a4f; }
+  .btn.big { min-height: 52px; font-size: 1.15rem; padding: 0 22px; }
+  .btn.sm { min-height: 34px; padding: 0 12px; font-size: .9rem; border-radius: 11px; }
+  .link { border: 0; background: none; padding: 4px 2px; color: var(--accent); font-weight: 800; font-size: .92rem; }
+  .link:hover { text-decoration: underline; }
+  .link.danger { color: var(--danger); }
+  input[type=text], input[type=number] { height: 44px; border: var(--edge); border-radius: 13px; background: var(--surface); padding: 0 12px; font-weight: 700; min-width: 0; box-shadow: var(--pop-sm); }
+  input:focus { outline: none; box-shadow: 0 0 0 4px var(--yellow), 3px 3px 0 4px var(--outline); }
+  input[readonly] { opacity: .65; }
+  .note { margin: 0; font-size: .88rem; color: var(--ink-2); font-weight: 600; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 2px solid var(--outline); border-radius: 12px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: none; min-height: 30px; padding: 0 12px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+  .ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ctl > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+
+  .crumbs { margin-top: 18px; } .crumbs a { color: var(--accent); font-weight: 800; text-decoration: none; } .crumbs a:hover { text-decoration: underline; }
+  main { margin-top: 12px; display: grid; gap: 22px; }
+  .intro { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: center; }
+  .intro p { margin: 0; color: var(--ink-2); font-weight: 600; font-size: 1.05rem; max-width: 62ch; }
+  .typeicons { display: flex; gap: 6px; font-size: 1.8rem; }
+  .progress { height: 14px; border: 2px solid var(--outline); border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+  .progress i { display: block; height: 100%; background: var(--accent); border-right: 2px solid var(--outline); transition: width .25s; }
+  .qhead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; color: var(--ink-2); font-weight: 800; font-size: .9rem; }
+  .question { margin: 0; font: 700 clamp(1.4rem, 3.2vw, 1.9rem)/1.2 Fredoka, ui-rounded, sans-serif; }
+  .answers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .answer { display: flex; align-items: center; gap: 12px; text-align: left; min-height: 64px; padding: 12px 16px; border: var(--edge); border-radius: 18px; background: var(--surface); box-shadow: var(--pop-sm);
+    font: 700 1rem/1.3 Nunito, sans-serif; color: var(--ink); transition: transform .12s, box-shadow .12s; }
+  .answer:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .answer[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; }
+  .answer .em { font-size: 1.6rem; flex: none; }
+  .qnav { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .result { display: grid; gap: 18px; }
+  .hero { border: 3px solid var(--outline); border-radius: 26px; box-shadow: 8px 8px 0 var(--outline); padding: 24px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: center; background: var(--tc); color: #3d2a4f; }
+  .hero .big { font-size: 4.5rem; line-height: 1; width: 110px; height: 110px; display: grid; place-items: center; background: #fffdf8; border: 3px solid #3d2a4f; border-radius: 28px; box-shadow: 4px 4px 0 #3d2a4f; transform: rotate(-5deg); }
+  .hero small { font: 600 .85rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .08em; }
+  .hero h2 { display: block; margin: 2px 0 6px; font: 700 clamp(2rem, 5vw, 3rem)/1.05 Fredoka, ui-rounded, sans-serif; }
+  .hero p { margin: 0; font-weight: 700; font-size: 1.05rem; max-width: 62ch; }
+  .hero .likes { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .hero .likes span { background: #fffdf8; border: 2px solid #3d2a4f; border-radius: 999px; padding: 1px 10px; font-weight: 800; font-size: .82rem; }
+  .mix { display: grid; gap: 8px; }
+  .mixrow { display: grid; grid-template-columns: 170px minmax(0, 1fr) 3.2em; gap: 10px; align-items: center; font-weight: 800; }
+  .mixrow .bar { height: 16px; border: 2px solid var(--outline); border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+  .mixrow .bar i { display: block; height: 100%; background: var(--tc); }
+  .mixrow b { text-align: right; font-variant-numeric: tabular-nums; }
+  .matches { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .match { display: flex; gap: 12px; padding: 12px; border: var(--edge); border-radius: 18px; background: var(--surface); box-shadow: var(--pop-sm); }
+  .art { --h: 30; width: 72px; height: 72px; flex: none; border: 2px solid var(--outline); border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 4px;
+    background: linear-gradient(135deg, hsl(var(--h) 90% 88%), hsl(calc(var(--h) + 35) 80% 77%)); font-size: 1.8rem; }
+  .art img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .minfo { min-width: 0; display: grid; gap: 3px; align-content: start; }
+  .mname { font: 700 1.08rem/1.2 Fredoka, ui-rounded, sans-serif; color: var(--ink); text-decoration: none; } .mname:hover { color: var(--accent); text-decoration: underline; }
+  .mfacts { color: var(--ink-2); font-weight: 700; font-size: .82rem; }
+  .why { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+  .why span { font-size: .72rem; font-weight: 800; border-radius: 999px; padding: 1px 8px; border: 1.5px solid var(--outline); background: var(--mint-soft); }
+  .types { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+  .tcard { display: grid; gap: 4px; justify-items: start; text-align: left; padding: 14px; border: var(--edge); border-radius: 18px; background: var(--tc); color: #3d2a4f; box-shadow: var(--pop-sm); font: inherit; }
+  .tcard .em { font-size: 1.8rem; } .tcard b { font: 700 1.1rem Fredoka, ui-rounded, sans-serif; } .tcard span { font-size: .85rem; font-weight: 700; }
+  .tcard[aria-pressed="true"] { outline: 3px solid var(--outline); outline-offset: 2px; transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btns { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .msg { font-weight: 700; color: var(--ink-2); font-size: .9rem; }
+  h2.sec { margin: 0; font: 700 1.35rem Fredoka, ui-rounded, sans-serif; }
+  footer { margin: 48px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
+  @media (max-width: 760px) {
+    .wrap { padding: 0 16px; } header.top { padding-top: 24px; } .logo { width: 54px; height: 54px; } .brand { gap: 12px; }
+    .card { box-shadow: var(--pop-sm); padding: 16px; border-radius: 18px; }
+    .answers { grid-template-columns: 1fr; } .intro { grid-template-columns: 1fr; }
+    .hero { grid-template-columns: 1fr; box-shadow: 5px 5px 0 var(--outline); padding: 18px; } .hero .big { width: 84px; height: 84px; font-size: 3.4rem; }
+    .mixrow { grid-template-columns: 120px minmax(0, 1fr) 3em; font-size: .9rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <a class="brand" href="/">
+        <svg class="logo" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="3" y="3" width="66" height="66" rx="18" fill="var(--yellow)" stroke="var(--outline)" stroke-width="3"/>
+          <g transform="translate(36 10) rotate(14)"><rect x="0" y="0" width="22" height="22" rx="5" fill="#fff" stroke="var(--outline)" stroke-width="2.5"/>
+            <circle cx="6" cy="6" r="2.2" fill="var(--outline)"/><circle cx="11" cy="11" r="2.2" fill="var(--outline)"/><circle cx="16" cy="16" r="2.2" fill="var(--outline)"/></g>
+          <g transform="translate(9 20) scale(1.75)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.4" stroke-linejoin="round"/></g>
+        </svg>
+        <div>
+          <h1>Gamer <span class="hl">Quiz</span></h1>
+          <p class="tagline">What kind of board gamer are you?</p>
+        </div>
+      </a>
+      <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats">Charts</a><a href="/tools" aria-current="page">Tools</a></nav>
+    </div>
+  </header>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools">‹ All tools</a></nav>
+  <main id="app" aria-live="polite"><section class="card"><p>Loading the shelf…</p></section></main>
+  <footer>Your answers and result are saved in this browser. Game matches come from our collection on BoardGameGeek.</footer>
+</div>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const KEY = "game-shelf:gamer-quiz";
+
+  /* ---------- The six gamer types, and what a matching game looks like for each ---------- */
+  const TYPES = {
+    strategist: { name: "The Strategist", em: "🧠", color: "#b7d8ff",
+      blurb: "You play the long game. You love building an engine that hums by the final round, planning several turns ahead and squeezing the most out of every action.",
+      likes: ["Engine building", "Worker placement", "Long-term planning", "Economic games"],
+      mech: ["Worker Placement", "Worker Placement, Different Worker Types", "Worker Placement with Dice Workers", "Tags", "Income", "Tech Trees / Tech Tracks", "Chaining", "End Game Bonuses", "Contracts", "Network and Route Building", "Tile Placement", "Action Retrieval", "Turn Order: Claim Action", "Market"],
+      cat: ["Economic", "City Building", "Industry / Manufacturing", "Civilization", "Farming", "Territory Building"],
+      weight: [2.8, 5], time: [75, 999] },
+    tactician: { name: "The Tactician", em: "⚔️", color: "#ffb3c9",
+      blurb: "You read the board and pounce. Positioning, timing and making the most of what's in front of you right now are your thing, whether it's a skirmish or a tight puzzle.",
+      likes: ["Positioning and movement", "Combat", "Clever card play", "Puzzly turns"],
+      mech: ["Grid Movement", "Hexagon Grid", "Square Grid", "Action Points", "Area Movement", "Movement Points", "Simultaneous Action Selection", "Card Play Conflict Resolution", "Action Queue", "Multi-Use Cards", "Variable Player Powers", "Campaign / Battle Card Driven", "Point to Point Movement", "Die Icon Resolution"],
+      cat: ["Fighting", "Miniatures", "Wargame", "Puzzle", "Modern Warfare"],
+      weight: [2.2, 4], time: [30, 180] },
+    social: { name: "The Social Gamer", em: "🎉", color: "#ffd45c",
+      blurb: "For you, the people are the point. You're happiest when the table is laughing, bluffing, guessing and talking over each other.",
+      likes: ["Party games", "Bluffing and deduction", "Teams", "Quick rules"],
+      mech: ["Communication Limits", "Team-Based Game", "Hidden Roles", "Voting", "Negotiation", "Trading", "Real-Time", "Deduction", "Targeted Clues", "Memory", "Score-and-Reset Game", "Roll / Spin and Move"],
+      cat: ["Party Game", "Bluffing", "Deduction", "Humor", "Word Game", "Real-time", "Negotiation", "Action / Dexterity", "Murder / Mystery", "Spies / Secret Agents"],
+      weight: [1, 2.3], time: [0, 45], bigGroups: true },
+    explorer: { name: "The Explorer", em: "🧭", color: "#8be0bd",
+      blurb: "You want a story. New worlds, unfolding campaigns and the thrill of finding out what's around the next corner, ideally with friends at your side.",
+      likes: ["Campaigns and adventures", "Story and narrative", "Co-op", "Rich worlds"],
+      mech: ["Scenario / Mission / Campaign Game", "Storytelling", "Narrative Choice / Paragraph", "Role Playing", "Legacy Game", "Cooperative Game", "Modular Board", "Map Addition", "Events", "Multiple Maps", "Variable Set-up"],
+      cat: ["Adventure", "Exploration", "Fantasy", "Science Fiction", "Space Exploration", "Mythology", "Horror", "Novel-based", "Video Game Theme", "Travel", "Nautical", "Pirates"],
+      weight: [2, 5], time: [60, 999] },
+    competitor: { name: "The Competitor", em: "🏆", color: "#ffbf8f",
+      blurb: "You play to win, and you love a worthy rival. Direct conflict, races to the finish and head-to-head duels bring out your best.",
+      likes: ["Head-to-head", "Take that", "Races", "Area control"],
+      mech: ["Take That", "Player Elimination", "Race", "Area Majority / Influence", "King of the Hill", "Auction / Bidding", "Push Your Luck", "Interrupts", "Sudden Death Ending", "Slide / Push", "Trick-taking"],
+      cat: ["Abstract Strategy", "Racing", "Sports", "Fighting", "Political", "Dice"],
+      weight: [1.5, 3.6], time: [15, 120], twoPlayer: true },
+    collector: { name: "The Collector", em: "💎", color: "#d6c4ff",
+      blurb: "You love the gathering: sets to complete, tableaus to fill and gorgeous components to admire. If a game has expansions, you probably own them.",
+      likes: ["Set collection", "Drafting", "Beautiful components", "Expansions"],
+      mech: ["Set Collection", "Open Drafting", "Closed Drafting", "Action Drafting", "Pattern Building", "Grid Coverage", "Layering", "Melding and Splaying", "Hand Management", "Deck Construction", "Deck, Bag, and Pool Building"],
+      cat: ["Animals", "Card Game", "Environmental", "Collectible Components", "Prehistoric"],
+      weight: [1.3, 3.2], time: [20, 90], addons: true },
+  };
+  const KEYS = Object.keys(TYPES);
+  const LABEL = { "Tags": "Engine tags", "Worker Placement, Different Worker Types": "Different worker types", "Worker Placement with Dice Workers": "Dice workers" };
+
+  /* ---------- Questions: each answer nudges one or more types ---------- */
+  const QUESTIONS = [
+    { q: "It's game night. Which box are you reaching for first?", a: [
+      ["🏭", "The big one with a hundred little wooden cubes", { strategist: 3 }],
+      ["🗺️", "The campaign we're halfway through", { explorer: 3 }],
+      ["🎭", "Something loud that everyone can play", { social: 3 }],
+      ["⚔️", "A tense head-to-head duel", { competitor: 2, tactician: 1 }],
+      ["🃏", "The pretty card game with all the expansions", { collector: 3 }],
+      ["🧩", "A tight puzzle where every move counts", { tactician: 3 }]] },
+    { q: "Your favorite moment in a game is…", a: [
+      ["⚙️", "When the engine I built finally pays off", { strategist: 3 }],
+      ["💥", "Pulling off the perfect move at the perfect time", { tactician: 3 }],
+      ["😂", "When the whole table bursts out laughing", { social: 3 }],
+      ["📖", "A plot twist nobody saw coming", { explorer: 3 }],
+      ["🥇", "Crossing the finish line first", { competitor: 3 }],
+      ["✨", "Completing the set I've been chasing all game", { collector: 3 }]] },
+    { q: "How long should a game last?", a: [
+      ["⚡", "15 to 30 minutes, then play again", { social: 2, competitor: 1 }],
+      ["⏱️", "About an hour", { tactician: 1, collector: 2 }],
+      ["🕰️", "Two hours or more, I'm settling in", { strategist: 2, explorer: 1 }],
+      ["📅", "It continues next week", { explorer: 3 }]] },
+    { q: "How do you feel about attacking other players?", a: [
+      ["😈", "Bring it. That's half the fun", { competitor: 3, tactician: 1 }],
+      ["🤝", "I'd rather we all team up against the game", { explorer: 2, social: 1 }],
+      ["🙂", "A little interaction is fine, nothing mean", { strategist: 2, collector: 1 }],
+      ["🕵️", "I prefer lying to them", { social: 3 }]] },
+    { q: "Pick a world to play in.", a: [
+      ["🐉", "Dungeons, dragons and ancient ruins", { explorer: 3, tactician: 1 }],
+      ["🚀", "Distant planets and starships", { explorer: 2, strategist: 1 }],
+      ["🌻", "Gardens, birds and cozy animals", { collector: 3 }],
+      ["🏰", "Building a medieval city or trade empire", { strategist: 3 }],
+      ["🎲", "Doesn't matter, it's about the mechanics", { tactician: 2, competitor: 1 }],
+      ["🕺", "Whatever gets people talking", { social: 3 }]] },
+    { q: "Teaching the rules: how long can you sit through?", a: [
+      ["🗣️", "Two minutes, then let's just play", { social: 3 }],
+      ["📏", "Ten minutes is fine", { collector: 1, competitor: 2 }],
+      ["📚", "Thirty minutes if the game is worth it", { strategist: 2, tactician: 1 }],
+      ["📕", "I already read the rulebook. Twice.", { strategist: 1, explorer: 2 }]] },
+    { q: "Someone at the table is about to win. You…", a: [
+      ["🧮", "Quietly calculate if my end-game points can catch up", { strategist: 3 }],
+      ["🎯", "Find the one move that blocks them", { tactician: 2, competitor: 1 }],
+      ["🍿", "Cheer them on, it's been a great game", { social: 2, explorer: 1 }],
+      ["🔥", "Team up with everyone else to stop them", { competitor: 3 }]] },
+    { q: "A new expansion comes out for a game you like.", a: [
+      ["🛒", "Already ordered. And the playmat.", { collector: 3 }],
+      ["🔍", "I'll check if it adds interesting new strategies", { strategist: 2 }],
+      ["📜", "New story content? I'm in", { explorer: 2 }],
+      ["🤷", "I'd rather try a different game", { social: 2, competitor: 1 }]] },
+    { q: "What's your ideal group size?", a: [
+      ["👤", "Just me, playing solo", { strategist: 1, explorer: 1, collector: 1 }],
+      ["👥", "Two players, face to face", { competitor: 2, tactician: 1 }],
+      ["👨‍👩‍👧", "Three or four friends", { strategist: 1, collector: 1, explorer: 1 }],
+      ["🎊", "The more the merrier", { social: 3 }]] },
+    { q: "Which compliment would make your night?", a: [
+      ["🧠", "\"That was a brilliant long-term plan.\"", { strategist: 3 }],
+      ["🎯", "\"How did you see that move?\"", { tactician: 3 }],
+      ["🥳", "\"You're the most fun person to play with.\"", { social: 3 }],
+      ["🧭", "\"You made that adventure unforgettable.\"", { explorer: 3 }],
+      ["👑", "\"You're unbeatable.\"", { competitor: 3 }],
+      ["🖼️", "\"Your collection is gorgeous.\"", { collector: 3 }]] },
+  ];
+
+  /* ---------- Matching games to a type ---------- */
+  let games = [], addons = new Map();
+  const tagsOf = (g) => new Set([...(g.mechanics || []), ...(g.categories || [])]);
+  const playTime = (g) => g.playTime || g.maxTime || g.minTime || 0;
+  const hue = (g) => (Number(String(g.id).replace(/\D/g, "")) * 47) % 360;
+  function typeScore(k, g) {
+    const T = TYPES[k], tags = tagsOf(g), why = [];
+    let s = 0;
+    for (const m of T.mech) if (tags.has(m)) { s += 2; why.push(LABEL[m] || m); }
+    for (const c of T.cat) if (tags.has(c)) { s += 1.6; why.push(c); }
+    if (g.weight) s += g.weight >= T.weight[0] && g.weight <= T.weight[1] ? 1.5 : -1;
+    const t = playTime(g); if (t) s += t >= T.time[0] && t <= T.time[1] ? 1 : -0.5;
+    if (T.bigGroups && (g.maxPlayers || 0) >= 6) { s += 1.5; why.push(`up to ${g.maxPlayers} players`); }
+    if (T.twoPlayer && ((g.bestPlayers || []).includes(2) || g.maxPlayers === 2)) { s += 1.5; why.push("great with 2"); }
+    if (T.addons && addons.get(g.id)) { s += Math.min(3, addons.get(g.id)); why.push(`${addons.get(g.id)} add-on${addons.get(g.id) === 1 ? "" : "s"} on our shelf`); }
+    s += Math.max(0, (g.rating || 6.5) - 6.5) * 0.8;
+    return { s, why };
+  }
+  // A person's matches blend their types by how strongly they scored on each.
+  function matchesFor(mix, n = 9) {
+    const tot = KEYS.reduce((a, k) => a + mix[k], 0) || 1;
+    return games.map((g) => {
+      let s = 0; const why = new Set();
+      for (const k of KEYS) { if (!mix[k]) continue; const r = typeScore(k, g); s += r.s * mix[k] / tot; if (mix[k] / tot >= .2) r.why.slice(0, 3).forEach((w) => why.add(w)); }
+      return { g, s, why: [...why].slice(0, 4) };
+    }).sort((a, b) => b.s - a.s || (b.g.rating || 0) - (a.g.rating || 0)).slice(0, n);
+  }
+
+  /* ---------- State ---------- */
+  let S; try { S = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { S = null; }
+  if (!S || !Array.isArray(S.answers)) S = { answers: [], step: -1, done: false, view: null };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+  function tally() {
+    const mix = Object.fromEntries(KEYS.map((k) => [k, 0]));
+    S.answers.forEach((ai, qi) => { if (ai == null) return; for (const [k, v] of Object.entries(QUESTIONS[qi].a[ai][2])) mix[k] += v; });
+    return mix;
+  }
+
+  /* ---------- Screens ---------- */
+  const card = (m) => `<li class="match"><span class="art" style="--h:${hue(m.g)}">${m.g.thumbnail ? `<img src="${esc(m.g.thumbnail)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith('🎲')">` : "🎲"}</span>
+    <div class="minfo"><a class="mname" href="${esc(m.g.url)}" target="_blank" rel="noopener">${esc(m.g.name)}</a>
+      <div class="mfacts">${esc([m.g.minPlayers && `${m.g.minPlayers}${m.g.maxPlayers && m.g.maxPlayers !== m.g.minPlayers ? `–${m.g.maxPlayers}` : ""} players`, playTime(m.g) && `${playTime(m.g)} min`, m.g.weight && `weight ${m.g.weight.toFixed(1)}`, m.g.rating && `★ ${m.g.rating.toFixed(1)}`].filter(Boolean).join(" · "))}</div>
+      ${m.why.length ? `<div class="why">${m.why.map((w) => `<span>${esc(w)}</span>`).join("")}</div>` : ""}</div></li>`;
+  const typeGrid = (pressed) => `<div class="types">${KEYS.map((k) => `<button class="tcard" type="button" data-type="${k}" style="--tc:${TYPES[k].color}" aria-pressed="${pressed === k}">
+      <span class="em" aria-hidden="true">${TYPES[k].em}</span><b>${TYPES[k].name}</b><span>${esc(TYPES[k].likes.slice(0, 2).join(" · "))}</span></button>`).join("")}</div>`;
+  function render(focus) {
+    const app = $("app");
+    if (S.step < 0 && !S.done) {
+      app.innerHTML = `<section class="card intro"><div><h2 class="sec">What kind of board gamer are you?</h2>
+          <p>Answer ${QUESTIONS.length} quick questions to find your gamer type, then see which games on our shelf suit you best.</p></div>
+          <div class="typeicons" aria-hidden="true">${KEYS.map((k) => TYPES[k].em).join("")}</div>
+          <div class="btns"><button class="btn primary big" type="button" id="start">Start the quiz</button></div></section>
+        <section class="card"><h2 class="sec">The six types</h2><p class="msg">Curious already? Tap a type to see its games.</p>${typeGrid(S.view)}${S.view ? typeSection(S.view) : ""}</section>`;
+    } else if (!S.done) {
+      const qi = S.step, Q = QUESTIONS[qi], picked = S.answers[qi];
+      app.innerHTML = `<section class="card" aria-labelledby="qtext">
+        <div class="qhead"><span>Question ${qi + 1} of ${QUESTIONS.length}</span><button class="link" type="button" id="quit">Start over</button></div>
+        <div class="progress" aria-hidden="true"><i style="width:${(qi / QUESTIONS.length) * 100}%"></i></div>
+        <h2 class="question" id="qtext">${esc(Q.q)}</h2>
+        <div class="answers" role="group" aria-labelledby="qtext">${Q.a.map(([em, t], i) => `<button class="answer" type="button" data-ans="${i}" aria-pressed="${picked === i}"><span class="em" aria-hidden="true">${em}</span>${esc(t)}</button>`).join("")}</div>
+        <div class="qnav">${qi ? `<button class="btn" type="button" id="back">‹ Back</button>` : "<span></span>"}${picked != null ? `<button class="btn yellow" type="button" id="next">${qi === QUESTIONS.length - 1 ? "See my result" : "Next ›"}</button>` : ""}</div></section>`;
+    } else {
+      const mix = tally(), tot = KEYS.reduce((a, k) => a + mix[k], 0) || 1;
+      const order = [...KEYS].sort((a, b) => mix[b] - mix[a]), top = order[0], second = order[1], T = TYPES[top];
+      const matches = matchesFor(mix);
+      app.innerHTML = `<section class="result">
+        <div class="hero" style="--tc:${T.color}"><span class="big" aria-hidden="true">${T.em}</span>
+          <div><small>You are</small><h2 id="resultH">${T.name}</h2><p>${esc(T.blurb)}</p>
+          ${mix[second] / tot >= .18 ? `<p style="margin-top:8px">With a streak of <b>${TYPES[second].name}</b>.</p>` : ""}
+          <div class="likes">${T.likes.map((l) => `<span>${esc(l)}</span>`).join("")}</div></div></div>
+        <section class="card"><h2 class="sec">Your gamer mix</h2><div class="mix">${order.map((k) => `<div class="mixrow" style="--tc:${TYPES[k].color}"><span>${TYPES[k].em} ${TYPES[k].name.replace("The ", "")}</span>
+          <span class="bar" role="img" aria-label="${Math.round(100 * mix[k] / tot)}%"><i style="width:${(100 * mix[k] / tot).toFixed(1)}%"></i></span><b>${Math.round(100 * mix[k] / tot)}%</b></div>`).join("")}</div></section>
+        <section class="card"><h2 class="sec">Games on our shelf for you</h2><p class="msg">Picked from our collection for your mix of types, with what makes each a match.</p>
+          ${matches.length ? `<ul class="matches">${matches.map(card).join("")}</ul>` : `<p class="msg">The shelf is still loading.</p>`}</section>
+        <section class="card"><h2 class="sec">Explore the other types</h2>${typeGrid(S.view)}${S.view ? typeSection(S.view) : ""}</section>
+        <div class="btns"><button class="btn primary" type="button" id="retake">Take the quiz again</button><button class="btn" type="button" id="copy">Copy my result</button><span class="msg" id="copyMsg" role="status"></span></div>
+      </section>`;
+    }
+    if (focus) document.querySelector(focus)?.focus();
+  }
+  function typeSection(k) {
+    const T = TYPES[k], mix = Object.fromEntries(KEYS.map((x) => [x, x === k ? 1 : 0]));
+    return `<div class="card" style="margin-top:14px;box-shadow:none;border-style:dashed" id="typeSec"><h2 class="sec">${T.em} ${T.name}</h2><p class="msg">${esc(T.blurb)}</p>
+      <ul class="matches">${matchesFor(mix, 6).map(card).join("")}</ul></div>`;
+  }
+
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.id === "start") { S.step = 0; S.answers = []; S.done = false; save(); render(".answer"); }
+    else if (b.dataset.ans) { S.answers[S.step] = Number(b.dataset.ans); save();
+      if (S.step < QUESTIONS.length - 1) { S.step++; save(); render(".answer"); } else render("#next"); }
+    else if (b.id === "next") { if (S.step < QUESTIONS.length - 1) { S.step++; save(); render(".answer"); } else { S.done = true; S.view = null; save(); render(); scrollTo({ top: 0, behavior: "smooth" }); $("resultH")?.setAttribute("tabindex", "-1"); $("resultH")?.focus({ preventScroll: true }); } }
+    else if (b.id === "back") { S.step--; save(); render(`[data-ans="${S.answers[S.step] ?? 0}"]`); }
+    else if (b.id === "quit" || b.id === "retake") { S = { answers: [], step: b.id === "retake" ? 0 : -1, done: false, view: null }; save(); render(b.id === "retake" ? ".answer" : "#start"); }
+    else if (b.dataset.type) { S.view = S.view === b.dataset.type ? null : b.dataset.type; save(); render(`[data-type="${b.dataset.type}"]`); }
+    else if (b.id === "copy") {
+      const mix = tally(), tot = KEYS.reduce((a, k) => a + mix[k], 0) || 1, order = [...KEYS].sort((a, c) => mix[c] - mix[a]);
+      const text = `I'm ${TYPES[order[0]].name} ${TYPES[order[0]].em} (${order.slice(0, 3).map((k) => `${TYPES[k].name.replace("The ", "")} ${Math.round(100 * mix[k] / tot)}%`).join(", ")}). Take the quiz: ${location.origin}/tools/quiz`;
+      navigator.clipboard.writeText(text).then(() => { $("copyMsg").textContent = "Copied!"; }, () => { $("copyMsg").textContent = text; });
+    }
+  });
+
+  fetch("/api/collection").then((r) => r.json()).then((d) => {
+    const all = d.games || [];
+    games = all.filter((g) => g.type === "Base game");
+    const ids = new Set(games.map((g) => g.id));
+    for (const x of all) if (x.type !== "Base game") for (const l of new Set(x.links || [])) if (ids.has(l)) addons.set(l, (addons.get(l) || 0) + 1);
+    render();
+  }).catch(() => { $("app").innerHTML = `<section class="card"><p>Couldn't load the shelf right now. <button class="link" type="button" onclick="location.reload()">Try again</button></p></section>`; });
+})();
+</script>
+<script src="/pwa.js" defer></script>
+</body>
+</html>

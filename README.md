@@ -24,6 +24,7 @@ Combines the owned BoardGameGeek collections of **Asianofchaos** (Remy) and **ce
 - **Pagination:** up to 10 page numbers at a time around the current page; 10, 25, 50, 100, 200 or 300 games per page (remembered on the device); filters stay applied while paging. On tablets and phones the filters open in a drawer.
 
 - **Tools (`/tools`):** a page of game night helpers, one card per tool (add new ones to the `TOOLS` list in `tools/index.html`).
+- **Gamer personality quiz (`/tools/quiz`):** ten quick questions score you across six types (Strategist, Tactician, Social Gamer, Explorer, Competitor, Collector) and show your main type, your full mix, and nine games from our shelf that suit that mix. Each type has a list of mechanics, categories, weight and time range it likes (the Social Gamer also likes big player counts, the Competitor games that shine at 2, the Collector games with add-ons on the shelf); a game's score blends those by your mix and the tags show why it matched. You can browse any type's games without taking the quiz. The result is saved in the browser.
 - **Initiative tracker (`/tools/initiative`):** add combatants, then roll a random turn order or type in initiative numbers (highest or lowest first, with arrows to settle ties), and step through turns in a full list or one at a time, round after round. Keep several parties and switch between them. Star (★) the core party members; everyone else is scenario-only (enemies and the like), shown in a "This scenario" list that one button clears when the scenario ends, keeping the party. Core status is just a toggle, so retired characters can be unstarred or removed and new ones starred. "Share" gives a party a 6-character code and a link; anyone who opens it gets the party on their device, and adding or removing names syncs between everyone using that code. Initiative numbers and turns stay on each device.
 
 ## How it works
@@ -31,6 +32,7 @@ Combines the owned BoardGameGeek collections of **Asianofchaos** (Remy) and **ce
 - `index.html`: the games page.
 - `tools/index.html`: the Tools page.
 - `tools/game-night.html`: the game night planner.
+- `tools/quiz.html`: the gamer personality quiz.
 - `tools/initiative.html`: the initiative tracker (served at `/tools/initiative`; the old `/initiative` address redirects there, query string included).
 - `api/group.js`: shared game night groups (people and preferences), using the same store.
 - `api/plays.js`: serves Remy's individual logged plays (saved by the daily sync to `shelf/plays.json`) for the "Our year" recaps.

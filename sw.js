@@ -1,9 +1,9 @@
 // Service worker: makes the site installable and usable offline.
 // Pages and the collection come from the network when it's there (so they stay current) and
 // from the last saved copy when it isn't. Fonts and libraries are cached once.
-const VERSION = "v3";
+const VERSION = "v4";
 const SHELL = `shell-${VERSION}`, DATA = `data-${VERSION}`, LIBS = `libs-${VERSION}`;
-const PAGES = ["/", "/stats", "/tools", "/tools/initiative", "/tools/game-night"];
+const PAGES = ["/", "/stats", "/tools", "/tools/initiative", "/tools/game-night", "/tools/quiz"];
 const ASSETS = ["/manifest.webmanifest", "/pwa.js", "/powered-by-bgg.png", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/icons/favicon-32.png"];
 
 self.addEventListener("install", (e) => {
