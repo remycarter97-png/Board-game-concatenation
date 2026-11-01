@@ -1,4 +1,5 @@
 {
+  "cleanUrls": true,
   "functions": {
     "api/sync.js": { "maxDuration": 300 },
     "api/collection.js": { "maxDuration": 15 }

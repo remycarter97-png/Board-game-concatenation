@@ -319,6 +319,11 @@
   .tagline { font-weight: 600; }
   .sync { border: var(--edge); box-shadow: var(--pop-sm); font-weight: 600; background: var(--surface); }
   .sync .sep { color: var(--muted); }
+  .headright { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+  .pagenav { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); }
+  .pagenav a { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-decoration: none; }
+  .pagenav a:hover { color: var(--ink); background: var(--surface-2); }
+  .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
 
 
   .banner { border: var(--edge); box-shadow: var(--pop); border-radius: 16px; }
@@ -445,7 +450,7 @@
 
   /* Table view */
   .tablewrap { background: var(--surface); border: var(--edge); border-radius: 20px; box-shadow: var(--pop); overflow-x: auto; }
-  .gtable { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .9rem; min-width: 1080px; }
+  .gtable { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .9rem; }
   .gtable th { position: sticky; top: 0; background: var(--surface-2); text-align: left; font: 600 .8rem/1.2 Fredoka, ui-rounded, sans-serif; letter-spacing: .03em;
     text-transform: uppercase; color: var(--ink-2); padding: 10px 8px; border-bottom: 2.5px solid var(--outline); white-space: nowrap; }
   .gtable th:first-child { border-top-left-radius: 17px; } .gtable th:last-child { border-top-right-radius: 17px; }
@@ -488,8 +493,21 @@
   .svicon:hover { background: var(--surface-2); color: var(--ink); }
   .svrename { display: flex; gap: 6px; align-items: center; flex: 1; padding: 3px 0; }
   .svempty { margin: 10px 0 0; font-size: .82rem; color: var(--muted); font-weight: 600; }
+  .colpanel { width: 290px; }
+  .colhead { margin: 0 0 6px; font: 600 .78rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-2); }
+  .collist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: 340px; overflow: auto; }
+  .collist li { display: flex; align-items: center; gap: 2px; border-radius: 10px; padding: 0 2px; border: 2px solid transparent; }
+  .collist li:hover { background: var(--surface-2); }
+  .collist li.off label { color: var(--muted); }
+  .collist li.dragging { opacity: .45; }
+  .collist li.drop-before { border-top-color: var(--accent); } .collist li.drop-after { border-bottom-color: var(--accent); }
+  .collist label { flex: 1; display: flex; align-items: center; gap: 8px; padding: 6px 4px; font-weight: 700; font-size: .9rem; cursor: pointer; }
+  .collist input { accent-color: var(--accent); width: 16px; height: 16px; }
+  .collist .grip { cursor: grab; color: var(--muted); font-size: .8rem; letter-spacing: -2px; padding: 0 2px; }
+  .collist .svicon:disabled { opacity: .3; cursor: default; }
+  .colfoot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 2px dashed var(--line); font-size: .78rem; color: var(--muted); font-weight: 600; }
   .tablewrap { overflow: visible; } .gtable-scroll { overflow-x: auto; border-radius: 0 0 18px 18px; }
-  @media (hover: none), (max-width: 760px) { .shint { display: none; } }
+  @media (hover: none), (max-width: 760px) { .shint { display: none; } .colwrap { margin-left: auto; } }
   .gtable td { padding: 7px 8px; border-bottom: 1.5px solid var(--line); vertical-align: middle; }
   .gtable tbody tr.head-row:hover td { background: color-mix(in srgb, var(--yellow) 14%, var(--surface)); }
   .gtable tr:last-child td { border-bottom: 0; }
@@ -521,7 +539,7 @@
   input.colf { padding: 0 8px; }
   .colf:focus { outline: none; border-color: var(--outline); box-shadow: 0 0 0 3px var(--yellow); }
   .colf.set { border-color: var(--outline); background: var(--yellow-soft); }
-  .gtable .frow td:nth-child(2) { min-width: 170px; } .gtable .frow td:nth-child(10) { min-width: 130px; }
+  .gtable .frow td.c-name { min-width: 170px; } .gtable .frow td.c-mech { min-width: 130px; }
   .gtable select.colf { min-width: 74px; }
   .tempty { text-align: center; padding: 28px 16px !important; color: var(--ink-2); }
   .tempty svg { display: block; margin: 0 auto 10px; }
@@ -596,11 +614,14 @@
           <p class="tagline">Our collection, all in one place.</p>
         </div>
       </div>
+      <div class="headright">
+      <nav class="pagenav" aria-label="Pages"><a href="/" aria-current="page">Games</a><a href="/stats">Charts</a></nav>
       <div class="sync" id="sync" data-state="syncing" role="status">
         <span class="dot"></span>
         <strong id="sync-label">Syncing…</strong>
         <span class="sep" id="sync-sep1" hidden>·</span><span id="sync-last"></span>
         <span class="sep long" id="sync-sep2" hidden>·</span><span class="long" id="sync-next"></span>
+      </div>
       </div>
     </div>
     <div class="banner" id="banner" hidden role="alert"></div>
@@ -1074,13 +1095,13 @@ const loadViews = () => { const v = store.get("localStorage", SV_KEY, []); retur
 const saveViews = (v) => store.set("localStorage", SV_KEY, v);
 function snapshotView() {
   return { sorts: state.sorts.map((x) => ({ key: x.key, dir: x.dir })), q: state.q, best: state.best, mechs: [...state.mechs].sort(),
-    col: Object.fromEntries(Object.entries(state.col).filter(([, v]) => v)) };
+    col: Object.fromEntries(Object.entries(state.col).filter(([, v]) => v)), cols: normCols(state.cols) };
 }
-const viewSig = (v) => JSON.stringify([v.sorts, v.q || "", v.best ?? null, [...(v.mechs || [])].sort(), Object.entries(v.col || {}).filter(([, x]) => x).sort()]);
+const viewSig = (v) => JSON.stringify([v.sorts, v.q || "", v.best ?? null, [...(v.mechs || [])].sort(), Object.entries(v.col || {}).filter(([, x]) => x).sort(), normCols(v.cols)]);
 function suggestName() {
   const parts = state.sorts.map((x) => `${SORTS[x.key].label} ${x.dir === 1 ? "↑" : "↓"}`);
   const n = activeFilters().length;
-  return parts.join(", ") + (n ? ` · ${n} filter${n === 1 ? "" : "s"}` : "");
+  return parts.join(", ") + (n ? ` · ${n} filter${n === 1 ? "" : "s"}` : "") + (colsAreDefault(state.cols) ? "" : " · my columns");
 }
 function applyView(v) {
   state.sorts = v.sorts.filter((x) => SORTS[x.key]).map((x) => ({ key: x.key, dir: x.dir === -1 ? -1 : 1 }));
@@ -1089,6 +1110,7 @@ function applyView(v) {
   state.best = typeof v.best === "number" ? v.best : null;
   state.mechs = new Set(v.mechs || []);
   state.col = { ...COLF_EMPTY, ...Object.fromEntries(Object.entries(v.col || {}).filter(([k]) => k in COLF_EMPTY)) };
+  setCols(v.cols); // views saved before columns could change use the standard layout
   $("mech-q").value = "";
   changed();
 }
@@ -1096,7 +1118,7 @@ function savedViewsUI() {
   const views = loadViews(), cur = viewSig(snapshotView());
   const active = views.find((v) => viewSig(v) === cur);
   const panel = svOpen ? `<div class="svpanel" role="dialog" aria-label="Saved views">
-      <form class="svform" data-svform="1"><label for="sv-name">Save this sort${activeFilters().length ? " and its filters" : ""} as</label>
+      <form class="svform" data-svform="1"><label for="sv-name">Save this sort, columns${activeFilters().length ? " and filters" : ""} as</label>
         <div class="svrow"><input id="sv-name" data-svname="1" maxlength="40" autocomplete="off" value="${esc(active ? active.name : suggestName())}">
         <button class="btn" type="submit">Save</button></div>
         ${svNote ? `<p class="svnote" role="status">${esc(svNote)}</p>` : ""}</form>
@@ -1130,26 +1152,76 @@ function sortBar() {
       <button class="sdir" data-sdir="${i}" title="Reverse" aria-label="${SORTS[x.key].label}: ${dirWord(x.key, x.dir)}. Reverse">${x.dir === 1 ? "▲" : "▼"} ${dirWord(x.key, x.dir)}</button>
       ${state.sorts.length > 1 ? `<button class="srem" data-srem="${i}" aria-label="Stop sorting by ${SORTS[x.key].label}">×</button>` : ""}</span>${i < state.sorts.length - 1 ? '<span class="sthen" aria-hidden="true">then</span>' : ""}`).join("")}
     ${state.sorts.length < MAX_SORTS && free.length ? `<select class="sadd" data-sadd="1" aria-label="Add another sort level"><option value="">+ Then by…</option>${free.map((k) => `<option value="${k}">${SORTS[k].label}</option>`).join("")}</select>` : ""}
-    <span class="shint">Tip: Shift-click a column header to add it</span>${savedViewsUI()}</div>`;
+    <span class="shint">Tip: Shift-click a column header to add it</span>${columnsUI()}${savedViewsUI()}</div>`;
+}
+/* ---------- Table columns: order and visibility, kept in this browser and in saved views ---------- */
+const dash = '<span class="dim">—</span>';
+const COLS = {
+  cover:   { label: "Cover", cls: "c-img", w: 56, head: () => th("", '<span class="sr">Cover</span>', "c-img"),
+    filt: () => `<td class="c-img"><span class="sr">No filter</span>${ICON.filter}</td>`,
+    cell: (x) => `<td class="c-img"><span class="tthumb" style="--h:${hueOf(x)}">${x.thumbnail ? imgTag(x, x.thumbnail) : doodle(x)}</span></td>` },
+  name:    { label: "Name", cls: "c-name", w: 200, always: true, head: () => th("name", "Name", "c-name"), filt: () => colfCell("name", "c-name"),
+    cell: (x, kid, kids, id) => `<td class="c-name">${kid ? `<span class="kidmark" aria-hidden="true">↳</span><a class="tkid" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a> <span class="ttype">${x.type}</span>`
+      : `<button class="tname" data-open="${id}">${esc(x.name)}</button>${x.type !== "Base game" ? ` <span class="ttype">${x.type}</span>` : ""}
+        ${kids.length ? `<button class="tkids" data-trow="${id}" aria-expanded="false">${ICON.chev}${addonSummary(kids)}</button>` : ""}`}</td>` },
+  rating:  { label: "Rating", cls: "c-num", w: 80, head: () => th("rating", "Rating", "c-num"), filt: () => colfCell("rating", "c-num"),
+    cell: (x) => `<td class="c-num">${x.rating ? `<span class="trate">${ICON.star}${x.rating.toFixed(1)}</span>` : dash}</td>` },
+  rank:    { label: "BGG rank", cls: "c-num", w: 90, head: () => th("rank", "BGG rank", "c-num"), filt: () => colfCell("rank", "c-num"),
+    cell: (x) => `<td class="c-num">${x.rank ? `#${x.rank.toLocaleString()}` : dash}</td>` },
+  players: { label: "Players", cls: "c-num", w: 85, head: () => th("players", "Players", "c-num"), filt: () => colfCell("players", "c-num"),
+    cell: (x, kid) => `<td class="c-num">${kid ? "" : players(x) || dash}</td>` },
+  best:    { label: "Best with", cls: "c-num", w: 95, head: () => th("best", "Best with", "c-num"), filt: () => bestCell(),
+    cell: (x, kid) => `<td class="c-num">${kid ? "" : esc(bestShort(x)) || dash}</td>` },
+  time:    { label: "Time", cls: "c-num c-time", w: 95, head: () => th("time", "Time", "c-num c-time"), filt: () => colfCell("time", "c-num"),
+    cell: (x, kid) => `<td class="c-num c-time">${kid ? "" : timeText(x) || dash}</td>` },
+  weight:  { label: "Complexity", cls: "c-num", w: 110, head: () => th("weight", "Complexity", "c-num"), filt: () => colfCell("weight", "c-num"),
+    cell: (x, kid) => `<td class="c-num">${kid ? "" : x.weight ? `<span class="tweight" title="${weightLabel(x.weight)}">${weightBar(x.weight)}${x.weight.toFixed(1)}</span>` : dash}</td>` },
+  year:    { label: "Year", cls: "c-num", w: 75, head: () => th("year", "Year", "c-num"), filt: () => colfCell("year", "c-num"),
+    cell: (x) => `<td class="c-num">${esc(x.year || "")}</td>` },
+  mech:    { label: "Mechanics", cls: "c-mech", w: 160, head: () => th("mech", "Mechanics", "c-mech"), filt: () => colfCell("mech", "c-mech"),
+    cell: (x, kid) => { const m = x.mechanics || []; return `<td class="c-mech">${kid ? "" : m.length ? `<span title="${esc(m.join(", "))}">${esc(m.slice(0, 2).join(", "))}${m.length > 2 ? ` <span class="dim">+${m.length - 2}</span>` : ""}</span>` : ""}</td>`; } },
+  owner:   { label: "Owner", cls: "c-own", w: 110, head: () => th("owner", "Owner", "c-own"), filt: () => colfCell("owner", "c-own"),
+    cell: (x) => `<td class="c-own"><span class="tiny own-${x.ownedBy}">${ownIcon(x.ownedBy)}${x.ownedBy}</span></td>` },
+};
+const COL_DEFAULT = Object.keys(COLS);
+// Keep only known columns, add any new ones at the end, and never hide Name.
+function normCols(c) {
+  const order = [...new Set((c?.order || []).filter((k) => COLS[k]))];
+  for (const k of COL_DEFAULT) if (!order.includes(k)) order.push(k);
+  const hidden = [...new Set((c?.hidden || []).filter((k) => COLS[k] && !COLS[k].always))];
+  return { order, hidden };
+}
+state.cols = normCols(store.get("localStorage", "table-cols", null));
+const visibleCols = () => state.cols.order.filter((k) => !state.cols.hidden.includes(k));
+const colsAreDefault = (c) => JSON.stringify(normCols(c)) === JSON.stringify(normCols(null));
+function setCols(c) { state.cols = normCols(c); store.set("localStorage", "table-cols", state.cols); }
+let colOpen = false, colNote = "";
+function columnsUI() {
+  const vis = visibleCols().length, all = state.cols.order.length;
+  const panel = colOpen ? `<div class="svpanel colpanel" role="dialog" aria-label="Columns">
+      <p class="colhead">Show, hide and reorder columns</p>
+      <ul class="collist" data-collist="1">${state.cols.order.map((k, i) => { const c = COLS[k], on = !state.cols.hidden.includes(k);
+        return `<li class="${on ? "" : "off"}" draggable="true" data-colkey="${k}">
+          <span class="grip" aria-hidden="true">⋮⋮</span>
+          <label><input type="checkbox" data-colvis="${k}" ${on ? "checked" : ""} ${c.always ? 'disabled title="Name is always shown"' : ""}> ${c.label}</label>
+          <button class="svicon" data-colmv="${k}" data-d="-1" ${i === 0 ? "disabled" : ""} aria-label="Move ${c.label} left" title="Move left">↑</button>
+          <button class="svicon" data-colmv="${k}" data-d="1" ${i === all - 1 ? "disabled" : ""} aria-label="Move ${c.label} right" title="Move right">↓</button></li>`; }).join("")}</ul>
+      <div class="colfoot"><span>Drag or use the arrows. Top is the left-most column.</span>
+        ${colsAreDefault(state.cols) ? "" : '<button class="linkbtn" data-colreset="1">Reset</button>'}</div>
+      ${colNote ? `<p class="svnote" role="status">${esc(colNote)}</p>` : ""}
+    </div>` : "";
+  return `<span class="svwrap colwrap"><button class="svbtn${colsAreDefault(state.cols) ? "" : " on"}" data-coltoggle="1" aria-expanded="${colOpen}" title="Show, hide or reorder columns">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="16" rx="1.5"/><rect x="16.5" y="4" width="4" height="16" rx="1.5"/></svg>
+    Columns${vis < all ? ` (${vis}/${all})` : ""}</button>${panel}</span>`;
+}
+function moveCol(k, to) {
+  const order = state.cols.order.filter((x) => x !== k);
+  order.splice(Math.max(0, Math.min(order.length, to)), 0, k);
+  setCols({ ...state.cols, order });
 }
 function tableRows({ head: g, kids }) {
-  const id = esc(g.id);
-  const mech = (g.mechanics || []);
-  const row = (x, kid) => `<tr class="${kid ? `kid-row kid-of-${id}` : "head-row"}"${kid ? " hidden" : ""}>
-    <td class="c-img"><span class="tthumb" style="--h:${hueOf(x)}">${x.thumbnail ? imgTag(x, x.thumbnail) : doodle(x)}</span></td>
-    <td class="c-name">${kid ? `<span class="kidmark" aria-hidden="true">↳</span><a class="tkid" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a> <span class="ttype">${x.type}</span>`
-      : `<button class="tname" data-open="${id}">${esc(x.name)}</button>${x.type !== "Base game" ? ` <span class="ttype">${x.type}</span>` : ""}
-        ${kids.length ? `<button class="tkids" data-trow="${id}" aria-expanded="false">${ICON.chev}${addonSummary(kids)}</button>` : ""}`}</td>
-    <td class="c-num">${x.rating ? `<span class="trate">${ICON.star}${x.rating.toFixed(1)}</span>` : "<span class=\"dim\">—</span>"}</td>
-    <td class="c-num">${x.rank ? `#${x.rank.toLocaleString()}` : "<span class=\"dim\">—</span>"}</td>
-    <td class="c-num">${kid ? "" : players(x) || "<span class=\"dim\">—</span>"}</td>
-    <td class="c-num">${kid ? "" : esc(bestShort(x)) || "<span class=\"dim\">—</span>"}</td>
-    <td class="c-num c-time">${kid ? "" : timeText(x) || "<span class=\"dim\">—</span>"}</td>
-    <td class="c-num">${kid ? "" : x.weight ? `<span class="tweight" title="${weightLabel(x.weight)}">${weightBar(x.weight)}${x.weight.toFixed(1)}</span>` : "<span class=\"dim\">—</span>"}</td>
-    <td class="c-num">${esc(x.year || "")}</td>
-    <td class="c-mech">${kid ? "" : mech.length ? `<span title="${esc(mech.join(", "))}">${esc(mech.slice(0, 2).join(", "))}${mech.length > 2 ? ` <span class="dim">+${mech.length - 2}</span>` : ""}</span>` : ""}</td>
-    <td class="c-own"><span class="tiny own-${x.ownedBy}">${ownIcon(x.ownedBy)}${x.ownedBy}</span></td>
-  </tr>`;
+  const id = esc(g.id), cols = visibleCols();
+  const row = (x, kid) => `<tr class="${kid ? `kid-row kid-of-${id}` : "head-row"}"${kid ? " hidden" : ""}>${cols.map((k) => COLS[k].cell(x, kid, kids, id)).join("")}</tr>`;
   return row(g, false) + kids.map((k) => row(k, true)).join("");
 }
 function colfCell(k, cls = "") {
@@ -1167,12 +1239,12 @@ function bestCell() {
 function renderTable(rows) {
   // Keep typing focus in a text filter across re-renders.
   const ae = document.activeElement, keep = ae?.dataset?.colf ? { k: ae.dataset.colf, s: ae.selectionStart, e: ae.selectionEnd } : null;
-  $("tablewrap").innerHTML = `${sortBar()}<div class="gtable-scroll"><table class="gtable">
+  const cols = visibleCols(), minW = Math.round(cols.reduce((n, k) => n + COLS[k].w, 0) * .94);
+  $("tablewrap").innerHTML = `${sortBar()}<div class="gtable-scroll"><table class="gtable" style="min-width:${minW}px">
     <caption class="sr">Games, ${state.page > 1 ? `page ${state.page}` : "first page"}. Use the second header row to filter each column. Select a game's name to see its details.</caption>
-    <thead><tr>${th("", '<span class="sr">Cover</span>', "c-img")}${th("name", "Name")}${th("rating", "Rating", "c-num")}${th("rank", "BGG rank", "c-num")}
-      ${th("players", "Players", "c-num")}${th("best", "Best with", "c-num")}${th("time", "Time", "c-num c-time")}${th("weight", "Complexity", "c-num")}${th("year", "Year", "c-num")}${th("mech", "Mechanics", "c-mech")}${th("owner", "Owner")}</tr>
-      <tr class="frow"><td class="c-img"><span class="sr">No filter</span>${ICON.filter}</td>${colfCell("name")}${colfCell("rating")}${colfCell("rank")}${colfCell("players")}${bestCell()}${colfCell("time")}${colfCell("weight")}${colfCell("year")}${colfCell("mech")}${colfCell("owner")}</tr></thead>
-    <tbody>${rows.length ? rows.map(tableRows).join("") : `<tr><td colspan="11" class="tempty">${SLEEPY}<div><b>No games match these filters.</b> Change a filter above, or <button class="linkbtn" data-reset="1">reset all filters</button>.</div></td></tr>`}</tbody></table></div>`;
+    <thead><tr>${cols.map((k) => COLS[k].head()).join("")}</tr>
+      <tr class="frow">${cols.map((k) => COLS[k].filt()).join("")}</tr></thead>
+    <tbody>${rows.length ? rows.map(tableRows).join("") : `<tr><td colspan="${cols.length}" class="tempty">${SLEEPY}<div><b>No games match these filters.</b> Change a filter above, or <button class="linkbtn" data-reset="1">reset all filters</button>.</div></td></tr>`}</tbody></table></div>`;
   if (keep) {
     const el = $("tablewrap").querySelector(`[data-colf="${keep.k}"]`);
     if (el) { el.focus({ preventScroll: true }); if (el.setSelectionRange && keep.s != null) try { el.setSelectionRange(keep.s, keep.e); } catch {} }
@@ -1374,7 +1446,11 @@ document.addEventListener("click", (e) => {
   else if (t.dataset.sorth) { setSort(t.dataset.sorth, { add: e.shiftKey }); changed(); }
   else if (t.dataset.sdir) { state.sorts[Number(t.dataset.sdir)].dir *= -1; changed(); }
   else if (t.dataset.srem) { state.sorts.splice(Number(t.dataset.srem), 1); changed(); }
-  else if (t.dataset.svtoggle) { svOpen = !svOpen; svNote = ""; svRenaming = null; renderGrid(); if (svOpen) $("sv-name")?.select(); }
+  else if (t.dataset.svtoggle) { svOpen = !svOpen; colOpen = false; svNote = ""; svRenaming = null; renderGrid(); if (svOpen) $("sv-name")?.select(); }
+  else if (t.dataset.coltoggle) { colOpen = !colOpen; svOpen = false; colNote = ""; renderGrid(); if (colOpen) document.querySelector("[data-colvis]:not(:disabled)")?.focus(); }
+  else if (t.dataset.colmv) { const k = t.dataset.colmv, d = Number(t.dataset.d); moveCol(k, state.cols.order.indexOf(k) + d); colNote = ""; renderGrid();
+    const again = document.querySelector(`[data-colmv="${k}"][data-d="${d}"]`); (again && !again.disabled ? again : document.querySelector(`[data-colvis="${k}"]`))?.focus(); }
+  else if (t.dataset.colreset) { setCols(null); colNote = "Back to the standard columns."; renderGrid(); document.querySelector("[data-coltoggle]")?.focus(); }
   else if (t.dataset.svapply) { const v = loadViews().find((x) => x.id === t.dataset.svapply); if (v) { svOpen = false; applyView(v); } }
   else if (t.dataset.svdel) { saveViews(loadViews().filter((x) => x.id !== t.dataset.svdel)); svNote = ""; renderGrid(); }
   else if (t.dataset.svren) { svRenaming = t.dataset.svren; renderGrid(); const el = document.querySelector(`[data-svrename="${CSS.escape(svRenaming)}"]`); el?.focus(); el?.select(); }
@@ -1405,13 +1481,45 @@ $("tablewrap").addEventListener("submit", (e) => {
     svRenaming = null; renderGrid();
   }
 });
-document.addEventListener("click", (e) => { if (svOpen && !e.target.closest(".svwrap")) { svOpen = false; svRenaming = null; if (state.view === "table" && status === "ok") renderGrid(); } });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape" && svOpen) { svOpen = false; svRenaming = null; renderGrid(); } });
+document.addEventListener("click", (e) => {
+  if (svOpen && !e.target.closest(".svwrap:not(.colwrap)")) { svOpen = false; svRenaming = null; if (state.view === "table" && status === "ok") renderGrid(); }
+  if (colOpen && !e.target.closest(".colwrap")) { colOpen = false; if (state.view === "table" && status === "ok") renderGrid(); }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if (svOpen) { svOpen = false; svRenaming = null; renderGrid(); document.querySelector("[data-svtoggle]")?.focus(); }
+  if (colOpen) { colOpen = false; renderGrid(); document.querySelector("[data-coltoggle]")?.focus(); }
+});
+// Drag a column in the Columns panel to reorder it.
+let dragCol = null;
+const tw = $("tablewrap");
+tw.addEventListener("dragstart", (e) => { const li = e.target.closest?.("[data-colkey]"); if (!li) return; dragCol = li.dataset.colkey; li.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", dragCol); } catch {} });
+tw.addEventListener("dragover", (e) => {
+  const li = e.target.closest?.("[data-colkey]"); if (!dragCol || !li) return;
+  e.preventDefault(); const r = li.getBoundingClientRect(), after = e.clientY > r.top + r.height / 2;
+  tw.querySelectorAll(".drop-before, .drop-after").forEach((x) => x.classList.remove("drop-before", "drop-after"));
+  if (li.dataset.colkey !== dragCol) li.classList.add(after ? "drop-after" : "drop-before");
+});
+tw.addEventListener("drop", (e) => {
+  const li = e.target.closest?.("[data-colkey]"); if (!dragCol || !li) return;
+  e.preventDefault();
+  if (li.dataset.colkey !== dragCol) {
+    const r = li.getBoundingClientRect(), after = e.clientY > r.top + r.height / 2;
+    const rest = state.cols.order.filter((x) => x !== dragCol);
+    moveCol(dragCol, rest.indexOf(li.dataset.colkey) + (after ? 1 : 0));
+  }
+  dragCol = null; colNote = ""; renderGrid();
+});
+tw.addEventListener("dragend", () => { dragCol = null; tw.querySelectorAll(".dragging, .drop-before, .drop-after").forEach((x) => x.classList.remove("dragging", "drop-before", "drop-after")); });
 $("tablewrap").addEventListener("input", (e) => {
   const el = e.target.closest("[data-colf]"); if (!el || el.tagName !== "INPUT") return;
   clearTimeout(cft); cft = setTimeout(() => { state.col[el.dataset.colf] = el.value.trim(); setPage(1); renderMechOpts(); renderBest(); renderActive(); renderGrid(); }, 180);
 });
 $("tablewrap").addEventListener("change", (e) => {
+  const vis = e.target.closest("input[data-colvis]");
+  if (vis) { const k = vis.dataset.colvis, hidden = state.cols.hidden.filter((x) => x !== k);
+    if (!vis.checked) hidden.push(k); setCols({ ...state.cols, hidden }); colNote = ""; renderGrid();
+    document.querySelector(`[data-colvis="${k}"]`)?.focus(); return; }
   const add = e.target.closest("select[data-sadd]");
   if (add) { if (add.value) { setSort(add.value, { add: true }); changed(); } return; }
   const el = e.target.closest("select[data-colf]"); if (!el) return;

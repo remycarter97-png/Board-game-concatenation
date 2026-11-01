@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shelf Charts</title>
+<meta name="description" content="Charts about our board game collection.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
+    --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
+    --yellow: #ffd45c; --yellow-soft: #fff1c2; --mint: #8be0bd; --mint-soft: #ddf6ea; --remy: #ec6f24; --jon: #2385d1;
+    --star: #f4a900; --ok: #24a26b; --danger: #e5484d; --danger-soft: #ffe3e2;
+    --edge: 2.5px solid var(--outline); --pop: 4px 4px 0 var(--outline); --pop-sm: 3px 3px 0 var(--outline);
+    /* Chart colors (validated: categorical for type, one-hue ramp for ordered levels) */
+    --s1: #ff7a5a; --s2: #2a78d6; --s3: #1baf7a;
+    --o1: #b398f6; --o2: #9270ec; --o3: #7049d9; --o4: #4d27a6;
+    --grid: #efdcc2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+      --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+      --yellow: #ffd45c; --yellow-soft: #4a3d1e; --mint: #6fd3ac; --mint-soft: #1f3d33; --remy: #ffa064; --jon: #6ab9f2;
+      --star: #ffd45c; --ok: #6fd3ac; --danger: #ff8a80; --danger-soft: #3a1d1a; --hl: #6b44c9;
+      --s1: #e8613f; --s2: #3987e5; --s3: #199e70;
+      --o1: #6e52c4; --o2: #8f72e2; --o3: #b097f3; --o4: #d3c4ff;
+      --grid: #3d304f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+    --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+    --yellow: #ffd45c; --yellow-soft: #4a3d1e; --mint: #6fd3ac; --mint-soft: #1f3d33; --remy: #ffa064; --jon: #6ab9f2;
+    --star: #ffd45c; --ok: #6fd3ac; --danger: #ff8a80; --danger-soft: #3a1d1a; --hl: #6b44c9;
+    --s1: #e8613f; --s2: #3987e5; --s3: #199e70;
+    --o1: #6e52c4; --o2: #8f72e2; --o3: #b097f3; --o4: #d3c4ff;
+    --grid: #3d304f;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; color: var(--ink); font: 16px/1.5 Nunito, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header (matches the shelf page) */
+  header.top { padding: 36px 0 8px; }
+  .titlebar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .brand { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+  .logo { width: 72px; height: 72px; flex: none; transform: rotate(-5deg); filter: drop-shadow(4px 4px 0 var(--outline)); transition: transform .3s; }
+  .logo:hover { transform: rotate(4deg) scale(1.05); }
+  h1 { font: 700 clamp(2rem, 4vw, 2.9rem)/1.05 Fredoka, ui-rounded, system-ui, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  h1 .hl { background: linear-gradient(transparent 62%, var(--hl, var(--yellow)) 62% 92%, transparent 92%); padding: 0 2px; }
+  .tagline { margin: 6px 0 0; color: var(--ink-2); font-size: 1.05rem; font-weight: 600; }
+  .pagenav { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); }
+  .pagenav a { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-decoration: none; }
+  .pagenav a:hover { color: var(--ink); background: var(--surface-2); }
+  .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+  .headright { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+  .sync { display: inline-flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--ink-2); font-weight: 600;
+    background: var(--surface); border: var(--edge); box-shadow: var(--pop-sm); border-radius: 999px; padding: 6px 14px 6px 10px; }
+  .sync .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 22%, transparent); }
+  .sync[data-state="syncing"] .dot { background: var(--star); }
+  .sync[data-state="error"] .dot { background: var(--danger); }
+  .banner { display: flex; gap: 12px; align-items: flex-start; margin-top: 16px; padding: 12px 16px; border-radius: 16px; border: var(--edge); box-shadow: var(--pop);
+    background: var(--yellow-soft); font-size: .95rem; font-weight: 600; }
+
+  /* Filters */
+  .filterbar { position: sticky; top: 0; z-index: 20; margin-top: 22px; padding: 12px 0; background: var(--bg); }
+  .filterbar.stuck { border-bottom: 2.5px dashed var(--line); }
+  .frow { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 14px; }
+  .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .field > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-2); }
+  select, input[type=text] { height: 40px; border: var(--edge); border-radius: 12px; box-shadow: var(--pop-sm); background: var(--surface); font-weight: 700; padding: 0 10px; min-width: 0; }
+  select.set { background: var(--yellow-soft); }
+  select:focus, input[type=text]:focus { outline: none; box-shadow: var(--pop-sm), 0 0 0 4px var(--yellow); }
+  .fcount { margin-left: auto; align-self: center; font-weight: 700; color: var(--ink-2); }
+  .fcount b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .linkbtn { border: 0; background: none; color: var(--accent); font-weight: 800; padding: 4px 2px; font-size: .92rem; }
+  .linkbtn:hover { text-decoration: underline; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 18px; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm);
+    background: var(--accent); color: #fff; font: 600 1rem Fredoka, ui-rounded, sans-serif; transition: transform .12s, box-shadow .12s; text-decoration: none; }
+  .btn:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .btn.ghost { background: var(--surface); color: var(--ink); }
+
+  /* Tiles */
+  .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 8px 0 8px; }
+  .tile { background: var(--surface); border: var(--edge); border-radius: 18px; box-shadow: var(--pop); padding: 14px 16px; }
+  .tile dt { font: 600 .78rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-2); }
+  .tile dd { margin: 2px 0 0; font: 700 2rem/1.1 Fredoka, ui-rounded, sans-serif; font-variant-numeric: tabular-nums; }
+  .tile dd small { font-size: .95rem; font-weight: 600; color: var(--ink-2); }
+
+  /* Sections and chart cards */
+  h2.sec { font: 700 1.5rem/1.2 Fredoka, ui-rounded, sans-serif; margin: 34px 0 4px; display: flex; align-items: center; gap: 10px; }
+  h2.sec .dot { width: 14px; height: 14px; border-radius: 4px; border: 2px solid var(--outline); background: var(--yellow); transform: rotate(-10deg); }
+  .secnote { margin: 0 0 14px; color: var(--ink-2); font-weight: 600; }
+  .charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  .charts .wide { grid-column: 1 / -1; }
+  .card { background: var(--surface); border: var(--edge); border-radius: 20px; box-shadow: var(--pop); padding: 16px 18px 12px; min-width: 0; display: flex; flex-direction: column; }
+  .chead { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px 12px; }
+  .card h3 { margin: 0; font: 600 1.15rem/1.25 Fredoka, ui-rounded, sans-serif; }
+  .card .sub { margin: 2px 0 0; color: var(--ink-2); font-size: .88rem; font-weight: 600; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 2px solid var(--outline); border-radius: 12px; padding: 2px; gap: 2px; flex-wrap: wrap; }
+  .seg button { border: 0; background: none; height: 28px; padding: 0 10px; border-radius: 9px; font-weight: 700; font-size: .85rem; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+  .plot { position: relative; height: 290px; margin-top: 12px; }
+  .plot.tall { height: auto; }
+  .plot canvas { display: block; }
+  .noplot { display: grid; place-items: center; height: 100%; min-height: 160px; color: var(--ink-2); font-weight: 700; text-align: center; border: 2.5px dashed var(--line); border-radius: 14px; padding: 16px; }
+  details.data { margin-top: 8px; border-top: 2px dashed var(--line); padding-top: 6px; }
+  details.data summary { cursor: pointer; font-weight: 800; font-size: .85rem; color: var(--accent); width: max-content; }
+  .dtable { max-height: 260px; overflow: auto; margin-top: 6px; }
+  .dtable table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+  .dtable th, .dtable td { text-align: left; padding: 4px 8px; border-bottom: 1.5px solid var(--line); }
+  .dtable th { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-2); position: sticky; top: 0; background: var(--surface); }
+  .dtable td.n { text-align: right; font-variant-numeric: tabular-nums; }
+  .cardfoot { display: flex; gap: 6px; margin-left: auto; }
+  .iconbtn { height: 30px; min-width: 30px; padding: 0 10px; border: 2px solid var(--outline); border-radius: 10px; background: var(--surface); font-weight: 700; font-size: .85rem; box-shadow: 2px 2px 0 var(--outline); }
+  .iconbtn:hover { background: var(--yellow-soft); }
+
+  /* Builder */
+  .builder { background: var(--surface); border: var(--edge); border-radius: 22px; box-shadow: var(--pop); padding: 18px; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; }
+  .bform { display: flex; flex-direction: column; gap: 12px; }
+  .bform .field select, .bform .field input { width: 100%; }
+  .kinds { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .kinds button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 2px 6px; border: 2px solid var(--outline); border-radius: 12px; background: var(--surface); font-weight: 700; font-size: .78rem; color: var(--ink-2); }
+  .kinds button svg { color: var(--ink); }
+  .kinds button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: 2px 2px 0 var(--outline); }
+  .kinds button[aria-pressed="true"] svg { color: #3d2a4f; }
+  .bsave { display: flex; gap: 8px; border-top: 2px dashed var(--line); padding-top: 12px; }
+  .bsave input { flex: 1; }
+  .bnote { margin: 0; font-size: .82rem; color: var(--ink-2); font-weight: 600; min-height: 1.2em; }
+  .bpreview { min-width: 0; display: flex; flex-direction: column; }
+  .bpreview h3 { margin: 0; font: 600 1.15rem Fredoka, ui-rounded, sans-serif; }
+  .bpreview .plot { height: 360px; flex: none; }
+  .saved-empty { color: var(--ink-2); font-weight: 600; border: 2.5px dashed var(--line); border-radius: 18px; padding: 18px; text-align: center; }
+
+  footer { margin: 48px 0 0; padding: 26px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600;
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
+  .bgg { display: inline-block; background: #fff; border: var(--edge); box-shadow: var(--pop-sm); border-radius: 12px; padding: 6px 10px; line-height: 0; }
+  .bgg img { width: 200px; height: auto; }
+  .loading { padding: 60px 0; text-align: center; font-weight: 700; color: var(--ink-2); }
+
+  @media (max-width: 1000px) {
+    .builder { grid-template-columns: 1fr; }
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 760px) {
+    .wrap { padding: 0 16px; }
+    header.top { padding-top: 24px; }
+    .logo { width: 54px; height: 54px; }
+    .brand { gap: 12px; }
+    .charts { grid-template-columns: 1fr; }
+    .card, .tile, .builder { box-shadow: var(--pop-sm); }
+    .filterbar { position: static; }
+    .frow { display: grid; grid-template-columns: 1fr 1fr; }
+    .frow .field select { width: 100%; }
+    .fcount { margin: 0; grid-column: 1 / -1; }
+    .tile dd { font-size: 1.6rem; }
+    .plot { height: 250px; }
+    .bpreview .plot { height: 300px; }
+    .sync .long { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <a class="brand" href="/">
+        <svg class="logo" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="3" y="3" width="66" height="66" rx="18" fill="var(--yellow)" stroke="var(--outline)" stroke-width="3"/>
+          <g transform="translate(36 10) rotate(14)"><rect x="0" y="0" width="22" height="22" rx="5" fill="#fff" stroke="var(--outline)" stroke-width="2.5"/>
+            <circle cx="6" cy="6" r="2.2" fill="var(--outline)"/><circle cx="11" cy="11" r="2.2" fill="var(--outline)"/><circle cx="16" cy="16" r="2.2" fill="var(--outline)"/></g>
+          <g transform="translate(9 20) scale(1.75)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.4" stroke-linejoin="round"/></g>
+        </svg>
+        <div>
+          <h1>Our Game <span class="hl">Shelf</span></h1>
+          <p class="tagline">Our collection, in charts.</p>
+        </div>
+      </a>
+      <div class="headright">
+        <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats" aria-current="page">Charts</a></nav>
+        <div class="sync" id="sync" data-state="syncing" role="status"><span class="dot"></span><span id="sync-label">Loading…</span></div>
+      </div>
+    </div>
+    <div class="banner" id="banner" hidden role="alert"></div>
+  </header>
+
+  <div class="filterbar" id="filterbar" hidden>
+    <div class="frow" role="group" aria-label="Filters for every chart">
+      <label class="field"><span>Include</span><select id="f-include">
+        <option value="base">Base games</option><option value="exp">Base games and expansions</option><option value="all">Everything</option></select></label>
+      <label class="field"><span>Best with</span><select id="f-best"></select></label>
+      <label class="field"><span>Complexity</span><select id="f-weight"></select></label>
+      <label class="field"><span>Play time</span><select id="f-time"></select></label>
+      <label class="field"><span>Published</span><select id="f-decade"></select></label>
+      <button class="linkbtn" id="f-reset" hidden>Reset filters</button>
+      <div class="fcount" id="fcount" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <main id="main">
+    <div class="loading" id="loading">Setting up the charts…</div>
+  </main>
+
+  <footer>
+    <div>A personal, non-commercial page. Game data comes from BoardGameGeek and is shown as provided.<br>This site isn't affiliated with or endorsed by BoardGameGeek.</div>
+    <a class="bgg" href="https://boardgamegeek.com" target="_blank" rel="noopener"><img src="/powered-by-bgg.png" alt="Powered by BGG" width="200" height="59"></a>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+/* ---------- Helpers ---------- */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const store = {
+  get(key, fallback) { try { const v = localStorage.getItem("game-shelf:" + key); return v === null ? fallback : JSON.parse(v); } catch { return fallback; } },
+  set(key, value) { try { localStorage.setItem("game-shelf:" + key, JSON.stringify(value)); } catch {} },
+};
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const fmt = (n, d = 0) => n == null || Number.isNaN(n) ? "—" : n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+const avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;
+const median = (a) => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const num = (v) => (v == null || v === "" || Number.isNaN(Number(v)) ? null : Number(v));
+const TEN = 10;
+
+/* ---------- What a game looks like to the charts ---------- */
+const playTime = (g) => g.playTime || g.maxTime || g.minTime || null;
+const WBANDS = [["light", "Light", (w) => w < 2], ["medium", "Medium", (w) => w >= 2 && w < 3], ["mheavy", "Medium-heavy", (w) => w >= 3 && w < 3.8], ["heavy", "Heavy", (w) => w >= 3.8]];
+const TBANDS = [["short", "Up to 30 min", (t) => t <= 30], ["hour", "31–60 min", (t) => t > 30 && t <= 60], ["long", "1–2 hours", (t) => t > 60 && t <= 120], ["epic", "Over 2 hours", (t) => t > 120]];
+const TBINS = [[15, "≤ 15"], [30, "16–30"], [45, "31–45"], [60, "46–60"], [90, "61–90"], [120, "91–120"], [180, "2–3 hrs"], [Infinity, "3+ hrs"]];
+const wband = (g) => g.weight ? WBANDS.find(([, , t]) => t(g.weight))[1] : null;
+const tband = (g) => playTime(g) ? TBANDS.find(([, , t]) => t(playTime(g)))[1] : null;
+const yearOf = (g) => { const y = num(g.year); return y && y > 0 ? y : null; };
+const OLD = 1970;
+const decadeOf = (g) => { const y = yearOf(g); return !y ? null : y < OLD ? `Before ${OLD}` : `${Math.floor(y / 10) * 10}s`; };
+const halfStep = (v, lo, hi) => { const b = Math.min(hi - .5, Math.max(lo, Math.floor(v * 2) / 2)); return `${b.toFixed(1)}–${(b + .5).toFixed(1)}`; };
+const halfSteps = (lo, hi) => { const out = []; for (let b = lo; b < hi; b += .5) out.push(`${b.toFixed(1)}–${(b + .5).toFixed(1)}`); return out; };
+const bestKey = (n) => n >= TEN ? "10+" : String(n);
+const BEST_KEYS = [...Array.from({ length: 9 }, (_, i) => String(i + 1)), "10+"];
+const byNum = (a, b) => parseFloat(a.replace(/\D*(\d+).*/, "$1")) - parseFloat(b.replace(/\D*(\d+).*/, "$1"));
+
+// Dimensions a chart can be split along. values() returns the bucket(s) a game falls into
+// (mechanics and the like can be several); order() lists the buckets to show.
+const TOP = 15;
+const topOrder = (key) => (list) => {
+  const c = new Map(); for (const g of list) for (const v of g[key] || []) c.set(v, (c.get(v) || 0) + 1);
+  return [...c].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, TOP).map(([k]) => k);
+};
+const present = (fn, sorter) => (list) => { const s = new Set(); for (const g of list) for (const v of fn(g)) s.add(v); return [...s].sort(sorter); };
+const DIMS = {
+  decade: { label: "Decade published", values: (g) => decadeOf(g) ? [decadeOf(g)] : [], order: present((g) => decadeOf(g) ? [decadeOf(g)] : [], (a, b) => (a.startsWith("Before") ? -1 : b.startsWith("Before") ? 1 : byNum(a, b))) },
+  year: { label: "Year published", values: (g) => yearOf(g) ? [String(yearOf(g))] : [], order: present((g) => yearOf(g) ? [String(yearOf(g))] : [], (a, b) => a - b) },
+  weightStep: { label: "Complexity (in half steps)", values: (g) => g.weight ? [halfStep(g.weight, 1, 5)] : [], order: () => halfSteps(1, 5) },
+  weightBand: { label: "Complexity level", values: (g) => wband(g) ? [wband(g)] : [], order: () => WBANDS.map((x) => x[1]), ordinal: true },
+  timeBin: { label: "Play time", values: (g) => playTime(g) ? [TBINS.find(([max]) => playTime(g) <= max)[1]] : [], order: () => TBINS.map((x) => x[1]) },
+  timeBand: { label: "Play time band", values: (g) => tband(g) ? [tband(g)] : [], order: () => TBANDS.map((x) => x[1]), ordinal: true },
+  best: { label: "Best player count", values: (g) => [...new Set((g.bestPlayers || []).map(bestKey))], order: () => BEST_KEYS },
+  maxPlayers: { label: "Most players", values: (g) => g.maxPlayers ? [bestKey(g.maxPlayers)] : [], order: () => BEST_KEYS },
+  minPlayers: { label: "Fewest players", values: (g) => g.minPlayers ? [bestKey(g.minPlayers)] : [], order: () => BEST_KEYS.slice(0, 6) },
+  rating: { label: "BGG rating (in half steps)", values: (g) => g.rating ? [halfStep(g.rating, 5, 9)] : [], order: () => halfSteps(5, 9) },
+  type: { label: "Type", values: (g) => [g.type], order: () => ["Base game", "Expansion", "Accessory"] },
+  mechanics: { label: "Mechanics", values: (g) => g.mechanics || [], order: topOrder("mechanics"), top: true, multi: true },
+  categories: { label: "Categories", values: (g) => g.categories || [], order: topOrder("categories"), top: true, multi: true },
+  designers: { label: "Designers", values: (g) => g.designers || [], order: topOrder("designers"), top: true, multi: true },
+  publishers: { label: "Publishers", values: (g) => g.publishers || [], order: topOrder("publishers"), top: true, multi: true },
+};
+const MEASURES = {
+  count: { label: "Number of games", short: "Games", get: null, d: 0 },
+  rating: { label: "Average BGG rating", short: "Avg rating", get: (g) => g.rating, d: 2 },
+  weight: { label: "Average complexity", short: "Avg complexity", get: (g) => g.weight, d: 2 },
+  time: { label: "Average play time (minutes)", short: "Avg minutes", get: playTime, d: 0 },
+};
+// Splits color the bars: type uses three distinct colors; the ordered levels use one purple from light to dark.
+const SPLITS = {
+  none: { label: "Nothing" },
+  type: { label: "Type", of: (g) => g.type, keys: ["Base game", "Expansion", "Accessory"], colors: ["--s1", "--s2", "--s3"] },
+  weightBand: { label: "Complexity level", of: wband, keys: WBANDS.map((x) => x[1]), colors: ["--o1", "--o2", "--o3", "--o4"] },
+  timeBand: { label: "Play time band", of: tband, keys: TBANDS.map((x) => x[1]), colors: ["--o1", "--o2", "--o3", "--o4"] },
+};
+const NUMS = {
+  weight: { label: "Complexity", get: (g) => g.weight, d: 1 },
+  time: { label: "Play time (minutes)", get: playTime, log: true, d: 0 },
+  rating: { label: "BGG rating", get: (g) => g.rating, d: 1 },
+  year: { label: "Year published", get: yearOf, d: 0, plain: true },
+  rank: { label: "BGG rank", get: (g) => g.rank, log: true, d: 0, reverse: true },
+  votes: { label: "Rating votes", get: (g) => g.votes || null, log: true, d: 0 },
+  maxPlayers: { label: "Most players", get: (g) => g.maxPlayers, d: 0 },
+};
+const KINDS = {
+  bar: { label: "Bars", icon: '<path d="M5 20V11M10 20V5M15 20V9M20 20V14" stroke-width="3" stroke-linecap="round"/>' },
+  hbar: { label: "Sideways", icon: '<path d="M4 5h9M4 10h15M4 15h7M4 20h12" stroke-width="3" stroke-linecap="round"/>' },
+  line: { label: "Line", icon: '<path d="M3 18l5-6 4 3 8-10" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>' },
+  scatter: { label: "Dots", icon: '<circle cx="6" cy="16" r="2.4"/><circle cx="11" cy="9" r="2.4"/><circle cx="16" cy="14" r="2.4"/><circle cx="19" cy="6" r="2.4"/>' },
+};
+
+/* ---------- Data and filters ---------- */
+let all = [], updatedAt = null;
+const F = { include: "base", best: "", weight: "", time: "", decade: "" };
+function filtered() {
+  return all.filter((g) => {
+    if (F.include === "base" && g.type !== "Base game") return false;
+    if (F.include === "exp" && g.type === "Accessory") return false;
+    if (F.best && !(g.bestPlayers || []).some((n) => bestKey(n) === F.best)) return false;
+    if (F.weight && wband(g) !== F.weight) return false;
+    if (F.time && tband(g) !== F.time) return false;
+    if (F.decade && decadeOf(g) !== F.decade) return false;
+    return true;
+  });
+}
+
+// Turn games into chart series for a bar/line chart.
+function aggregate(list, { dim, measure = "count", split = "none" }) {
+  const D = DIMS[dim], M = MEASURES[measure], S = SPLITS[split];
+  const labels = D.order(list), idx = new Map(labels.map((l, i) => [l, i]));
+  const keys = S.keys || [null];
+  const cells = keys.map(() => labels.map(() => []));
+  for (const g of list) {
+    const sk = S.of ? S.of(g) : null, si = S.of ? keys.indexOf(sk) : 0;
+    if (si < 0) continue;
+    for (const v of D.values(g)) { const i = idx.get(v); if (i !== undefined) cells[si][i].push(g); }
+  }
+  const val = (gs) => M.get ? avg(gs.map(M.get).filter((x) => x != null)) : gs.length;
+  let series = keys.map((k, si) => ({ name: k || M.label, color: S.colors ? S.colors[si] : "--s1", data: cells[si].map(val), n: cells[si].map((gs) => gs.length) }));
+  series = series.filter((s) => s.data.some((v) => v));                       // drop empty splits (keep each one's own color)
+  return { labels, series, stacked: measure === "count" && series.length > 1 };
+}
+function scatterData(list, { x, y, color = "none" }) {
+  const S = SPLITS[color], keys = S.keys || [null];
+  const series = keys.map((k, i) => ({ name: k || "Games", color: S.colors ? S.colors[i] : "--s1", shape: ["circle", "triangle", "rectRounded", "rectRot"][i], data: [] }));
+  for (const g of list) {
+    const xv = NUMS[x].get(g), yv = NUMS[y].get(g); if (xv == null || yv == null) continue;
+    const si = S.of ? keys.indexOf(S.of(g)) : 0; if (si < 0) continue;
+    series[si].data.push({ x: xv, y: yv, name: g.name });
+  }
+  return { series: series.filter((s) => s.data.length) };
+}
+
+/* ---------- Drawing ---------- */
+const charts = new Map();
+function chartTheme() {
+  return { ink: css("--ink"), ink2: css("--ink-2"), grid: css("--grid"), outline: css("--outline"), surface: css("--surface") };
+}
+function draw(id, cfg, list) {
+  const box = $(id); if (!box) return;
+  charts.get(id)?.destroy(); charts.delete(id);
+  const T = chartTheme();
+  const kind = cfg.kind || "bar";
+  let data, opts, type, table;
+  if (kind === "scatter") {
+    const r = scatterData(list, cfg); if (!r.series.length) return empty(box);
+    const X = NUMS[cfg.x], Y = NUMS[cfg.y];
+    type = "scatter";
+    data = { datasets: r.series.map((s) => ({ label: s.name, data: s.data, backgroundColor: css(s.color), borderColor: T.outline, borderWidth: 1.2,
+      pointStyle: r.series.length > 1 ? s.shape : "circle", pointRadius: 4.5, pointHoverRadius: 7, hitRadius: 6 })) };
+    opts = { scales: { x: axis(T, X), y: axis(T, Y) } };
+    opts.plugins = { tooltip: { callbacks: { label: (c) => `${c.raw.name}: ${fmt(c.raw.x, X.d)} · ${fmt(c.raw.y, Y.d)}`, title: () => "" } } };
+    table = { head: ["Game", X.label, Y.label, ...(r.series.length > 1 ? [SPLITS[cfg.color].label] : [])],
+      rows: r.series.flatMap((s) => s.data.map((p) => [p.name, fmt(p.x, X.d), fmt(p.y, Y.d), ...(r.series.length > 1 ? [s.name] : [])])).sort((a, b) => a[0].localeCompare(b[0])) };
+  } else {
+    const r = aggregate(list, cfg); if (!r.labels.length || !r.series.length) return empty(box);
+    const M = MEASURES[cfg.measure || "count"], horiz = kind === "hbar";
+    type = kind === "line" ? "line" : "bar";
+    data = { labels: r.labels, datasets: r.series.map((s) => kind === "line"
+      ? { label: s.name, data: s.data, borderColor: css(s.color), backgroundColor: css(s.color), borderWidth: 2.5, pointRadius: 3.5, pointHoverRadius: 6, pointBorderColor: T.outline, pointBorderWidth: 1.2, tension: .25, spanGaps: true, n: s.n }
+      : { label: s.name, data: s.data, backgroundColor: css(s.color), borderColor: T.outline, borderWidth: 1.6, borderRadius: 5, borderSkipped: r.stacked ? false : "start",
+          maxBarThickness: 46, categoryPercentage: .82, barPercentage: r.series.length > 1 && !r.stacked ? .92 : .86, n: s.n }) };
+    const valAxis = { ...axis(T, { label: M.label, d: M.d }), stacked: r.stacked, beginAtZero: true };
+    if (cfg.measure === "count" || !cfg.measure) valAxis.ticks.precision = 0;
+    const catAxis = { stacked: r.stacked, grid: { display: false }, border: { color: T.outline, width: 2 }, ticks: { color: T.ink2, font: { weight: 700 }, autoSkip: !horiz, maxRotation: 0 },
+      title: { display: !horiz, text: DIMS[cfg.dim].label, color: T.ink2, font: { weight: 700 } } };
+    if (horiz) catAxis.ticks.callback = function (v) { const l = this.getLabelForValue(v); return l.length > 26 ? l.slice(0, 25) + "…" : l; };
+    opts = { indexAxis: horiz ? "y" : "x", scales: horiz ? { x: valAxis, y: catAxis } : { x: catAxis, y: valAxis } };
+    opts.plugins = { tooltip: { callbacks: {
+      title: (items) => items[0]?.label,
+      label: (c) => { const v = c.raw; const pre = r.series.length > 1 ? `${c.dataset.label}: ` : "";
+        return M.get ? `${pre}${fmt(v, M.d)} (${c.dataset.n[c.dataIndex]} game${c.dataset.n[c.dataIndex] === 1 ? "" : "s"})` : `${pre}${fmt(v)} game${v === 1 ? "" : "s"}`; } } } };
+    if (horiz) box.style.height = Math.max(160, r.labels.length * (r.series.length > 1 && !r.stacked ? 18 * r.series.length + 8 : 26) + 70) + "px";
+    table = { head: [DIMS[cfg.dim].label, ...r.series.map((s) => r.series.length > 1 ? s.name : M.short)],
+      rows: r.labels.map((l, i) => [l, ...r.series.map((s) => s.data[i] == null ? "—" : fmt(s.data[i], M.d))]) };
+  }
+  const multi = data.datasets.length > 1;
+  opts = { ...opts, responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+    interaction: kind === "scatter" ? { mode: "nearest", intersect: true } : { mode: kind === "line" ? "index" : "nearest", intersect: kind !== "line", axis: kind === "hbar" ? "y" : "x" },
+    plugins: { ...opts.plugins,
+      legend: { display: multi, position: "top", align: "start", labels: { color: T.ink, usePointStyle: true, pointStyle: kind === "scatter" ? undefined : "rectRounded", boxWidth: 10, boxHeight: 10, font: { weight: 700 } } },
+      tooltip: { ...opts.plugins.tooltip, backgroundColor: T.surface, titleColor: T.ink, bodyColor: T.ink, borderColor: T.outline, borderWidth: 2, cornerRadius: 10, padding: 10,
+        titleFont: { family: "Fredoka", weight: 600, size: 14 }, bodyFont: { weight: 700 }, boxPadding: 4, usePointStyle: true } } };
+  box.innerHTML = `<canvas role="img" aria-label="${esc(cfg.title || "")} chart. The numbers are in the table below."></canvas>`;
+  charts.set(id, new Chart(box.querySelector("canvas"), { type, data, options: opts }));
+  const dt = box.parentElement.querySelector(".dtable");
+  if (dt) dt.innerHTML = `<table><thead><tr>${table.head.map((h) => `<th scope="col">${esc(h)}</th>`).join("")}</tr></thead><tbody>${table.rows.map((r) => `<tr>${r.map((c, i) => i ? `<td class="n">${esc(c)}</td>` : `<th scope="row">${esc(c)}</th>`).join("")}</tr>`).join("")}</tbody></table>`;
+  function empty(b) { b.style.height = ""; b.innerHTML = `<div class="noplot">No games with this information match the filters.</div>`; const d = b.parentElement.querySelector(".dtable"); if (d) d.innerHTML = ""; }
+}
+function axis(T, a) {
+  return { type: a.log ? "logarithmic" : "linear", reverse: !!a.reverse, grid: { color: T.grid, lineWidth: 1 }, border: { display: false },
+    title: { display: true, text: a.label, color: T.ink2, font: { weight: 700 } },
+    ticks: { color: T.ink2, font: { weight: 600 }, maxTicksLimit: a.log ? 30 : 8, autoSkip: !a.log, callback: function (v) { if (a.log && ![1, 2, 5].includes(Math.round(v / 10 ** Math.floor(Math.log10(v)) * 100) / 100)) return ""; return a.plain ? String(v) : fmt(v, Number.isInteger(v) ? 0 : 1); } } };
+}
+
+/* ---------- Dashboard ---------- */
+const DASH = [
+  { section: "Games by year", note: "When the games on our shelf were published." },
+  { id: "c-years", wide: true, title: "Games by year published", sub: "Number of games", modes: [["decade", "By decade"], ["year", "By year"]], mode: "decade",
+    cfg: (m) => ({ kind: m === "year" ? "line" : "bar", dim: m }) },
+  { section: "Complexity & play time", note: "How heavy and how long the games are, and how the two go together." },
+  { id: "c-weight", title: "Complexity", sub: "BGG weight from 1 (light) to 5 (heavy), number of games", cfg: () => ({ kind: "bar", dim: "weightStep" }) },
+  { id: "c-time", title: "Play time", sub: "BGG's listed playing time, number of games", cfg: () => ({ kind: "bar", dim: "timeBin" }) },
+  { id: "c-wt", wide: true, title: "Complexity vs. play time", sub: "Each dot is a game. Heavier games tend to run longer; play time is on a log scale.", cfg: () => ({ kind: "scatter", x: "weight", y: "time" }) },
+  { section: "Players & mechanics", note: "Who the games are best for, and what's inside them. A game counts once for each best count, mechanic, category, designer or publisher it has." },
+  { id: "c-best", title: "Best player count", sub: "From BGG's community poll, number of games", cfg: () => ({ kind: "bar", dim: "best" }) },
+  { id: "c-mech", title: `Top ${TOP} mechanics`, sub: "Number of games", cfg: () => ({ kind: "hbar", dim: "mechanics" }), tall: true },
+  { id: "c-tops", wide: true, title: `Top ${TOP} categories`, sub: "Number of games", modes: [["categories", "Categories"], ["designers", "Designers"], ["publishers", "Publishers"]], mode: "categories",
+    cfg: (m) => ({ kind: "hbar", dim: m }), tall: true },
+];
+const cardHtml = (c, extra = "") => `<article class="card${c.wide ? " wide" : ""}" id="${c.id}-card">
+  <div class="chead"><div><h3 id="${c.id}-h">${esc(c.title)}</h3>${c.sub ? `<p class="sub">${esc(c.sub)}</p>` : ""}</div>
+    ${c.modes ? `<div class="seg" role="group" aria-label="${esc(c.title)}: show">${c.modes.map(([k, l]) => `<button data-mode="${c.id}:${k}" aria-pressed="${c.mode === k}">${l}</button>`).join("")}</div>` : ""}${extra}</div>
+  <div class="plot${c.tall ? " tall" : ""}" id="${c.id}"></div>
+  <details class="data"><summary>Show the numbers</summary><div class="dtable"></div></details></article>`;
+function renderDash(list) {
+  for (const c of DASH) if (c.id) draw(c.id, { ...c.cfg(c.mode), title: c.title }, list);
+}
+
+/* ---------- Tiles ---------- */
+function renderTiles(list) {
+  const r = list.map((g) => g.rating).filter(Boolean), w = list.map((g) => g.weight).filter(Boolean), t = list.map(playTime).filter(Boolean);
+  $("tiles").innerHTML = [
+    ["Games", fmt(list.length)],
+    ["Average BGG rating", r.length ? fmt(avg(r), 1) : "—"],
+    ["Typical complexity", w.length ? `${fmt(median(w), 1)} <small>/ 5</small>` : "—"],
+    ["Typical play time", t.length ? `${fmt(median(t))} <small>min</small>` : "—"],
+  ].map(([k, v]) => `<div class="tile"><dt>${k}</dt><dd>${v}</dd></div>`).join("");
+}
+
+/* ---------- Builder ---------- */
+const SC_KEY = "saved-charts", SC_MAX = 12;
+const B_DEFAULT = { kind: "bar", dim: "decade", measure: "count", split: "none", x: "weight", y: "rating", color: "none" };
+let B = { ...B_DEFAULT, ...store.get("builder", {}) };
+const loadCharts = () => { const v = store.get(SC_KEY, []); return Array.isArray(v) ? v.filter((c) => c && c.id && c.name && KINDS[c.kind]) : []; };
+const saveCharts = (v) => store.set(SC_KEY, v);
+const opt = (obj, cur) => Object.entries(obj).map(([k, v]) => `<option value="${k}"${k === cur ? " selected" : ""}>${esc(v.label)}</option>`).join("");
+function clean(c) {
+  const o = { ...B_DEFAULT, ...c };
+  if (!KINDS[o.kind]) o.kind = "bar"; if (!DIMS[o.dim]) o.dim = "decade"; if (!MEASURES[o.measure]) o.measure = "count";
+  if (!SPLITS[o.split]) o.split = "none"; if (!NUMS[o.x]) o.x = "weight"; if (!NUMS[o.y]) o.y = "rating"; if (!SPLITS[o.color]) o.color = "none";
+  if (o.split === o.dim) o.split = "none";
+  return { kind: o.kind, dim: o.dim, measure: o.measure, split: o.split, x: o.x, y: o.y, color: o.color };
+}
+function describe(c) {
+  if (c.kind === "scatter") return `${NUMS[c.y].label} vs. ${NUMS[c.x].label.toLowerCase()}${c.color !== "none" ? `, colored by ${SPLITS[c.color].label.toLowerCase()}` : ""}`;
+  return `${MEASURES[c.measure].label} by ${DIMS[c.dim].label.toLowerCase()}${DIMS[c.dim].top ? ` (top ${TOP})` : ""}${c.split !== "none" ? `, split by ${SPLITS[c.split].label.toLowerCase()}` : ""}`;
+}
+function builderHtml() {
+  const sc = B.kind === "scatter";
+  return `<form class="bform" id="bform" autocomplete="off">
+      <div class="field"><span id="kind-l">Chart type</span><div class="kinds" role="group" aria-labelledby="kind-l">${Object.entries(KINDS).map(([k, v]) =>
+        `<button type="button" data-kind="${k}" aria-pressed="${B.kind === k}"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor">${v.icon}</svg>${v.label}</button>`).join("")}</div></div>
+      ${sc ? `<label class="field"><span>Across (x)</span><select data-b="x">${opt(NUMS, B.x)}</select></label>
+        <label class="field"><span>Up (y)</span><select data-b="y">${opt(NUMS, B.y)}</select></label>
+        <label class="field"><span>Color by</span><select data-b="color">${opt(SPLITS, B.color)}</select></label>`
+      : `<label class="field"><span>Group games by</span><select data-b="dim">${opt(DIMS, B.dim)}</select></label>
+        <label class="field"><span>Show</span><select data-b="measure">${opt(MEASURES, B.measure)}</select></label>
+        <label class="field"><span>Split ${B.kind === "line" ? "into lines" : "bars"} by</span><select data-b="split">${opt(Object.fromEntries(Object.entries(SPLITS).filter(([k]) => k !== B.dim)), B.split)}</select></label>`}
+      <div class="bsave"><input type="text" id="b-name" maxlength="50" placeholder="Name this chart" aria-label="Chart name"><button class="btn" type="submit">Save</button></div>
+      <p class="bnote" id="b-note" role="status"></p>
+    </form>
+    <div class="bpreview"><h3 id="b-title">${esc(describe(B))}</h3><p class="sub" style="margin:2px 0 0;color:var(--ink-2);font-weight:600;font-size:.88rem">Preview, using the filters at the top</p>
+      <div class="plot${!sc && B.kind === "hbar" ? " tall" : ""}" id="b-plot"></div>
+      <details class="data"><summary>Show the numbers</summary><div class="dtable"></div></details></div>`;
+}
+function renderBuilder(keepFocus) {
+  const ae = document.activeElement, key = ae?.dataset?.b || (ae?.dataset?.kind ? "kind:" + ae.dataset.kind : null);
+  const name = $("b-name")?.value || "", note = $("b-note")?.textContent || "";
+  $("builder").innerHTML = builderHtml();
+  $("b-name").value = name; $("b-note").textContent = note;
+  draw("b-plot", { ...B, title: describe(B) }, filtered());
+  if (keepFocus && key) (key.startsWith("kind:") ? document.querySelector(`[data-kind="${key.slice(5)}"]`) : document.querySelector(`[data-b="${key}"]`))?.focus();
+}
+function renderSaved(list) {
+  const saved = loadCharts();
+  for (const id of [...charts.keys()]) if (id.startsWith("sc-")) { charts.get(id).destroy(); charts.delete(id); }
+  $("saved").innerHTML = saved.length ? saved.map((c) => cardHtml({ id: "sc-" + c.id, title: c.name, sub: describe(c), wide: c.kind === "hbar" || c.dim === "year", tall: c.kind === "hbar" },
+    `<div class="cardfoot"><button class="iconbtn" data-edit="${c.id}" title="Load into the builder">Edit</button><button class="iconbtn" data-del="${c.id}" aria-label="Delete ${esc(c.name)}" title="Delete">×</button></div>`)).join("")
+    : `<div class="saved-empty wide">No saved charts yet. Build one above and give it a name. Saved charts are kept in this browser.</div>`;
+  for (const c of saved) draw("sc-" + c.id, { ...clean(c), title: c.name }, list);
+}
+
+/* ---------- Page ---------- */
+function filterOptions() {
+  const base = all.filter((g) => g.type === "Base game");
+  const bests = new Set(); for (const g of all) for (const n of g.bestPlayers || []) bests.add(bestKey(n));
+  const decades = DIMS.decade.order(all);
+  const o = (pairs, cur) => pairs.map(([v, l]) => `<option value="${esc(v)}"${v === cur ? " selected" : ""}>${esc(l)}</option>`).join("");
+  $("f-include").value = F.include;
+  $("f-best").innerHTML = o([["", "Any"], ...BEST_KEYS.filter((k) => bests.has(k)).map((k) => [k, `Best with ${k}`])], F.best);
+  $("f-weight").innerHTML = o([["", "Any"], ...WBANDS.map(([, l]) => [l, l])], F.weight);
+  $("f-time").innerHTML = o([["", "Any"], ...TBANDS.map(([, l]) => [l, l])], F.time);
+  $("f-decade").innerHTML = o([["", "Any time"], ...decades.slice().reverse().map((d) => [d, d])], F.decade);
+  for (const [id, k] of [["f-include", "include"], ["f-best", "best"], ["f-weight", "weight"], ["f-time", "time"], ["f-decade", "decade"]])
+    $(id).classList.toggle("set", k === "include" ? F.include !== "base" : !!F[k]);
+  $("f-reset").hidden = F.include === "base" && !F.best && !F.weight && !F.time && !F.decade;
+}
+function renderAll() {
+  const list = filtered();
+  filterOptions();
+  const one = list.length === 1;
+  const kinds = F.include === "base" ? (one ? "base game" : "base games") : F.include === "exp" ? (one ? "game or expansion" : "games and expansions") : (one ? "item" : "items");
+  $("fcount").innerHTML = `Charting <b>${fmt(list.length)}</b> ${kinds}`;
+  renderTiles(list); renderDash(list); renderBuilder(); renderSaved(list);
+}
+function buildPage() {
+  let html = `<dl class="tiles" id="tiles"></dl>`, open = false;
+  for (const c of DASH) {
+    if (c.section) { if (open) html += `</div>`; html += `<h2 class="sec"><span class="dot" aria-hidden="true"></span>${c.section}</h2><p class="secnote">${c.note}</p><div class="charts">`; open = true; }
+    else html += cardHtml(c);
+  }
+  html += `</div><h2 class="sec"><span class="dot" aria-hidden="true"></span>Make your own chart</h2>
+    <p class="secnote">Pick a chart type and what to show. It uses the filters at the top. Save the ones you like to keep them below.</p>
+    <section class="builder" id="builder" aria-label="Chart builder"></section>
+    <h2 class="sec"><span class="dot" aria-hidden="true"></span>Your charts</h2><p class="secnote">Saved in this browser. They update with each sync and follow the filters at the top.</p>
+    <div class="charts" id="saved"></div>`;
+  $("main").innerHTML = html;
+}
+
+/* ---------- Events ---------- */
+const FIDS = { "f-include": "include", "f-best": "best", "f-weight": "weight", "f-time": "time", "f-decade": "decade" };
+document.addEventListener("change", (e) => {
+  const t = e.target;
+  if (FIDS[t.id]) { F[FIDS[t.id]] = t.value; store.set("chart-filters", F); renderAll(); t.focus(); return; }
+  if (t.dataset.b) { B[t.dataset.b] = t.value; B = clean(B); store.set("builder", B); $("b-note").textContent = ""; renderBuilder(true); }
+});
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.id === "f-reset") { Object.assign(F, { include: "base", best: "", weight: "", time: "", decade: "" }); store.set("chart-filters", F); renderAll(); $("f-include").focus(); }
+  else if (t.dataset.mode) {
+    const [id, m] = t.dataset.mode.split(":"), c = DASH.find((x) => x.id === id); c.mode = m;
+    t.parentElement.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b === t)));
+    if (id === "c-tops") { c.title = `Top ${TOP} ${m}`; $(id + "-h").textContent = c.title; }
+    draw(id, { ...c.cfg(m), title: c.title }, filtered());
+  }
+  else if (t.dataset.kind) { B.kind = t.dataset.kind; B = clean(B); store.set("builder", B); renderBuilder(true); }
+  else if (t.dataset.edit) { const c = loadCharts().find((x) => x.id === t.dataset.edit); if (!c) return;
+    B = clean(c); store.set("builder", B); renderBuilder(); $("b-name").value = c.name; $("b-note").textContent = `Editing “${c.name}”. Save with the same name to update it.`;
+    $("builder").scrollIntoView({ behavior: "smooth", block: "start" }); $("b-name").focus({ preventScroll: true }); }
+  else if (t.dataset.del) { saveCharts(loadCharts().filter((x) => x.id !== t.dataset.del)); renderSaved(filtered()); }
+});
+document.addEventListener("submit", (e) => {
+  if (e.target.id !== "bform") return;
+  e.preventDefault();
+  const name = $("b-name").value.trim().slice(0, 50), note = $("b-note");
+  if (!name) { note.textContent = "Give the chart a name first."; $("b-name").focus(); return; }
+  const list = loadCharts(), i = list.findIndex((c) => c.name.toLowerCase() === name.toLowerCase());
+  if (i >= 0) { list[i] = { ...list[i], ...clean(B), name }; note.textContent = `Updated “${name}”.`; }
+  else if (list.length >= SC_MAX) { note.textContent = `You can keep up to ${SC_MAX} charts. Delete one to save another.`; return; }
+  else { list.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, ...clean(B) }); note.textContent = `Saved “${name}”. It's under Your charts.`; }
+  saveCharts(list); $("b-name").value = ""; renderSaved(filtered());
+});
+// Redraw in the other theme's colors when light/dark mode changes.
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => all.length && renderAll());
+new IntersectionObserver(([e]) => $("filterbar").classList.toggle("stuck", e.intersectionRatio < 1), { threshold: [1], rootMargin: "-1px 0px 0px 0px" }).observe($("filterbar"));
+
+/* ---------- Load ---------- */
+function setSync(kind, text) { $("sync").dataset.state = kind; $("sync-label").textContent = text; }
+function banner(html) { $("banner").innerHTML = html || ""; $("banner").hidden = !html; }
+async function load() {
+  if (!window.Chart) { setSync("error", "Couldn't load"); $("loading").textContent = "The chart library didn't load. Check your connection and refresh the page."; return; }
+  Chart.defaults.font.family = "Nunito, ui-rounded, system-ui, sans-serif"; Chart.defaults.font.size = 12;
+  try {
+    const r = await fetch("/api/collection");
+    const d = await r.json().catch(() => ({}));
+    if (r.status === 503 && d.status === "syncing") { setSync("syncing", "Setting up"); $("loading").textContent = "The shelf is being set up. Check back in a few minutes."; return; }
+    if (!r.ok || !Array.isArray(d.games)) throw new Error(d.message || `HTTP ${r.status}`);
+    all = d.games; updatedAt = d.updatedAt;
+    const when = updatedAt ? new Date(updatedAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+    setSync(d.lastSyncError ? "error" : "ok", d.lastSyncError ? `Showing last sync${when ? ` · ${when}` : ""}` : `Synced ${when}`);
+    if (d.detailsComplete === false) banner("Some game details are still loading from BoardGameGeek, so a few charts may be missing games until the next sync.");
+    const saved = store.get("chart-filters", null);
+    if (saved && typeof saved === "object") for (const k of Object.keys(F)) if (typeof saved[k] === "string") F[k] = saved[k];
+    if (!["base", "exp", "all"].includes(F.include)) F.include = "base";
+    $("filterbar").hidden = false;
+    buildPage(); renderAll();
+  } catch (err) {
+    setSync("error", "Couldn't load");
+    $("loading").innerHTML = `Couldn't load the collection right now. <button class="linkbtn" onclick="location.reload()">Try again</button>`;
+  }
+}
+load();
+</script>
+</body>
+</html>
