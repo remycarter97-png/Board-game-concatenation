@@ -6,7 +6,8 @@
   "functions": {
     "api/sync.js": { "maxDuration": 300 },
     "api/collection.js": { "maxDuration": 15 },
-    "api/party.js": { "maxDuration": 10 }
+    "api/party.js": { "maxDuration": 10 },
+    "api/plays.js": { "maxDuration": 15 }
   },
   "crons": [
     { "path": "/api/sync", "schedule": "0 10 * * *" }

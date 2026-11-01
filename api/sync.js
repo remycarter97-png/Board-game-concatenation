@@ -4,10 +4,11 @@
 // Visitors never trigger BGG requests.
 
 import { get, put } from "@vercel/blob";
-import { syncCollection } from "../lib/bgg.js";
+import { syncCollection, syncPlays } from "../lib/bgg.js";
 
 export const SNAPSHOT = "shelf/collection.json";
 const DETAILS = "shelf/details.json";
+export const PLAYS = "shelf/plays.json";
 
 export async function readJson(pathname) {
   try {
@@ -35,8 +36,13 @@ export default async function handler(req, res) {
 
   const prevDetails = (await readJson(DETAILS)) || {};
   const prev = await readJson(SNAPSHOT).catch(() => null);
+  // Remy's individual plays for the Wrapped recaps. If BGG fails here, the last saved plays stay.
+  const playsStart = Date.now();
+  try { await save(PLAYS, await syncPlays({ token })); }
+  catch (err) { console.error(`plays failed: ${err.message}`); }
+  const budgetMs = Math.max(60_000, 230_000 - (Date.now() - playsStart));
   try {
-    const { snapshot, details, stats } = await syncCollection({ token, prevDetails, prevHot: prev?.hot || null, prevPlays: prev?.plays || null });
+    const { snapshot, details, stats } = await syncCollection({ token, prevDetails, prevHot: prev?.hot || null, prevPlays: prev?.plays || null, budgetMs });
     await save(DETAILS, details);
     await save(SNAPSHOT, snapshot);
     return res.status(200).json({ status: "ok", ...stats });

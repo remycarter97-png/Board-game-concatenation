@@ -173,6 +173,45 @@
   .plegend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-weight: 700; font-size: .85rem; color: var(--ink); }
   .plegend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid var(--outline); margin-right: 6px; vertical-align: -1px; }
   .plmore { align-self: flex-start; margin-top: 4px; }
+
+  /* Gaming Wrapped */
+  .wrpick { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 14px; margin-bottom: 14px; }
+  .wrpick .seg small { font-weight: 700; opacity: .7; margin-left: 2px; }
+  .wrapped { border: 3px solid var(--outline); border-radius: 28px; box-shadow: 8px 8px 0 var(--outline); padding: 22px; color: #fff8ee;
+    background: radial-gradient(circle at 15% 10%, #ff9a6b 0, transparent 40%), radial-gradient(circle at 90% 20%, #8656ec 0, transparent 45%), radial-gradient(circle at 60% 100%, #2385d1 0, transparent 50%), #3d2a4f; }
+  .wrempty { padding: 30px; text-align: center; font-weight: 800; font-size: 1.1rem; }
+  .wrhead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-bottom: 16px; }
+  .wrbadge { background: var(--yellow); color: #3d2a4f; border: 2px solid #0c0714; border-radius: 999px; padding: 3px 12px; font: 600 .9rem Fredoka, ui-rounded, sans-serif; box-shadow: 2px 2px 0 #0c0714; }
+  .wrhead h3 { margin: 0; font: 700 clamp(1.8rem, 4vw, 2.8rem)/1.05 Fredoka, ui-rounded, sans-serif; }
+  .wrstats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .wrstat { border: 2.5px solid #0c0714; border-radius: 20px; padding: 14px 16px; box-shadow: 3px 3px 0 #0c0714; color: #3d2a4f; display: grid; }
+  .wrstat b { font: 700 clamp(2rem, 4.5vw, 3rem)/1 Fredoka, ui-rounded, sans-serif; font-variant-numeric: tabular-nums; }
+  .wrstat span { font-weight: 800; font-size: .9rem; }
+  .wrstat.s1 { background: #ffd45c; transform: rotate(-1.5deg); } .wrstat.s2 { background: #8be0bd; transform: rotate(1deg); }
+  .wrstat.s3 { background: #ffb3c9; transform: rotate(-.8deg); } .wrstat.s4 { background: #b7d8ff; transform: rotate(1.4deg); }
+  .wrgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .wrcard { background: rgb(255 255 255 / .1); border: 2px solid rgb(255 255 255 / .28); border-radius: 18px; padding: 14px 16px; min-width: 0; }
+  .wrcard.wrwide { grid-column: 1 / -1; }
+  .wrcard h4 { margin: 0 0 10px; font: 600 .82rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .08em; opacity: .85; }
+  .wrtop { all: unset; cursor: pointer; display: flex; align-items: center; gap: 14px; width: 100%; box-sizing: border-box; }
+  .wrtop img, .wrdie { width: 76px; height: 76px; object-fit: contain; border-radius: 12px; background: #fff8ee; border: 2px solid #0c0714; padding: 4px; flex: none; transform: rotate(-3deg); box-shadow: 3px 3px 0 #0c0714; display: grid; place-items: center; font-size: 2rem; }
+  .wrtop b { display: block; font: 700 1.4rem/1.15 Fredoka, ui-rounded, sans-serif; } .wrtop small { font-weight: 700; opacity: .85; font-size: .9rem; }
+  .wrtop:focus-visible, .wrlist button:focus-visible, .wrchips button:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; border-radius: 8px; }
+  .wrlist { margin: 12px 0 0; padding-left: 22px; display: grid; gap: 4px; font-weight: 700; }
+  .wrlist li { display: list-item; } .wrlist li > * { vertical-align: middle; }
+  .wrlist li span:last-child { float: right; opacity: .8; font-variant-numeric: tabular-nums; }
+  .wrlist button { all: unset; cursor: pointer; } .wrlist button:hover { text-decoration: underline; }
+  .wrwin { font-size: 1.05rem; margin-bottom: 6px; } .wrwin span { opacity: .8; }
+  .wrbig { margin: 0 0 8px; font: 700 2rem/1 Fredoka, ui-rounded, sans-serif; } .wrbig span { font: 700 .95rem Nunito, sans-serif; }
+  .wrchips { display: flex; flex-wrap: wrap; gap: 6px; } .wrchips button, .wrchips span { all: unset; cursor: pointer; font-size: .82rem; font-weight: 800; border: 1.5px solid rgb(255 255 255 / .45); border-radius: 999px; padding: 2px 10px; }
+  .wrchips span { cursor: default; opacity: .8; }
+  .wrnote { margin: 6px 0 0; font-size: .85rem; font-weight: 600; opacity: .85; }
+  .wrfacts { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-weight: 600; }
+  .wrapped .plot { margin-top: 0; background: var(--surface); border-radius: 12px; padding: 8px; }
+  @media (max-width: 760px) {
+    .wrapped { padding: 16px; border-radius: 22px; box-shadow: 4px 4px 0 var(--outline); }
+    .wrstats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wrgrid { grid-template-columns: 1fr; }
+  }
   footer { margin: 48px 0 0; padding: 26px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600;
     display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
   .bgg { display: inline-block; background: #fff; border: var(--edge); box-shadow: var(--pop-sm); border-radius: 12px; padding: 6px 10px; line-height: 0; }
@@ -597,10 +636,13 @@ function renderAll() {
   const one = list.length === 1;
   const kinds = F.include === "base" ? (one ? "base game" : "base games") : F.include === "exp" ? (one ? "game or expansion" : "games and expansions") : (one ? "item" : "items");
   $("fcount").innerHTML = `Charting <b>${fmt(list.length)}</b> ${kinds}`;
-  renderTiles(list); renderDash(list); renderPlays(); renderBuilder(); renderSaved(list);
+  renderTiles(list); renderDash(list); renderWrapped(); renderPlays(); renderBuilder(); renderSaved(list);
 }
 function buildPage() {
-  let html = `<dl class="tiles" id="tiles"></dl><p class="hint">Tip: click any bar, point or dot to see the games that make it up.</p>`, open = false;
+  let html = `<dl class="tiles" id="tiles"></dl><p class="hint">Tip: click any bar, point or dot to see the games that make it up.</p>
+    <h2 class="sec" id="wrapped-h"><span class="dot" aria-hidden="true"></span>Gaming Wrapped</h2>
+    <p class="secnote">Remy's year and quarters at the table, from her logged plays on BoardGameGeek. The filters at the top don't change this section.</p>
+    <section id="wrapped" aria-labelledby="wrapped-h"></section>`, open = false;
   for (const c of DASH) {
     if (c.section) { if (open) html += `</div>`; html += `<h2 class="sec"><span class="dot" aria-hidden="true"></span>${c.section}</h2><p class="secnote">${c.note}</p><div class="charts">`; open = true; }
     else html += cardHtml(c);
@@ -671,6 +713,122 @@ document.addEventListener("click", (e) => {
   else if (t.dataset.plmore) { PL.expanded = !PL.expanded; renderPlays(); document.querySelector("[data-plmore]")?.focus(); }
 });
 
+/* ---------- Gaming Wrapped: Remy's year and quarters in plays ---------- */
+let LOG = null;                 // { plays: [...] } from /api/plays
+const WR = { year: null, q: 0 }; // q = 0 for the whole year, 1-4 for a quarter
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const DAYS = ["Sundays", "Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays"];
+const isRemy = (p) => (p.user || "").toLowerCase() === "asianofchaos" || /^remy\b/i.test(p.name || "");
+const isJon = (p) => (p.user || "").toLowerCase() === "celestinpro" || /^jon(athan)?\b/i.test(p.name || "");
+const qOf = (d) => Math.ceil(Number(d.slice(5, 7)) / 3);
+const inPeriod = (pl, y, q) => Number(pl.date.slice(0, 4)) === y && (!q || qOf(pl.date) === q);
+const periodName = (y, q) => q ? `Q${q} ${y}` : String(y);
+const shelfGame = (id) => all.find((g) => g.id === id);
+const hrs = (m) => m >= 600 ? fmt(m / 60) : fmt(m / 60, 1);
+// Minutes for a play: what was logged, or BGG's listed time for games on our shelf.
+const playMins = (pl) => pl.mins ? { m: pl.mins, est: false } : (shelfGame(pl.game)?.playTime ? { m: shelfGame(pl.game).playTime * pl.qty, est: true } : { m: 0, est: null });
+function firstPlays() { const f = new Map(); for (const pl of LOG.plays) if (!f.has(pl.game) || pl.date < f.get(pl.game)) f.set(pl.game, pl.date); return f; }
+function summarize(list) {
+  const s = { plays: 0, sessions: list.length, games: new Map(), mins: 0, estMins: 0, noTime: 0, remy: { n: 0, w: 0 }, jon: { n: 0, w: 0 }, with: new Map(),
+    byMonth: Array(12).fill(0), byDow: Array(7).fill(0), byDate: new Map(), longest: null };
+  for (const pl of list) {
+    s.plays += pl.qty;
+    const g = s.games.get(pl.game) || { id: pl.game, name: pl.name, n: 0, mins: 0, wins: 0 };
+    g.n += pl.qty; s.games.set(pl.game, g);
+    const t = playMins(pl); if (t.est === null) s.noTime++; else { s.mins += t.m; g.mins += t.m; if (t.est) s.estMins += t.m; }
+    if (!s.longest || t.m > s.longest.m) s.longest = { m: t.m, pl, est: t.est };
+    if (!pl.nowin && !pl.incomplete) for (const [who, test] of [["remy", isRemy], ["jon", isJon]]) {
+      const p = pl.players.find(test); if (p) { s[who].n += pl.qty; if (p.win) { s[who].w += pl.qty; if (who === "remy") g.wins += pl.qty; } }
+    }
+    for (const p of pl.players) if (!isRemy(p) && p.name) { const k = p.name.trim(); s.with.set(k, (s.with.get(k) || 0) + pl.qty); }
+    const d = new Date(pl.date + "T12:00:00");
+    s.byMonth[d.getMonth()] += pl.qty; s.byDow[d.getDay()] += pl.qty; s.byDate.set(pl.date, (s.byDate.get(pl.date) || 0) + pl.qty);
+  }
+  s.top = [...s.games.values()].sort((a, b) => b.n - a.n || b.mins - a.mins || a.name.localeCompare(b.name));
+  return s;
+}
+function wrappedHtml() {
+  if (!LOG?.plays?.length) return `<div class="card wide"><div class="noplot">Your Wrapped shows up after the next daily sync brings in your logged plays from BoardGameGeek.</div></div>`;
+  const years = [...new Set(LOG.plays.map((p) => Number(p.date.slice(0, 4))))].sort((a, b) => b - a);
+  if (!years.includes(WR.year)) WR.year = years[0];
+  const y = WR.year, q = WR.q, list = LOG.plays.filter((p) => inPeriod(p, y, q)), s = summarize(list);
+  const prev = q ? (q === 1 ? [y - 1, 4] : [y, q - 1]) : [y - 1, 0], ps = summarize(LOG.plays.filter((p) => inPeriod(p, prev[0], prev[1])));
+  const qCounts = [1, 2, 3, 4].map((n) => LOG.plays.filter((p) => inPeriod(p, y, n)).reduce((a, p) => a + p.qty, 0));
+  const picker = `<div class="wrpick"><label class="field"><span>Year</span><select id="wr-year">${years.map((v) => `<option${v === y ? " selected" : ""}>${v}</option>`).join("")}</select></label>
+    <div class="seg" role="group" aria-label="Which part of ${y}"><button data-wrq="0" aria-pressed="${!q}">Whole year</button>${[1, 2, 3, 4].map((n) =>
+      `<button data-wrq="${n}" aria-pressed="${q === n}">Q${n} <small>${qCounts[n - 1]}</small></button>`).join("")}</div></div>`;
+  if (!s.plays) return `${picker}<div class="wrapped"><div class="wrempty">No plays logged in ${periodName(y, q)}. Pick another ${q ? "quarter" : "year"}.</div></div>`;
+  const delta = ps.plays ? s.plays - ps.plays : null;
+  const fresh = (() => { const f = firstPlays(); return s.top.filter((g) => inPeriod({ date: f.get(g.id) }, y, q)); })();
+  const fav = s.top[0], favG = shelfGame(fav.id);
+  const winLine = (who, label) => s[who].n ? `<div class="wrwin"><b>${label}</b> won <b>${s[who].w}</b> of ${s[who].n} <span>(${Math.round(100 * s[who].w / s[who].n)}%)</span></div>` : "";
+  const busiestDow = s.byDow.indexOf(Math.max(...s.byDow)), busiestDay = [...s.byDate].sort((a, b) => b[1] - a[1])[0];
+  const friends = [...s.with].sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const facts = [
+    `Most game nights fell on <b>${DAYS[busiestDow]}</b>.`,
+    busiestDay[1] > 1 && `Biggest day: <b>${new Date(busiestDay[0] + "T12:00:00").toLocaleDateString(undefined, { month: "long", day: "numeric" })}</b>, with ${busiestDay[1]} plays.`,
+    s.longest?.m && `Longest session: <b>${esc(s.longest.pl.name)}</b>, ${s.longest.est ? "about " : ""}${hrs(s.longest.m)} hours.`,
+    delta !== null && `That's <b>${Math.abs(delta)} ${delta >= 0 ? "more" : "fewer"}</b> plays than ${periodName(prev[0], prev[1])}.`,
+  ].filter(Boolean);
+  return `${picker}<div class="wrapped" aria-live="polite">
+    <div class="wrhead"><span class="wrbadge">🎁 Gaming Wrapped</span><h3>Remy's ${periodName(y, q)}</h3></div>
+    <div class="wrstats">
+      <div class="wrstat s1"><b>${fmt(s.plays)}</b><span>plays</span></div>
+      <div class="wrstat s2"><b>${fmt(s.games.size)}</b><span>different games</span></div>
+      <div class="wrstat s3"><b>${s.mins ? hrs(s.mins) : "—"}</b><span>hours played${s.estMins ? "*" : ""}</span></div>
+      <div class="wrstat s4"><b>${s.remy.n ? Math.round(100 * s.remy.w / s.remy.n) + "%" : "—"}</b><span>${s.remy.n ? `win rate · ${s.remy.w} wins` : "no wins tracked"}</span></div>
+    </div>
+    <div class="wrgrid">
+      <section class="wrcard wrfav"><h4>Favorite game</h4>
+        <button class="wrtop" data-wrgame="${esc(fav.id)}">${favG?.thumbnail ? `<img src="${esc(favG.thumbnail)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : `<span class="wrdie" aria-hidden="true">🎲</span>`}
+          <span><b>${esc(fav.name)}</b><small>played ${fav.n} time${fav.n === 1 ? "" : "s"}${fav.mins ? ` · ${hrs(fav.mins)} hrs` : ""}${fav.wins ? ` · ${fav.wins} win${fav.wins === 1 ? "" : "s"}` : ""}</small></span></button>
+        <ol class="wrlist" start="2">${s.top.slice(1, 5).map((g) => `<li><button data-wrgame="${esc(g.id)}">${esc(g.name)}</button><span>${g.n}×</span></li>`).join("")}</ol></section>
+      <section class="wrcard"><h4>Wins</h4>${winLine("remy", "Remy") || `<p class="wrnote">No wins recorded for Remy this time.</p>`}${winLine("jon", "Jonathan")}
+        ${s.top.filter((g) => g.wins).length ? `<p class="wrnote">Best game for wins: <b>${esc([...s.top].sort((a, b) => b.wins - a.wins)[0].name)}</b></p>` : ""}</section>
+      <section class="wrcard"><h4>New to you</h4>${fresh.length ? `<p class="wrbig">${fresh.length} <span>game${fresh.length === 1 ? "" : "s"} played for the first time</span></p>
+        <div class="wrchips">${fresh.slice(0, 10).map((g) => `<button data-wrgame="${esc(g.id)}">${esc(g.name)}</button>`).join("")}${fresh.length > 10 ? `<span>+${fresh.length - 10} more</span>` : ""}</div>` : `<p class="wrnote">Only old favorites this time.</p>`}</section>
+      <section class="wrcard"><h4>Played most with</h4>${friends.length ? `<ol class="wrlist">${friends.map(([n, c]) => `<li><span>${esc(n)}</span><span>${c}×</span></li>`).join("")}</ol>` : `<p class="wrnote">No other players logged.</p>`}</section>
+      <section class="wrcard wrwide"><h4>${q ? "Plays by week" : "Plays by month"}</h4><div class="plot" id="c-wrapped" style="height:200px"></div></section>
+      <section class="wrcard wrwide"><h4>Fun facts</h4><ul class="wrfacts">${facts.map((f) => `<li>${f}</li>`).join("")}</ul>
+        ${s.estMins || s.noTime ? `<p class="wrnote">*${s.estMins ? `About ${hrs(s.estMins)} of these hours are estimated from BGG's listed play time for plays logged without a time.` : ""}${s.noTime ? ` ${s.noTime} play${s.noTime === 1 ? "" : "s"} had no time and no listed time, so ${s.noTime === 1 ? "it isn't" : "they aren't"} counted.` : ""}</p>` : ""}</section>
+    </div></div>`;
+}
+function renderWrapped() {
+  const box = $("wrapped"); if (!box) return;
+  box.innerHTML = wrappedHtml();
+  const plot = $("c-wrapped"); if (!plot) return;
+  const y = WR.year, q = WR.q, list = LOG.plays.filter((p) => inPeriod(p, y, q)), T = chartTheme();
+  let labels, buckets;
+  if (q) { // weeks of the quarter, starting on the quarter's first day
+    const start = new Date(y, (q - 1) * 3, 1), end = new Date(y, q * 3, 1), n = Math.ceil((end - start) / (7 * 864e5));
+    labels = Array.from({ length: n }, (_, i) => new Date(start.getTime() + i * 7 * 864e5).toLocaleDateString(undefined, { month: "short", day: "numeric" }));
+    buckets = labels.map(() => []); for (const pl of list) buckets[Math.min(n - 1, Math.floor((new Date(pl.date + "T12:00:00") - start) / (7 * 864e5)))].push(pl);
+  } else { labels = MONTHS; buckets = MONTHS.map(() => []); for (const pl of list) buckets[Number(pl.date.slice(5, 7)) - 1].push(pl); }
+  charts.get("c-wrapped")?.destroy();
+  plot.innerHTML = `<canvas role="img" aria-label="Plays ${q ? "by week" : "by month"} in ${periodName(y, q)}. Select a bar to see the games."></canvas>`;
+  charts.set("c-wrapped", new Chart(plot.querySelector("canvas"), { type: "bar",
+    data: { labels, datasets: [{ label: "Plays", data: buckets.map((b) => b.reduce((a, p) => a + p.qty, 0)), backgroundColor: css("--s1"), borderColor: T.outline, borderWidth: 1.6, borderRadius: 5, borderSkipped: "start", maxBarThickness: 40 }] },
+    options: { responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+      scales: { x: { grid: { display: false }, border: { color: T.outline, width: 2 }, ticks: { color: T.ink2, font: { weight: 700 }, maxRotation: 0, autoSkip: true } },
+        y: { ...axis(T, { label: "Plays", d: 0 }), beginAtZero: true, ticks: { ...axis(T, { d: 0 }).ticks, precision: 0 } } },
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: T.surface, titleColor: T.ink, bodyColor: T.ink, borderColor: T.outline, borderWidth: 2, cornerRadius: 10, padding: 10,
+        callbacks: { label: (c) => `${c.raw} play${c.raw === 1 ? "" : "s"}` } } },
+      onClick: (evt, _e, chart) => { const el = chart.getElementsAtEventForMode(evt, "index", { intersect: false }, true)[0]; if (!el || !buckets[el.index].length) return;
+        const s = summarize(buckets[el.index]);
+        openDrill(`${q ? "Week of " : ""}${labels[el.index]}${q ? "" : ` ${y}`}`, `${s.plays} play${s.plays === 1 ? "" : "s"}`, s.top.map((g) => ({ ...wrGame(g.id, g.name), year: `${g.n}×` }))); },
+      onHover: (evt, els) => { evt.native.target.style.cursor = els.length ? "pointer" : "default"; } } }));
+}
+const wrGame = (id, name) => shelfGame(id) || { id, name, type: "Base game", url: `https://boardgamegeek.com/boardgame/${id}` };
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.wrq !== undefined) { WR.q = Number(t.dataset.wrq); renderWrapped(); document.querySelector(`[data-wrq="${WR.q}"]`)?.focus(); }
+  else if (t.dataset.wrgame) {
+    const y = WR.year, q = WR.q, mine = LOG.plays.filter((p) => p.game === t.dataset.wrgame && inPeriod(p, y, q)), s = summarize(mine), g = s.top[0];
+    openDrill(g.name, `${g.n} play${g.n === 1 ? "" : "s"} in ${periodName(y, q)}${g.mins ? ` · ${hrs(g.mins)} hours` : ""}${s.remy.n ? ` · Remy won ${s.remy.w}` : ""}`, [wrGame(g.id, g.name)]);
+  }
+});
+document.addEventListener("change", (e) => { if (e.target.id === "wr-year") { WR.year = Number(e.target.value); renderWrapped(); $("wr-year").focus(); } });
+
 /* ---------- Events ---------- */
 const FIDS = { "f-include": "include", "f-best": "best", "f-weight": "weight", "f-time": "time", "f-decade": "decade" };
 document.addEventListener("change", (e) => {
@@ -727,6 +885,7 @@ async function load() {
   if (!window.Chart) { setSync("error", "Couldn't load"); $("loading").textContent = "The chart library didn't load. Check your connection and refresh the page."; return; }
   Chart.defaults.font.family = "Nunito, ui-rounded, system-ui, sans-serif"; Chart.defaults.font.size = 12;
   try {
+    const logReq = fetch("/api/plays").then((x) => x.ok ? x.json() : null).catch(() => null);
     const r = await fetch("/api/collection");
     const d = await r.json().catch(() => ({}));
     if (r.status === 503 && d.status === "syncing") { setSync("syncing", "Setting up"); $("loading").textContent = "The shelf is being set up. Check back in a few minutes."; return; }
@@ -738,6 +897,8 @@ async function load() {
     const saved = store.get("chart-filters", null);
     if (saved && typeof saved === "object") for (const k of Object.keys(F)) if (typeof saved[k] === "string") F[k] = saved[k];
     if (!["base", "exp", "all"].includes(F.include)) F.include = "base";
+    LOG = await logReq;
+    if (LOG?.plays?.length) { const ys = LOG.plays.map((p) => Number(p.date.slice(0, 4))); WR.year = Math.max(...ys); }
     $("filterbar").hidden = false;
     buildPage(); renderAll();
   } catch (err) {
