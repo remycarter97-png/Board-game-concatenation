@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Personal Goals</title>
+<meta name="description" content="Track personal quests and retirement goals, linked to characters in your campaigns.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#fff3e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1528" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Game Shelf">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
+    --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
+    --yellow: #ffd45c; --yellow-soft: #fff1c2; --mint: #8be0bd; --mint-soft: #ddf6ea;
+    --ok: #24a26b; --danger: #d43c41; --warn: #a35a00; --warn-soft: #ffe8cc;
+    --edge: 2.5px solid var(--outline); --pop: 4px 4px 0 var(--outline); --pop-sm: 3px 3px 0 var(--outline);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+      --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+      --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+    --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+    --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; color: var(--ink); font: 16px/1.5 Nunito, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header (matches the other pages) */
+  header.top { padding: 36px 0 8px; }
+  .titlebar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .brand { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+  .logo { width: 72px; height: 72px; flex: none; transform: rotate(-5deg); filter: drop-shadow(4px 4px 0 var(--outline)); transition: transform .3s; }
+  .logo:hover { transform: rotate(4deg) scale(1.05); }
+  h1 { font: 700 clamp(2rem, 4vw, 2.9rem)/1.05 Fredoka, ui-rounded, system-ui, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  h1 .hl { background: linear-gradient(transparent 62%, var(--hl, var(--yellow)) 62% 92%, transparent 92%); padding: 0 2px; }
+  .tagline { margin: 6px 0 0; color: var(--ink-2); font-size: 1.05rem; font-weight: 600; }
+  .pagenav { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); }
+  .pagenav a { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-decoration: none; }
+  .pagenav a:hover { color: var(--ink); background: var(--surface-2); }
+  .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+
+  /* Shared bits */
+  .card { background: var(--surface); border: var(--edge); border-radius: 22px; box-shadow: var(--pop); padding: 18px 20px; min-width: 0; display: grid; gap: 14px; align-content: start; }
+  h2 { font: 700 1.3rem/1.2 Fredoka, ui-rounded, sans-serif; margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  h2 small { font: 700 .88rem Nunito, sans-serif; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm);
+    background: var(--surface); color: var(--ink); font: 600 1rem Fredoka, ui-rounded, sans-serif; transition: transform .12s, box-shadow .12s; text-decoration: none; }
+  .btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.yellow { background: var(--yellow); color: #3d2a4f; }
+  .btn.big { min-height: 52px; font-size: 1.15rem; padding: 0 22px; }
+  .btn.sm { min-height: 34px; padding: 0 12px; font-size: .9rem; border-radius: 11px; }
+  .link { border: 0; background: none; padding: 4px 2px; color: var(--accent); font-weight: 800; font-size: .92rem; }
+  .link:hover { text-decoration: underline; }
+  .link.danger { color: var(--danger); }
+  input[type=text], input[type=number] { height: 44px; border: var(--edge); border-radius: 13px; background: var(--surface); padding: 0 12px; font-weight: 700; min-width: 0; box-shadow: var(--pop-sm); }
+  input:focus { outline: none; box-shadow: 0 0 0 4px var(--yellow), 3px 3px 0 4px var(--outline); }
+  input[readonly] { opacity: .65; }
+  .note { margin: 0; font-size: .88rem; color: var(--ink-2); font-weight: 600; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 2px solid var(--outline); border-radius: 12px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: none; min-height: 30px; padding: 0 12px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+  .ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ctl > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+
+  .crumbs { margin-top: 18px; } .crumbs a { color: var(--accent); font-weight: 800; text-decoration: none; } .crumbs a:hover { text-decoration: underline; }
+  main { margin-top: 12px; display: grid; gap: 20px; }
+  a.btn { text-decoration: none; color: var(--ink); }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .sub { margin: -4px 0 0; color: var(--ink-2); font-weight: 600; font-size: .92rem; }
+  .note { margin: 0; color: var(--ink-2); font-weight: 700; font-size: .86rem; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .field { display: grid; gap: 5px; min-width: 0; }
+  .field > span { font: 600 .74rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+  input[type=text], input[type=number], select, textarea { min-height: 40px; border: var(--edge); border-radius: 12px; background: var(--surface); color: var(--ink); font: 700 .95rem Nunito, sans-serif; padding: 0 10px; min-width: 0; }
+  input[type=number] { width: 5.5em; } textarea { padding: 8px 10px; width: 100%; box-sizing: border-box; }
+  input:focus-visible, select:focus-visible, button:focus-visible, textarea:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  h2.sec { margin: 0; font: 700 1.3rem Fredoka, ui-rounded, sans-serif; display: flex; gap: 10px; align-items: center; justify-content: flex-start; flex-wrap: wrap; }
+  .empty { text-align: center; color: var(--ink-2); font-weight: 700; padding: 16px 12px; border: 2.5px dashed var(--line); border-radius: 16px; margin: 0; }
+  .x { width: 30px; height: 30px; flex: none; border-radius: 50%; border: 2px solid var(--outline); background: var(--surface); font-weight: 900; color: var(--ink-2); }
+  .steps-ed { display: grid; gap: 6px; }
+  .goals { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .goal { display: grid; gap: 10px; align-content: start; padding: 16px; border: var(--edge); border-radius: 18px; background: var(--surface); box-shadow: var(--pop-sm); scroll-margin-top: 16px; }
+  .goal.done { background: var(--mint-soft); }
+  .goal h3 { margin: 0; font: 700 1.2rem Fredoka, ui-rounded, sans-serif; }
+  .goal .who { color: var(--ink-2); font-weight: 800; font-size: .88rem; } .goal .who a { color: var(--accent); }
+  .bar { height: 12px; border-radius: 999px; border: 2px solid var(--outline); background: var(--surface); overflow: hidden; } .bar i { display: block; height: 100%; background: var(--ok); transition: width .3s; }
+  .step { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 10px; border: 2px solid var(--line); border-radius: 12px; font-weight: 800; }
+  .step.ok { background: var(--mint-soft); border-color: var(--ok); }
+  .step label { display: flex; align-items: center; gap: 10px; cursor: pointer; flex: 1; } .step input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--ok); }
+  .stepper { display: inline-flex; align-items: center; border: 2px solid var(--outline); border-radius: 11px; overflow: hidden; background: var(--surface); flex: none; }
+  .stepper button { width: 34px; height: 34px; border: 0; background: none; font-size: 1.1rem; font-weight: 900; color: var(--ink); }
+  .stepper output { min-width: 4.2em; text-align: center; font: 700 .95rem Fredoka, ui-rounded, sans-serif; border-left: 2px solid var(--line); border-right: 2px solid var(--line); padding: 6px 0; }
+  .banner { padding: 10px 12px; border-radius: 12px; background: var(--yellow); color: #3d2a4f; font-weight: 800; border: 2px solid var(--outline); }
+  .codebox { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--yellow-soft); border: 2px dashed var(--outline); border-radius: 16px; padding: 10px 14px; }
+  .code { font: 700 1.5rem/1 Fredoka, ui-rounded, sans-serif; letter-spacing: .16em; background: var(--surface); border: var(--edge); border-radius: 12px; padding: 6px 8px 6px 14px; }
+  footer { margin: 40px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
+  @media (max-width: 760px) { .wrap { padding: 0 16px; } header.top { padding-top: 22px; } .logo { width: 54px; height: 54px; } .brand { gap: 12px; } .card { box-shadow: var(--pop-sm); padding: 16px; border-radius: 18px; } .goals { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <a class="brand" href="/">
+        <svg class="logo" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="3" y="3" width="66" height="66" rx="18" fill="var(--yellow)" stroke="var(--outline)" stroke-width="3"/>
+          <g transform="translate(36 10) rotate(14)"><rect x="0" y="0" width="22" height="22" rx="5" fill="#fff" stroke="var(--outline)" stroke-width="2.5"/>
+            <circle cx="6" cy="6" r="2.2" fill="var(--outline)"/><circle cx="11" cy="11" r="2.2" fill="var(--outline)"/><circle cx="16" cy="16" r="2.2" fill="var(--outline)"/></g>
+          <g transform="translate(9 20) scale(1.75)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.4" stroke-linejoin="round"/></g>
+        </svg>
+        <div>
+          <h1>Personal <span class="hl">Goals</span></h1>
+          <p class="tagline">Personal quests and retirement goals, step by step.</p>
+        </div>
+      </a>
+      <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats">Charts</a><a href="/tools" aria-current="page">Tools</a></nav>
+    </div>
+  </header>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools" id="crumb">‹ All tools</a></nav>
+  <main id="app"></main>
+  <footer>Goals are saved in this browser. Turn on a backup code to keep a copy online and open them on another device.</footer>
+</div>
+<script src="/tools/shelf-sync.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const KEY = "game-shelf:goals", CAMP = "game-shelf:campaigns";
+  const uid = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") ?? d; } catch (e) { return d; } };
+  let S = load(KEY, null); if (!S || !Array.isArray(S.goals)) S = { goals: [] };
+  const camps = () => load(CAMP, { campaigns: {} }).campaigns || {};
+  const pct = (g) => { const st = g.steps || []; if (!st.length) return 0; return Math.round(100 * st.reduce((s, x) => s + (x.type === "count" ? Math.min(1, (x.value || 0) / (x.target || 1)) : x.done ? 1 : 0), 0) / st.length); };
+  let msg = "", pushT = null, showCode = false, editing = null;
+  const params = new URLSearchParams(location.search);
+  const pre = params.get("campaign") ? { campaign: params.get("campaign"), char: params.get("char") } : null;
+  let draft = newDraft();
+  function newDraft() { return { title: "", game: "", steps: [{ id: uid("t"), label: "", type: "check", target: 1 }], link: pre ? `${pre.campaign}|${pre.char}` : "" }; }
+
+  function save(rer = true) {
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+    mirror();
+    if (S.code) { S.dirty = true; clearTimeout(pushT); pushT = setTimeout(push, 1200); }
+    if (rer) render();
+  }
+  // Keep each linked character's snapshot of its goal in the campaign, so the campaign page (and its backup) shows progress.
+  function mirror() {
+    const all = load(CAMP, null); if (!all?.campaigns) return; let changed = false;
+    for (const g of S.goals) { const c = all.campaigns[g.link?.campaign], ch = c?.characters?.find((x) => x.id === g.link.char); if (!ch) continue;
+      const snap = { id: g.id, title: g.title, pct: pct(g), done: pct(g) >= 100 }; if (JSON.stringify(snap) !== JSON.stringify(ch.goalSnap)) { ch.goalSnap = snap; c.updated = Date.now(); if (c.code) c.dirty = true; changed = true; } }
+    if (changed) try { localStorage.setItem(CAMP, JSON.stringify(all)); } catch (e) {}
+  }
+  const payload = () => ({ goals: S.goals });
+  async function push() { try { const r = await ShelfSync.put(S.code, "goals", payload()); S.syncedAt = r.updatedAt; S.dirty = false; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} } catch (e) { clearTimeout(pushT); pushT = setTimeout(push, 15000); } }
+  async function pull() {
+    if (!S.code || S.dirty) return;
+    try { const r = await ShelfSync.get(S.code, "goals"); if (r && (!S.syncedAt || r.updatedAt > S.syncedAt)) { S.goals = r.data.goals || []; S.syncedAt = r.updatedAt; save(); S.dirty = false; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} } } catch (e) {}
+  }
+
+  const linkOptions = (sel) => { const cs = Object.values(camps()); const opts = cs.flatMap((c) => (c.characters || []).filter((ch) => ch.status !== "retired").map((ch) => [`${c.id}|${ch.id}`, `${ch.name} · ${c.name}`]));
+    return `<option value="">Not linked to a character</option>${opts.map(([v, l]) => `<option value="${esc(v)}"${v === sel ? " selected" : ""}>${esc(l)}</option>`).join("")}`; };
+  function editorHtml(g, isNew) {
+    return `<div class="field"><span>Goal</span><input type="text" id="gTitle" maxlength="80" value="${esc(g.title)}" placeholder="e.g. Seeker of Xorn"></div>
+      <div class="row"><label class="field" style="flex:1 1 200px"><span>Game</span><input type="text" id="gGame" maxlength="60" value="${esc(g.game)}" placeholder="Frosthaven"></label>
+        <label class="field" style="flex:1 1 220px"><span>For character</span><select id="gLink">${linkOptions(g.link)}</select></label></div>
+      <div class="field"><span>Steps <small style="text-transform:none;letter-spacing:0">(a checkbox, or a count to reach, like “kill 15 elites”)</small></span><div class="steps-ed">${g.steps.map((s, i) => `<div class="row">
+          <input type="text" data-dlabel="${i}" value="${esc(s.label)}" maxlength="80" placeholder="Step ${i + 1}" aria-label="Step ${i + 1}" style="flex:1 1 200px">
+          <select data-dtype="${i}" aria-label="Step ${i + 1} kind"><option value="check"${s.type === "check" ? " selected" : ""}>Checkbox</option><option value="count"${s.type === "count" ? " selected" : ""}>Count to</option></select>
+          ${s.type === "count" ? `<input type="number" data-dtarget="${i}" value="${s.target || 1}" min="1" max="999" aria-label="Step ${i + 1} target">` : ""}
+          ${g.steps.length > 1 ? `<button class="x" type="button" data-dstepdel="${i}" aria-label="Remove step ${i + 1}">×</button>` : ""}</div>`).join("")}</div></div>
+      <div class="row"><button class="btn sm" type="button" id="dAddStep">+ Another step</button></div>
+      <div class="row"><button class="btn yellow" type="button" id="${isNew ? "createGoal" : "saveGoal"}">${isNew ? "Add goal" : "Save"}</button>${isNew ? "" : `<button class="link" type="button" id="cancelEdit">Cancel</button>`}<span class="note" role="status">${esc(msg)}</span></div>`;
+  }
+  function goalHtml(g) {
+    const p = pct(g), c = camps()[g.link?.campaign], ch = c?.characters?.find((x) => x.id === g.link.char);
+    if (editing?.id === g.id) return `<article class="goal" id="${g.id}">${editorHtml(editing, false)}</article>`;
+    return `<article class="goal${p >= 100 ? " done" : ""}" id="${esc(g.id)}" aria-label="${esc(g.title)}">
+      <div><h3>${esc(g.title)}</h3><div class="who">${esc(g.game || "")}${ch ? `${g.game ? " · " : ""}for <a href="/tools/campaigns?c=${encodeURIComponent(c.id)}#party">${esc(ch.name)} (${esc(c.name)})</a>${ch.status === "retired" ? " · retired" : ""}` : g.link?.charName ? ` · for ${esc(g.link.charName)}` : ""}</div></div>
+      <div class="bar" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100" aria-label="Progress"><i style="width:${p}%"></i></div>
+      ${(g.steps || []).map((s, i) => s.type === "count"
+        ? `<div class="step${(s.value || 0) >= s.target ? " ok" : ""}"><span>${esc(s.label || `Step ${i + 1}`)}</span><span class="stepper"><button type="button" data-cnt="${g.id}:${i}:-1" aria-label="${esc(s.label)} down">−</button><output>${s.value || 0} / ${s.target}</output><button type="button" data-cnt="${g.id}:${i}:1" data-focus="${g.id}:${i}" aria-label="${esc(s.label)} up">+</button></span></div>`
+        : `<div class="step${s.done ? " ok" : ""}"><label><input type="checkbox" data-chk="${g.id}:${i}"${s.done ? " checked" : ""}>${esc(s.label || `Step ${i + 1}`)}</label></div>`).join("")}
+      ${p >= 100 ? `<div class="banner">🎉 Goal complete${ch && ch.status !== "retired" ? `: ${esc(ch.name)} is ready to retire. <a href="/tools/campaigns?c=${encodeURIComponent(c.id)}#party">Retire in the campaign</a>` : ""}</div>` : ""}
+      <div class="row"><button class="btn sm" type="button" data-edit="${g.id}">Edit</button><button class="link danger" type="button" data-del="${g.id}">Delete</button></div></article>`;
+  }
+  function render() {
+    const y = scrollY, foc = document.activeElement?.dataset?.focus;
+    const act = S.goals.filter((g) => pct(g) < 100), done = S.goals.filter((g) => pct(g) >= 100);
+    const preCh = pre && camps()[pre.campaign]?.characters?.find((x) => x.id === pre.char);
+    $("app").innerHTML = `<section class="card" aria-labelledby="newH"><h2 class="sec" id="newH">New goal${preCh ? ` for ${esc(preCh.name)}` : ""}</h2>
+        <p class="sub">Personal quests, retirement goals, anything with steps. Link one to a character in a campaign and the campaign shows its progress and flags them ready to retire when it's done.</p>
+        ${editorHtml(draft, true)}</section>
+      <section class="card" aria-labelledby="actH"><h2 class="sec" id="actH">In progress <span class="note">${act.length}</span></h2>${act.length ? `<div class="goals">${act.map(goalHtml).join("")}</div>` : `<p class="empty">No goals in progress.</p>`}</section>
+      ${done.length ? `<section class="card" aria-labelledby="doneH"><h2 class="sec" id="doneH">Complete <span class="note">${done.length}</span></h2><div class="goals">${done.map(goalHtml).join("")}</div></section>` : ""}
+      <section class="card" aria-labelledby="bkH"><h2 class="sec" id="bkH">Backup code</h2><p class="sub">Keep your goals online and open them on another device.</p>
+        ${S.code ? `<div class="codebox"><span class="code">${showCode ? esc(S.code) : "••••••"}</span><button class="btn sm" type="button" id="toggleCode">${showCode ? "Hide" : "Show"}</button><button class="btn sm yellow" type="button" id="copyCode">Copy code</button><button class="link" type="button" id="stopBackup">Stop backing up</button></div>`
+          : `<div class="row"><button class="btn sm yellow" type="button" id="startBackup">Make a backup code</button><label class="vh" for="openCode">Backup code</label><input type="text" id="openCode" maxlength="6" placeholder="Have a code?" autocapitalize="characters"><button class="btn sm" type="button" id="openBtn">Open</button></div>`}
+        <p class="note" role="status" id="bkMsg"></p></section>`;
+    if (foc) document.querySelector(`[data-focus="${foc}"]`)?.focus({ preventScroll: true });
+    scrollTo(0, y);
+  }
+  const readDraft = (g) => { g.title = $("gTitle").value.trim(); g.game = $("gGame").value.trim(); g.link = $("gLink").value; };
+  const toGoal = (d, base = {}) => { const [campaign, char] = (d.link || "").split("|"); const c = camps()[campaign], ch = c?.characters?.find((x) => x.id === char);
+    const g = { ...base, title: d.title, game: d.game, steps: d.steps.filter((s) => s.label.trim()).map((s) => ({ ...s, label: s.label.trim(), target: s.type === "count" ? Math.max(1, Number(s.target) || 1) : undefined })) };
+    if (ch) g.link = { campaign, char, campaignName: c.name, charName: ch.name }; else delete g.link; return g; };
+
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return; const d = b.dataset, cur = editing || draft;
+    if (b.id === "dAddStep") { readDraft(cur); cur.steps.push({ id: uid("t"), label: "", type: "check", target: 1 }); render(); document.querySelector(`[data-dlabel="${cur.steps.length - 1}"]`)?.focus(); }
+    else if (d.dstepdel) { readDraft(cur); cur.steps.splice(Number(d.dstepdel), 1); render(); }
+    else if (b.id === "createGoal") { readDraft(draft); if (!draft.title) { $("gTitle").focus(); return; } const g = toGoal(draft, { id: uid("g"), created: Date.now() });
+      if (!g.steps.length) { msg = "Add at least one step."; return render(); } S.goals.unshift(g); msg = ""; draft = newDraft(); draft.link = ""; save(); }
+    else if (d.edit) { const g = S.goals.find((x) => x.id === d.edit); editing = { ...JSON.parse(JSON.stringify(g)), link: g.link ? `${g.link.campaign}|${g.link.char}` : "" }; render(); $("gTitle").focus(); }
+    else if (b.id === "cancelEdit") { editing = null; render(); }
+    else if (b.id === "saveGoal") { readDraft(editing); const i = S.goals.findIndex((x) => x.id === editing.id), old = S.goals[i];
+      const g = toGoal(editing, { id: old.id, created: old.created }); g.steps = g.steps.map((s) => { const o = old.steps.find((x) => x.id === s.id); return o ? { ...s, value: o.value, done: o.done } : s; }); S.goals[i] = g; editing = null; save(); }
+    else if (d.del) { S.goals = S.goals.filter((x) => x.id !== d.del); save(); }
+    else if (d.cnt) { const [gid, i, dir] = d.cnt.split(":"), s = S.goals.find((x) => x.id === gid).steps[Number(i)]; s.value = Math.max(0, Math.min(s.target * 2, (s.value || 0) + Number(dir))); save(); }
+    else if (b.id === "startBackup") (async () => { try { const r = await ShelfSync.put(null, "goals", payload()); S.code = r.code; S.syncedAt = r.updatedAt; S.dirty = false; showCode = true; save(); } catch (err) { $("bkMsg").textContent = "Couldn't reach the backup service. Try again."; } })();
+    else if (b.id === "openBtn") (async () => { const code = ShelfSync.clean($("openCode").value); if (code.length !== 6) { $("bkMsg").textContent = "Codes are 6 letters and numbers."; return; }
+      try { const r = await ShelfSync.get(code, "goals"); if (!r) { $("bkMsg").textContent = `No goals backed up under ${code}.`; return; } S = { goals: r.data.goals || [], code, syncedAt: r.updatedAt, dirty: false }; save(); } catch (err) { $("bkMsg").textContent = "Couldn't reach the backup service. Try again."; } })();
+    else if (b.id === "toggleCode") { showCode = !showCode; render(); }
+    else if (b.id === "copyCode") navigator.clipboard.writeText(S.code).then(() => { $("bkMsg").textContent = "Copied!"; }, () => { $("bkMsg").textContent = S.code; });
+    else if (b.id === "stopBackup") { delete S.code; delete S.syncedAt; delete S.dirty; save(); }
+  });
+  document.addEventListener("change", (e) => {
+    const t = e.target, d = t.dataset, cur = editing || draft;
+    if (d.chk) { const [gid, i] = d.chk.split(":"); S.goals.find((x) => x.id === gid).steps[Number(i)].done = t.checked; save(); }
+    else if (d.dtype) { readDraft(cur); cur.steps[Number(d.dtype)].type = t.value; render(); }
+    else if (d.dtarget) cur.steps[Number(d.dtarget)].target = Number(t.value) || 1;
+  });
+  document.addEventListener("input", (e) => { const d = e.target.dataset, cur = editing || draft; if (d.dlabel) cur.steps[Number(d.dlabel)].label = e.target.value; });
+  document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.dataset?.dlabel != null) { e.preventDefault(); $("dAddStep").click(); } });
+  render(); pull();
+  if (location.hash) setTimeout(() => document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: "start" }), 50);
+})();
+</script>
+<script src="/pwa.js" defer></script>
+</body>
+</html>

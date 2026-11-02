@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Campaign Tracker</title>
+<meta name="description" content="Track campaign scenarios, characters, unlocks and achievements for Frosthaven, Gloomhaven or any campaign game.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#fff3e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1528" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Game Shelf">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
+    --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
+    --yellow: #ffd45c; --yellow-soft: #fff1c2; --mint: #8be0bd; --mint-soft: #ddf6ea;
+    --ok: #24a26b; --danger: #d43c41; --warn: #a35a00; --warn-soft: #ffe8cc;
+    --edge: 2.5px solid var(--outline); --pop: 4px 4px 0 var(--outline); --pop-sm: 3px 3px 0 var(--outline);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+      --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+      --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+    --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+    --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; color: var(--ink); font: 16px/1.5 Nunito, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header (matches the other pages) */
+  header.top { padding: 36px 0 8px; }
+  .titlebar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .brand { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+  .logo { width: 72px; height: 72px; flex: none; transform: rotate(-5deg); filter: drop-shadow(4px 4px 0 var(--outline)); transition: transform .3s; }
+  .logo:hover { transform: rotate(4deg) scale(1.05); }
+  h1 { font: 700 clamp(2rem, 4vw, 2.9rem)/1.05 Fredoka, ui-rounded, system-ui, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  h1 .hl { background: linear-gradient(transparent 62%, var(--hl, var(--yellow)) 62% 92%, transparent 92%); padding: 0 2px; }
+  .tagline { margin: 6px 0 0; color: var(--ink-2); font-size: 1.05rem; font-weight: 600; }
+  .pagenav { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); }
+  .pagenav a { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-decoration: none; }
+  .pagenav a:hover { color: var(--ink); background: var(--surface-2); }
+  .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+
+  /* Shared bits */
+  .card { background: var(--surface); border: var(--edge); border-radius: 22px; box-shadow: var(--pop); padding: 18px 20px; min-width: 0; display: grid; gap: 14px; align-content: start; }
+  h2 { font: 700 1.3rem/1.2 Fredoka, ui-rounded, sans-serif; margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  h2 small { font: 700 .88rem Nunito, sans-serif; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm);
+    background: var(--surface); color: var(--ink); font: 600 1rem Fredoka, ui-rounded, sans-serif; transition: transform .12s, box-shadow .12s; text-decoration: none; }
+  .btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.yellow { background: var(--yellow); color: #3d2a4f; }
+  .btn.big { min-height: 52px; font-size: 1.15rem; padding: 0 22px; }
+  .btn.sm { min-height: 34px; padding: 0 12px; font-size: .9rem; border-radius: 11px; }
+  .link { border: 0; background: none; padding: 4px 2px; color: var(--accent); font-weight: 800; font-size: .92rem; }
+  .link:hover { text-decoration: underline; }
+  .link.danger { color: var(--danger); }
+  input[type=text], input[type=number] { height: 44px; border: var(--edge); border-radius: 13px; background: var(--surface); padding: 0 12px; font-weight: 700; min-width: 0; box-shadow: var(--pop-sm); }
+  input:focus { outline: none; box-shadow: 0 0 0 4px var(--yellow), 3px 3px 0 4px var(--outline); }
+  input[readonly] { opacity: .65; }
+  .note { margin: 0; font-size: .88rem; color: var(--ink-2); font-weight: 600; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 2px solid var(--outline); border-radius: 12px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: none; min-height: 30px; padding: 0 12px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+  .ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ctl > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+
+  .crumbs { margin-top: 18px; } .crumbs a { color: var(--accent); font-weight: 800; text-decoration: none; } .crumbs a:hover { text-decoration: underline; }
+  main { margin-top: 12px; display: grid; gap: 20px; }
+  a.btn { text-decoration: none; color: var(--ink); }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .sub { margin: -4px 0 0; color: var(--ink-2); font-weight: 600; font-size: .92rem; }
+  .note { margin: 0; color: var(--ink-2); font-weight: 700; font-size: .86rem; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .field { display: grid; gap: 5px; min-width: 0; }
+  .field > span { font: 600 .74rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+  input[type=text], input[type=number], input[type=date], textarea, select { min-height: 40px; border: var(--edge); border-radius: 12px; background: var(--surface); color: var(--ink); font: 700 .95rem Nunito, sans-serif; padding: 0 10px; min-width: 0; }
+  input[type=number] { width: 6em; } textarea { padding: 8px 10px; min-height: 60px; resize: vertical; width: 100%; box-sizing: border-box; }
+  input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  h2.sec { margin: 0; font: 700 1.3rem Fredoka, ui-rounded, sans-serif; display: flex; gap: 10px; align-items: center; justify-content: flex-start; flex-wrap: wrap; }
+  h3.sub2 { margin: 6px 0 0; font: 700 1.05rem Fredoka, ui-rounded, sans-serif; }
+  .empty { text-align: center; color: var(--ink-2); font-weight: 700; padding: 16px 12px; border: 2.5px dashed var(--line); border-radius: 16px; margin: 0; }
+  .x { width: 30px; height: 30px; flex: none; border-radius: 50%; border: 2px solid var(--outline); background: var(--surface); font-weight: 900; color: var(--ink-2); line-height: 1; }
+  .pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px; border: 2px solid var(--outline); border-radius: 999px; font-weight: 800; font-size: .8rem; background: var(--surface-2); white-space: nowrap; }
+  .pill.done { background: var(--mint); color: #3d2a4f; } .pill.available { background: var(--yellow); color: #3d2a4f; } .pill.locked { background: var(--surface-2); color: var(--ink-2); }
+  .pill.win { background: var(--mint-soft); } .pill.loss { background: var(--accent-soft); }
+  /* list + templates */
+  .tpls { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .tpl { display: grid; gap: 6px; text-align: left; padding: 14px; border: var(--edge); border-radius: 18px; background: var(--surface); box-shadow: var(--pop-sm); font: inherit; color: var(--ink); }
+  .tpl b { font: 700 1.1rem Fredoka, ui-rounded, sans-serif; } .tpl span { font-size: .85rem; font-weight: 600; color: var(--ink-2); } .tpl .ic { font-size: 1.8rem; }
+  .tpl[aria-pressed="true"] { background: var(--yellow-soft); outline: 3px solid var(--outline); outline-offset: 1px; }
+  .clist { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .clist a { display: grid; gap: 4px; padding: 14px 16px; border: var(--edge); border-radius: 18px; background: var(--surface); box-shadow: var(--pop); color: var(--ink); text-decoration: none; }
+  .clist a:hover { transform: translate(-2px, -2px); } .clist b { font: 700 1.2rem Fredoka, ui-rounded, sans-serif; } .clist small { color: var(--ink-2); font-weight: 700; }
+  /* campaign */
+  .chead { display: grid; gap: 8px; }
+  .chead h2 { margin: 0; font: 700 clamp(1.5rem, 4vw, 2.1rem)/1.1 Fredoka, ui-rounded, sans-serif; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--ink-2); font-weight: 800; font-size: .92rem; }
+  .sync { display: inline-flex; align-items: center; gap: 6px; } .sync i { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); } .sync.off i { background: var(--warn); }
+  .tabs { position: sticky; top: 0; z-index: 5; display: flex; gap: 6px; overflow-x: auto; padding: 10px 2px; margin: -8px 0; background: var(--bg); scrollbar-width: none; }
+  .tabs button { flex: none; min-height: 38px; padding: 0 14px; border: 2px solid var(--outline); border-radius: 12px; background: var(--surface); font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink); }
+  .tabs button[aria-selected="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: 2px 2px 0 var(--outline); }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin: 0; }
+  .tiles div { border: 2px solid var(--outline); border-radius: 14px; padding: 10px 12px; background: var(--surface-2); }
+  .tiles dt { font-size: .76rem; font-weight: 800; color: var(--ink-2); text-transform: uppercase; letter-spacing: .04em; } .tiles dd { margin: 2px 0 0; font: 700 1.5rem Fredoka, ui-rounded, sans-serif; }
+  .tracks { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+  .track { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border: 2px solid var(--line); border-radius: 14px; background: var(--surface); font-weight: 800; }
+  .stepper { display: inline-flex; align-items: center; border: 2px solid var(--outline); border-radius: 11px; overflow: hidden; background: var(--surface); flex: none; }
+  .stepper button { width: 32px; height: 32px; border: 0; background: none; font-size: 1.1rem; font-weight: 900; color: var(--ink); }
+  .stepper input { width: 3.4em; min-height: 32px; border: 0; border-left: 2px solid var(--line); border-right: 2px solid var(--line); border-radius: 0; text-align: center; padding: 0; -moz-appearance: textfield; }
+  .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .res { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 8px; }
+  .cf textarea { width: 100%; }
+  .boxes { display: flex; flex-wrap: wrap; gap: 4px; }
+  .box { width: 26px; height: 26px; border-radius: 7px; border: 2px solid var(--outline); background: var(--surface); padding: 0; font-weight: 900; color: #3d2a4f; }
+  .box[aria-pressed="true"] { background: var(--mint); } .box.gap { margin-right: 8px; }
+  /* scenarios */
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; }
+  .filters button { min-height: 32px; padding: 0 12px; border-radius: 999px; border: 2px solid var(--outline); background: var(--surface); font-weight: 800; font-size: .85rem; color: var(--ink); }
+  .filters button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; }
+  .scen { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .scen > li > details { border: 2px solid var(--outline); border-radius: 14px; background: var(--surface); }
+  .scen summary { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; list-style: none; font-weight: 800; }
+  .scen summary::-webkit-details-marker { display: none; }
+  .scen .num { min-width: 2.8em; height: 30px; padding: 0 6px; border-radius: 9px; display: grid; place-items: center; background: var(--surface-2); border: 2px solid var(--outline); font: 700 .95rem Fredoka, ui-rounded, sans-serif; }
+  .scen .nm { flex: 1; min-width: 0; } .scen .warn { color: var(--warn); font-size: .8rem; }
+  .sbody { display: grid; gap: 12px; padding: 4px 12px 14px; border-top: 2px dashed var(--line); }
+  .playform { display: grid; gap: 10px; padding: 12px; border-radius: 14px; background: var(--yellow-soft); border: 2px dashed var(--outline); }
+  .checks { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chk { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 12px; border: 2px solid var(--outline); border-radius: 999px; background: var(--surface); font-weight: 800; font-size: .88rem; cursor: pointer; }
+  .chk input { width: 17px; height: 17px; accent-color: var(--accent); }
+  .plays { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .88rem; font-weight: 700; }
+  .plays li { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  /* characters */
+  .chars { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .char { display: grid; gap: 10px; align-content: start; padding: 14px; border: var(--edge); border-radius: 18px; background: var(--surface); box-shadow: var(--pop-sm); }
+  .char.retired { opacity: .8; box-shadow: none; border-style: dashed; }
+  .char h3 { margin: 0; font: 700 1.2rem Fredoka, ui-rounded, sans-serif; } .char .cls { color: var(--ink-2); font-weight: 800; font-size: .9rem; }
+  .cfields { display: grid; gap: 8px; }
+  .cf { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 800; font-size: .92rem; }
+  .cf.block { display: grid; } .hint { font-size: .78rem; color: var(--ink-2); font-weight: 700; }
+  .goal { display: grid; gap: 6px; padding: 10px; border-radius: 12px; border: 2px dashed var(--outline); background: var(--mint-soft); }
+  .goal.ready { background: var(--yellow); color: #3d2a4f; }
+  .bar { height: 10px; border-radius: 999px; border: 1.5px solid var(--outline); background: var(--surface); overflow: hidden; } .bar i { display: block; height: 100%; background: var(--ok); }
+  /* calendar */
+  .weeks { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; max-width: 620px; }
+  .wk { height: 38px; border-radius: 8px; border: 2px solid var(--outline); background: var(--surface); font: 700 .78rem Fredoka, ui-rounded, sans-serif; color: var(--ink); padding: 0; position: relative; }
+  .wk.winter { background: #dceeff; } .wk.summer { background: #fff4cc; }
+  .wk.past { opacity: .45; } .wk.now { box-shadow: 0 0 0 3px var(--accent); }
+  .wk.has::after { content: ""; position: absolute; right: 3px; top: 3px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  .wk[aria-pressed="true"] { outline: 3px solid var(--outline); outline-offset: 1px; }
+  .yearlbl { grid-column: 1 / -1; font-weight: 800; font-size: .8rem; color: var(--ink-2); margin-top: 4px; }
+  .bld { display: grid; grid-template-columns: 4em minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; padding: 8px 10px; border: 2px solid var(--line); border-radius: 12px; background: var(--surface); font-weight: 800; }
+  .ach { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 2px solid var(--line); border-radius: 12px; background: var(--surface); font-weight: 800; }
+  .ach label { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; cursor: pointer; } .ach input { width: 20px; height: 20px; accent-color: var(--ok); }
+  .ach.done { background: var(--mint-soft); } .ach small { color: var(--ink-2); font-weight: 700; }
+  .stack { display: grid; gap: 6px; }
+  .log { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .9rem; font-weight: 700; }
+  .log time { color: var(--ink-2); font-size: .8rem; margin-right: 6px; }
+  .codebox { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--yellow-soft); border: 2px dashed var(--outline); border-radius: 16px; padding: 10px 14px; }
+  .code { font: 700 1.5rem/1 Fredoka, ui-rounded, sans-serif; letter-spacing: .16em; background: var(--surface); border: var(--edge); border-radius: 12px; padding: 6px 8px 6px 14px; }
+  .schema { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .schema li { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 2px solid var(--line); border-radius: 12px; background: var(--surface); font-weight: 800; }
+  .schema li small { color: var(--ink-2); font-weight: 700; flex: 1; }
+  footer { margin: 40px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
+  @media (max-width: 760px) {
+    .wrap { padding: 0 16px; } header.top { padding-top: 22px; } .logo { width: 54px; height: 54px; } .brand { gap: 12px; }
+    .card { box-shadow: var(--pop-sm); padding: 16px; border-radius: 18px; }
+    .weeks { grid-template-columns: repeat(5, minmax(0, 1fr)); } .bld { grid-template-columns: 3em minmax(0, 1fr) auto; } .bld .bstate, .bld .blvl { grid-column: 2 / -1; }
+    .chars { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <a class="brand" href="/">
+        <svg class="logo" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="3" y="3" width="66" height="66" rx="18" fill="var(--yellow)" stroke="var(--outline)" stroke-width="3"/>
+          <g transform="translate(36 10) rotate(14)"><rect x="0" y="0" width="22" height="22" rx="5" fill="#fff" stroke="var(--outline)" stroke-width="2.5"/>
+            <circle cx="6" cy="6" r="2.2" fill="var(--outline)"/><circle cx="11" cy="11" r="2.2" fill="var(--outline)"/><circle cx="16" cy="16" r="2.2" fill="var(--outline)"/></g>
+          <g transform="translate(9 20) scale(1.75)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.4" stroke-linejoin="round"/></g>
+        </svg>
+        <div>
+          <h1>Campaign <span class="hl">Tracker</span></h1>
+          <p class="tagline">Scenarios, characters, unlocks and achievements, for any campaign.</p>
+        </div>
+      </a>
+      <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats">Charts</a><a href="/tools" aria-current="page">Tools</a></nav>
+    </div>
+  </header>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools" id="crumb">‹ All tools</a></nav>
+  <main id="app"><section class="card"><p>Loading…</p></section></main>
+  <footer>Campaigns are saved in this browser. Turn on a backup code to keep a copy online and open it on another device; whoever has the code can open and change it.</footer>
+</div>
+<script src="/tools/campaign-templates.js"></script>
+<script src="/tools/shelf-sync.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const KEY = "game-shelf:campaigns", GOALS = "game-shelf:goals", T = window.CAMPAIGN_TEMPLATES;
+  const uid = (p = "x") => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+  const fmtDate = (s) => s ? new Date(s.length === 10 ? s + "T12:00" : s).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "";
+  const copy = (o) => JSON.parse(JSON.stringify(o));
+  const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") ?? d; } catch (e) { return d; } };
+  let DB = load(KEY, null); if (!DB || typeof DB.campaigns !== "object") DB = { campaigns: {}, templates: {} };
+  DB.templates = DB.templates || {};
+  const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} };
+
+  /* ---------- Campaign model ---------- */
+  function blankCampaign(tpl, name, game) {
+    const schema = copy({ charFields: tpl.charFields, sections: tpl.sections, lists: tpl.lists, unlockKinds: tpl.unlockKinds, retirement: tpl.retirement });
+    const c = { id: uid("c"), name: name || tpl.name, game: game || tpl.game || "", template: tpl.id, icon: tpl.icon || "📜", schema, created: today(), updated: Date.now(),
+      partyName: "", tracks: {}, res: {}, calendar: { week: 1, notes: {} }, buildings: [], scenarios: [], characters: [], achievements: [], unlocks: [], plays: [], log: [] };
+    for (const s of schema.sections) if (s.type === "tracks") for (const t of s.items) c.tracks[t.id] = t.def ?? 0;
+    addLog(c, `Campaign started${c.game ? ` (${c.game})` : ""}`);
+    return c;
+  }
+  function addLog(c, text) { c.log.unshift({ date: today(), text }); c.log = c.log.slice(0, 300); }
+  const fieldVal = (ch, f) => ch.fields?.[f.id] ?? (f.type === "checks" ? [] : f.type === "resources" ? {} : f.def ?? (f.type === "number" || f.type === "xp" ? 0 : ""));
+  const levelFor = (f, xp) => { let l = 1; (f.thresholds || []).forEach((t, i) => { if (xp >= t) l = i + 1; }); return l; };
+  const scenByNum = (c, n) => c.scenarios.find((s) => String(s.num).toLowerCase() === String(n).toLowerCase());
+  const sortScen = (a, b) => { const na = parseFloat(a.num), nb = parseFloat(b.num); return (isNaN(na) ? 1e9 : na) - (isNaN(nb) ? 1e9 : nb) || String(a.num).localeCompare(String(b.num)); };
+  const achName = (c, id) => c.achievements.find((a) => a.id === id)?.name || "?";
+  const unmet = (c, s) => (s.requires || []).filter((r) => { const a = c.achievements.find((x) => x.id === r.ach); return !a || !!a.done !== r.need; });
+  const goalsStore = () => load(GOALS, { goals: [] });
+  const goalPct = (g) => { const st = g.steps || []; if (!st.length) return g.done ? 100 : 0; const p = st.reduce((s, x) => s + (x.type === "count" ? Math.min(1, (x.value || 0) / (x.target || 1)) : x.done ? 1 : 0), 0); return Math.round(100 * p / st.length); };
+
+  /* ---------- Saving + backup ---------- */
+  const params = new URLSearchParams(location.search);
+  let CID = params.get("c"), C = CID ? DB.campaigns[CID] : null, tab = (location.hash || "#overview").slice(1), msg = "", syncState = "", pushT = null;
+  function save(rerender = true) {
+    if (C) { C.updated = Date.now(); if (C.code) { C.dirty = true; clearTimeout(pushT); pushT = setTimeout(push, 1200); syncState = "Saving…"; } }
+    persist(); if (rerender) render();
+  }
+  const payload = (c) => { const { code, dirty, syncedAt, ...rest } = c; return rest; };
+  async function push() {
+    const c = C; if (!c?.code) return;
+    try { const r = await ShelfSync.put(c.code, "campaign", payload(c)); c.syncedAt = r.updatedAt; c.dirty = false; syncState = ""; persist(); }
+    catch (e) { syncState = /not_found/.test(e.message) ? "That backup code is gone; saved only here." : "Offline · will back up when you're back"; if (/not_found/.test(e.message)) { delete c.code; persist(); } else { clearTimeout(pushT); pushT = setTimeout(push, 15000); } }
+    renderSync();
+  }
+  async function pull() {
+    const c = C; if (!c?.code || c.dirty) return;
+    try {
+      const r = await ShelfSync.get(c.code, "campaign"); if (!r) return;
+      if (!c.syncedAt || r.updatedAt > c.syncedAt) { Object.keys(c).forEach((k) => { if (!["code", "id"].includes(k)) delete c[k]; }); Object.assign(c, r.data, { id: c.id, code: c.code, syncedAt: r.updatedAt, dirty: false }); persist(); render(); }
+    } catch (e) { syncState = "Offline"; renderSync(); }
+  }
+  addEventListener("online", () => { if (C?.dirty) push(); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) pull(); });
+
+  /* ---------- Render ---------- */
+  function render() {
+    const app = $("app"), y = scrollY, open = new Set([...document.querySelectorAll("details[data-key][open]")].map((d) => d.dataset.key));
+    const foc = document.activeElement?.dataset?.focus;
+    if (!C) { app.innerHTML = listHtml(); $("crumb").href = "/tools"; $("crumb").textContent = "‹ All tools"; }
+    else { app.innerHTML = campaignHtml(); $("crumb").href = "/tools/campaigns"; $("crumb").textContent = "‹ All campaigns"; document.title = `${C.name} · Campaign tracker`; }
+    document.querySelectorAll("details[data-key]").forEach((d) => { if (open.has(d.dataset.key)) d.open = true; });
+    if (foc) document.querySelector(`[data-focus="${foc}"]`)?.focus({ preventScroll: true });
+    scrollTo(0, y);
+  }
+  function renderSync() { const el = $("syncline"); if (el) el.outerHTML = syncHtml(); }
+
+  // ---- Campaign list ----
+  let pick = "frosthaven";
+  function listHtml() {
+    const list = Object.values(DB.campaigns).sort((a, b) => b.updated - a.updated);
+    const mine = Object.values(DB.templates);
+    const tpls = [...window.CAMPAIGN_ORDER.map((k) => T[k]), ...mine];
+    const sel = tpls.find((t) => t.id === pick) || T.blank;
+    return `${list.length ? `<section class="card" aria-labelledby="mineH"><h2 class="sec" id="mineH">Your campaigns</h2>
+        <ul class="clist">${list.map((c) => { const done = c.scenarios.filter((s) => s.status === "done").length, act = c.characters.filter((x) => x.status === "active");
+          return `<li><a href="/tools/campaigns?c=${encodeURIComponent(c.id)}"><span style="font-size:1.6rem" aria-hidden="true">${esc(c.icon || "📜")}</span><b>${esc(c.name)}</b>
+            <small>${esc(c.game || "Campaign")} · ${done} scenario${done === 1 ? "" : "s"} done${act.length ? ` · ${esc(act.map((x) => x.name).join(", "))}` : ""}</small>${c.code ? `<small>Backed up · ${esc(c.code)}</small>` : ""}</a></li>`; }).join("")}</ul></section>` : ""}
+      <section class="card" aria-labelledby="newH"><h2 class="sec" id="newH">Start a campaign</h2>
+        <p class="sub">Pick a setup. It decides what gets tracked (character stats, campaign tracks, achievement lists); you add scenarios, achievements and unlocks as you play, so nothing is spoiled.</p>
+        <div class="tpls" role="group" aria-label="Setup">${tpls.map((t) => `<button class="tpl" type="button" data-tpl="${esc(t.id)}" aria-pressed="${t.id === sel.id}"><span class="ic" aria-hidden="true">${esc(t.icon || "📜")}</span><b>${esc(t.name)}</b><span>${esc(t.blurb || "Your saved setup.")}</span></button>`).join("")}</div>
+        <div class="grid2"><label class="field"><span>Campaign name</span><input type="text" id="newName" maxlength="60" placeholder="${esc(sel.name)}${sel.id === "blank" ? "" : " campaign"}"></label>
+          <label class="field"><span>Game</span><input type="text" id="newGame" maxlength="80" list="campaignGames" value="${esc(sel.game || "")}" placeholder="Which game?"></label></div>
+        <div class="row"><button class="btn yellow big" type="button" id="create">Start campaign</button></div>
+      </section>
+      <section class="card" aria-labelledby="openH"><h2 class="sec" id="openH">Open a backed-up campaign</h2>
+        <p class="sub">Have a backup code from another device? Open it here.</p>
+        <div class="row"><label class="vh" for="openCode">Backup code</label><input type="text" id="openCode" maxlength="6" placeholder="ABC234" autocomplete="off" autocapitalize="characters"><button class="btn" type="button" id="openBtn">Open</button><span class="note" role="status">${esc(msg)}</span></div>
+      </section>`;
+  }
+
+  // ---- Campaign ----
+  const TABS = () => [["overview", "Overview"], ["scenarios", "Scenarios"], ["party", "Party"], ...(C.schema.sections.length ? [["camp", C.schema.sections[0].label]] : []), ["achievements", "Achievements"], ["unlocks", "Unlocks"], ["setup", "Setup"]];
+  function syncHtml() { return `<span class="sync${/Offline|gone/.test(syncState) ? " off" : ""}" id="syncline">${C.code ? `<i aria-hidden="true"></i>${esc(syncState || `Backed up · ${C.code}`)}` : `<span class="note">Saved on this device</span>`}</span>`; }
+  function campaignHtml() {
+    if (!TABS().some(([k]) => k === tab)) tab = "overview";
+    const body = { overview: overviewHtml, scenarios: scenariosHtml, party: partyHtml, camp: campHtml, achievements: achHtml, unlocks: unlocksHtml, setup: setupHtml }[tab]();
+    return `<section class="card chead"><div class="row" style="justify-content:space-between"><h2>${esc(C.icon || "")} ${esc(C.name)}</h2>${syncHtml()}</div>
+        <div class="meta">${C.game ? `<span>${esc(C.game)}</span>` : ""}${C.partyName ? `<span>Party: ${esc(C.partyName)}</span>` : ""}<span>Started ${esc(fmtDate(C.created))}</span></div></section>
+      <nav class="tabs" role="tablist" aria-label="Campaign">${TABS().map(([k, l]) => `<button type="button" role="tab" data-tab="${k}" aria-selected="${tab === k}">${esc(l)}</button>`).join("")}</nav>
+      ${body}`;
+  }
+  const stepper = (key, val, label) => `<span class="stepper"><button type="button" data-step="${key}:-1" aria-label="${esc(label)} down">−</button><label class="vh" for="n-${key}">${esc(label)}</label><input type="number" id="n-${key}" data-num="${key}" value="${val}" inputmode="numeric"><button type="button" data-step="${key}:1" aria-label="${esc(label)} up">+</button></span>`;
+
+  function overviewHtml() {
+    const s = C.scenarios, done = s.filter((x) => x.status === "done").length, avail = s.filter((x) => x.status === "available").length;
+    const act = C.characters.filter((x) => x.status === "active");
+    const tr = C.schema.sections.filter((x) => x.type === "tracks").flatMap((x) => x.items);
+    const ready = act.filter((ch) => readyToRetire(ch));
+    return `<section class="card"><h2 class="sec">At a glance</h2>
+        <dl class="tiles"><div><dt>Scenarios done</dt><dd>${done}</dd></div><div><dt>Available</dt><dd>${avail}</dd></div><div><dt>Plays logged</dt><dd>${C.plays.length}</dd></div>
+          <div><dt>Achievements</dt><dd>${C.achievements.filter((a) => a.done).length}</dd></div><div><dt>Unlocks</dt><dd>${C.unlocks.length}</dd></div><div><dt>Retired</dt><dd>${C.characters.filter((x) => x.status === "retired").length}</dd></div>
+          ${tr.map((t) => `<div><dt>${esc(t.label)}</dt><dd>${C.tracks[t.id] ?? t.def ?? 0}</dd></div>`).join("")}
+          ${C.schema.sections.some((x) => x.type === "calendar") ? `<div><dt>Week</dt><dd>${C.calendar.week}</dd></div>` : ""}</dl>
+        ${ready.length ? `<p class="goal ready">🎉 ${esc(ready.map((x) => x.name).join(" and "))} finished ${ready.length === 1 ? "their personal goal and is" : "their personal goals and are"} ready to retire. <button class="link" type="button" data-tab="party">Go to the party</button></p>` : ""}
+      </section>
+      <section class="card"><h2 class="sec">The party</h2>
+        ${act.length ? `<div class="row">${act.map((ch) => `<span class="pill">${esc(ch.name)}${ch.cls ? ` · ${esc(ch.cls)}` : ""}${C.schema.charFields.some((f) => f.id === "level") ? ` · L${esc(fieldVal(ch, { id: "level", def: 1 }))}` : ""}</span>`).join("")}</div>` : `<p class="empty">No one in the party yet. <button class="link" type="button" data-tab="party">Add characters</button></p>`}
+        ${avail ? `<p class="note">Up next: ${s.filter((x) => x.status === "available").sort(sortScen).slice(0, 6).map((x) => `#${esc(x.num)}${x.name ? ` ${esc(x.name)}` : ""}`).join(", ")}</p>` : ""}</section>
+      <section class="card"><h2 class="sec">History</h2>${C.log.length ? `<ul class="log">${C.log.slice(0, 25).map((l) => `<li><time>${esc(fmtDate(l.date))}</time>${esc(l.text)}</li>`).join("")}</ul>` : `<p class="empty">Nothing yet.</p>`}</section>`;
+  }
+
+  // ---- Scenarios ----
+  let sFilter = "all", playFor = null;
+  function scenariosHtml() {
+    const counts = { all: C.scenarios.length, available: 0, done: 0, locked: 0 }; C.scenarios.forEach((s) => counts[s.status]++);
+    const list = C.scenarios.filter((s) => sFilter === "all" || s.status === sFilter).sort(sortScen);
+    return `<section class="card"><h2 class="sec">Scenarios</h2>
+      <p class="sub">Add scenarios as your game makes them available. Mark which ones each unlocks and what they need, then log each attempt: a win marks it done and opens what it unlocks.</p>
+      <div class="row"><label class="field"><span>Number</span><input type="text" id="sNum" maxlength="12" style="width:6em" placeholder="1"></label>
+        <label class="field" style="flex:1 1 200px"><span>Name (optional)</span><input type="text" id="sName" maxlength="80" placeholder="Scenario name"></label>
+        <label class="field"><span>Status</span><select id="sStatus"><option value="available">Available</option><option value="locked">Locked</option><option value="done">Done</option></select></label>
+        <button class="btn sm yellow" type="button" id="addScen" style="align-self:end">Add scenario</button></div>
+      <div class="filters" role="group" aria-label="Show">${[["all", "All"], ["available", "Available"], ["done", "Done"], ["locked", "Locked"]].map(([k, l]) => `<button type="button" data-sfilter="${k}" aria-pressed="${sFilter === k}">${l} · ${counts[k]}</button>`).join("")}</div>
+      ${list.length ? `<ul class="scen">${list.map(scenHtml).join("")}</ul>` : `<p class="empty">${C.scenarios.length ? "None here." : "No scenarios yet. Add the first one above."}</p>`}</section>`;
+  }
+  function scenHtml(s) {
+    const need = unmet(C, s), plays = C.plays.filter((p) => p.scen === s.id);
+    const allAch = C.achievements;
+    return `<li><details data-key="s-${s.id}"><summary><span class="num">${esc(s.num)}</span><span class="nm">${esc(s.name || "Scenario " + s.num)}${need.length && s.status !== "done" ? ` <span class="warn">⚠ needs ${esc(need.map((r) => (r.need ? "" : "no ") + achName(C, r.ach)).join(", "))}</span>` : ""}</span>
+        ${plays.length ? `<span class="note">${plays.length} ${plays.length === 1 ? "try" : "tries"}</span>` : ""}<span class="pill ${s.status}">${s.status === "done" ? "✓ Done" : s.status === "available" ? "Available" : "Locked"}</span></summary>
+      <div class="sbody">
+        <div class="grid2"><label class="field"><span>Name</span><input type="text" data-sedit="${s.id}:name" value="${esc(s.name)}" maxlength="80"></label>
+          <label class="field"><span>Status</span><select data-sedit="${s.id}:status">${["available", "locked", "done"].map((v) => `<option value="${v}"${v === s.status ? " selected" : ""}>${v[0].toUpperCase() + v.slice(1)}</option>`).join("")}</select></label>
+          <label class="field"><span>Unlocks scenarios <small>(numbers, comma-separated)</small></span><input type="text" data-sedit="${s.id}:unlocks" value="${esc((s.unlocks || []).join(", "))}" placeholder="e.g. 3, 4"></label></div>
+        <div class="field"><span>Needs <small>(achievements that must, or must not, be in place)</small></span>
+          ${(s.requires || []).length ? `<div class="checks">${s.requires.map((r, i) => `<span class="pill">${r.need ? "" : "Not "}${esc(achName(C, r.ach))}<button class="x" style="width:22px;height:22px" type="button" data-unreq="${s.id}:${i}" aria-label="Remove requirement">×</button></span>`).join("")}</div>` : ""}
+          ${allAch.length ? `<div class="row"><select data-reqach="${s.id}" aria-label="Achievement"><option value="">Add a requirement…</option>${allAch.map((a) => `<option value="${a.id}">${esc(a.name)}</option>`).join("")}</select><select data-reqneed="${s.id}" aria-label="Must it be complete?"><option value="1">must be complete</option><option value="0">must NOT be complete</option></select><button class="btn sm" type="button" data-addreq="${s.id}">Add</button></div>` : `<p class="note">Add achievements in the Achievements tab to use them as requirements.</p>`}
+          <input type="text" data-sedit="${s.id}:reqText" value="${esc(s.reqText || "")}" placeholder="Other requirements, in your words" aria-label="Other requirements"></div>
+        <label class="field"><span>Notes</span><textarea data-sedit="${s.id}:notes" maxlength="2000">${esc(s.notes || "")}</textarea></label>
+        ${plays.length ? `<div class="field"><span>Attempts</span><ul class="plays">${plays.map((p) => `<li><span class="pill ${p.result}">${p.result === "win" ? "Win" : "Loss"}</span>${esc(fmtDate(p.date))}${p.level != null && p.level !== "" ? ` · level ${esc(p.level)}` : ""}${p.party?.length ? ` · ${esc(p.party.map((id) => C.characters.find((x) => x.id === id)?.name || "?").join(", "))}` : ""}${p.notes ? ` · ${esc(p.notes)}` : ""}<button class="x" style="width:22px;height:22px" type="button" data-unplay="${p.id}" aria-label="Delete this attempt">×</button></li>`).join("")}</ul></div>` : ""}
+        ${playFor === s.id ? playForm(s) : `<div class="row"><button class="btn sm yellow" type="button" data-playform="${s.id}">Log an attempt</button><button class="link danger" type="button" data-delscen="${s.id}">Delete scenario</button></div>`}
+      </div></details></li>`;
+  }
+  function playForm(s) {
+    const act = C.characters.filter((x) => x.status !== "retired"), open = C.achievements.filter((a) => !a.done);
+    return `<div class="playform" role="group" aria-label="Log an attempt at scenario ${esc(s.num)}">
+      <div class="row"><label class="field"><span>Date</span><input type="date" id="pDate" value="${today()}"></label>
+        <label class="field"><span>Result</span><select id="pResult"><option value="win">Win</option><option value="loss">Loss</option></select></label>
+        <label class="field"><span>Scenario level</span><input type="number" id="pLevel" min="0" max="10" style="width:5em"></label></div>
+      ${act.length ? `<div class="field"><span>Who played</span><div class="checks">${act.map((ch) => `<label class="chk"><input type="checkbox" data-pparty="${ch.id}"${ch.status === "active" ? " checked" : ""}>${esc(ch.name)}</label>`).join("")}</div></div>` : ""}
+      ${open.length ? `<div class="field"><span>Achievements gained</span><div class="checks">${open.map((a) => `<label class="chk"><input type="checkbox" data-pach="${a.id}">${esc(a.name)}</label>`).join("")}</div></div>` : ""}
+      <div class="row"><label class="field" style="flex:1 1 200px"><span>New achievement gained</span><input type="text" id="pNewAch" maxlength="80" placeholder="Name, if it's new"></label>
+        <label class="field"><span>List</span><select id="pNewAchList">${C.schema.lists.map((l) => `<option value="${l.id}">${esc(l.label)}</option>`).join("")}</select></label></div>
+      <div class="row"><label class="field"><span>Also unlocked</span><select id="pUnlockKind">${C.schema.unlockKinds.map((k) => `<option>${esc(k)}</option>`).join("")}</select></label>
+        <label class="field" style="flex:1 1 200px"><span>Name</span><input type="text" id="pUnlockName" maxlength="80" placeholder="Optional"></label></div>
+      <label class="field"><span>Notes</span><input type="text" id="pNotes" maxlength="300" placeholder="How it went"></label>
+      <p class="note">${(s.unlocks || []).length ? `A win opens scenario${s.unlocks.length === 1 ? "" : "s"} ${esc(s.unlocks.join(", "))}.` : "Add the scenarios it unlocks above, and a win opens them."}</p>
+      <div class="row"><button class="btn sm yellow" type="button" data-saveplay="${s.id}">Save attempt</button><button class="link" type="button" data-cancelplay="1">Cancel</button></div></div>`;
+  }
+
+  // ---- Party ----
+  function readyToRetire(ch) { const g = linkedGoal(ch); return ch.status !== "retired" && (g ? goalPct(g) >= 100 : ch.goalSnap?.done); }
+  function linkedGoal(ch) { return goalsStore().goals.find((g) => g.link?.campaign === C.id && g.link?.char === ch.id) || null; }
+  let retiring = null;
+  function partyHtml() {
+    const groups = [["active", "In the party"], ["benched", "On the bench"], ["retired", "Retired"]];
+    return `<section class="card"><h2 class="sec">Party</h2>
+      <div class="row"><label class="field" style="flex:1 1 220px"><span>Party name</span><input type="text" id="partyName" maxlength="60" value="${esc(C.partyName)}" placeholder="Our party"></label></div>
+      <div class="row"><label class="field"><span>Character name</span><input type="text" id="chName" maxlength="40"></label><label class="field"><span>Class</span><input type="text" id="chClass" maxlength="40"></label>
+        <label class="field"><span>Player</span><input type="text" id="chPlayer" maxlength="30" list="playerNames"></label><button class="btn sm yellow" type="button" id="addChar" style="align-self:end">Add character</button></div>
+      <datalist id="playerNames">${[...new Set(C.characters.map((x) => x.player).filter(Boolean))].map((p) => `<option value="${esc(p)}">`).join("")}</datalist></section>
+      ${groups.map(([st, label]) => { const list = C.characters.filter((x) => x.status === st); return list.length || st === "active" ? `<section class="card"><h2 class="sec">${label} <span class="note">${list.length}</span></h2>
+        ${list.length ? `<div class="chars">${list.map(charHtml).join("")}</div>` : `<p class="empty">No one yet.</p>`}</section>` : ""; }).join("")}`;
+  }
+  function charHtml(ch) {
+    const g = linkedGoal(ch), goals = goalsStore().goals.filter((x) => !x.link?.char), ret = ch.status === "retired";
+    const pct = g ? goalPct(g) : ch.goalSnap?.pct;
+    return `<article class="char${ret ? " retired" : ""}" aria-label="${esc(ch.name)}">
+      <div class="row" style="justify-content:space-between"><div><h3>${esc(ch.name)}</h3><div class="cls">${esc([ch.cls, ch.player && `played by ${ch.player}`].filter(Boolean).join(" · "))}</div></div>
+        ${ret ? `<span class="pill">Retired ${esc(fmtDate(ch.retired))}</span>` : ""}</div>
+      ${ret ? `<details data-key="rf-${ch.id}"><summary class="hint">Final stats</summary><div class="cfields" style="margin-top:8px">${C.schema.charFields.map((f) => fieldHtml(ch, f, ret)).join("")}</div></details>` : `<div class="cfields">${C.schema.charFields.map((f) => fieldHtml(ch, f, ret)).join("")}</div>`}
+      ${C.schema.retirement !== false ? `<div class="goal${readyToRetire(ch) ? " ready" : ""}"><b>Personal goal</b>
+        ${g ? `<span>${esc(g.title)}</span><div class="bar"><i style="width:${pct}%"></i></div><span class="hint" style="color:inherit">${pct}% · <a href="/tools/goals#${esc(g.id)}">Open in goals</a></span>`
+          : ch.goalSnap ? `<span>${esc(ch.goalSnap.title)}</span><div class="bar"><i style="width:${ch.goalSnap.pct}%"></i></div><span class="hint">${ch.goalSnap.pct}% (from the last time this device saw it)</span>`
+          : ret ? `<span class="hint">None linked.</span>` : `<div class="row">${goals.length ? `<select data-linkgoal="${ch.id}" aria-label="Link a goal"><option value="">Link a goal…</option>${goals.map((x) => `<option value="${esc(x.id)}">${esc(x.title)}</option>`).join("")}</select>` : ""}
+              <a class="btn sm" href="/tools/goals?campaign=${encodeURIComponent(C.id)}&char=${encodeURIComponent(ch.id)}">+ New goal</a></div>`}
+        ${readyToRetire(ch) ? `<b>🎉 Goal complete: ready to retire</b>` : ""}</div>` : ""}
+      ${ret ? `<div class="row"><button class="link" type="button" data-unretire="${ch.id}">Undo retirement</button></div>`
+        : retiring === ch.id ? `<div class="playform"><b>Retire ${esc(ch.name)}?</b><div class="row"><label class="field"><span>Did it unlock anything?</span><select id="rKind">${C.schema.unlockKinds.map((k) => `<option>${esc(k)}</option>`).join("")}</select></label><label class="field" style="flex:1 1 160px"><span>Name</span><input type="text" id="rName" maxlength="80" placeholder="Optional"></label></div>
+            <div class="row"><button class="btn sm yellow" type="button" data-retire="${ch.id}">Retire</button><button class="link" type="button" data-cancelretire="1">Cancel</button></div></div>`
+        : `<div class="row">${C.schema.retirement !== false ? `<button class="btn sm${readyToRetire(ch) ? " yellow" : ""}" type="button" data-askretire="${ch.id}">Retire…</button>` : ""}
+            <button class="btn sm" type="button" data-bench="${ch.id}">${ch.status === "active" ? "Bench" : "Back in the party"}</button>${g ? `<button class="link" type="button" data-unlinkgoal="${ch.id}">Unlink goal</button>` : ""}<button class="link danger" type="button" data-delchar="${ch.id}">Delete</button></div>`}
+    </article>`;
+  }
+  function fieldHtml(ch, f, ro) {
+    const v = fieldVal(ch, f), key = `cf:${ch.id}:${f.id}`;
+    if (f.type === "number") return `<div class="cf"><span>${esc(f.label)}</span>${stepper(key, v, `${ch.name} ${f.label}`)}</div>`;
+    if (f.type === "xp") { const lvl = levelFor(f, v), cur = Number(fieldVal(ch, { id: "level", def: 1 })), next = f.thresholds?.[lvl];
+      return `<div class="cf"><span>${esc(f.label)}${f.thresholds ? `<br><span class="hint">${lvl > cur ? `⬆ enough for level ${lvl}` : next != null ? `${next - v} to level ${lvl + 1}` : "max level"}</span>` : ""}</span>${stepper(key, v, `${ch.name} ${f.label}`)}</div>`; }
+    if (f.type === "checks") { const on = Array.isArray(v) ? v.length : 0;
+      return `<div class="cf block"><span>${esc(f.label)} <span class="hint">${on}/${f.count}${f.group ? ` · ${Math.floor(on / f.group)} perk${Math.floor(on / f.group) === 1 ? "" : "s"} earned` : ""}</span></span>
+        <div class="boxes">${Array.from({ length: f.count }, (_, i) => `<button class="box${f.group && (i + 1) % f.group === 0 ? " gap" : ""}" type="button" data-box="${key}:${i}" data-focus="${key}:${i}" aria-pressed="${i < on}" aria-label="${esc(f.label)} ${i + 1}">${i < on ? "✓" : ""}</button>`).join("")}</div></div>`; }
+    if (f.type === "resources") return `<details class="cf block" data-key="${key}"><summary><b>${esc(f.label)}</b> <span class="hint">${esc(f.names.filter((n) => v[n]).map((n) => `${n} ${v[n]}`).join(" · ") || "none")}</span></summary>
+        <div class="res" style="margin-top:6px">${f.names.map((n) => `<div class="track" style="padding:4px 8px"><span>${esc(n)}</span>${stepper(`${key}:${n}`, v[n] || 0, `${ch.name} ${n}`)}</div>`).join("")}</div></details>`;
+    if (f.type === "notes") return `<label class="cf block"><span>${esc(f.label)}</span><textarea data-ctext="${key}" maxlength="3000" rows="2">${esc(v)}</textarea></label>`;
+    return `<label class="cf"><span>${esc(f.label)}</span><input type="text" data-ctext="${key}" value="${esc(v)}" maxlength="120"></label>`;
+  }
+
+  // ---- Game-specific sections (outpost, calendar, buildings…) ----
+  let weekSel = null;
+  function campHtml() {
+    return C.schema.sections.map((s) => {
+      if (s.type === "tracks") return `<section class="card"><h2 class="sec">${esc(s.label)}</h2>${s.items.length ? `<div class="tracks">${s.items.map((t) => `<div class="track"><span>${esc(t.label)}</span>${stepper(`tr:${t.id}`, C.tracks[t.id] ?? t.def ?? 0, t.label)}</div>`).join("")}</div>` : `<p class="empty">No tracks yet. Add them in Setup.</p>`}</section>`;
+      if (s.type === "resources") { const r = C.res[s.id] || {}; return `<section class="card"><h2 class="sec">${esc(s.label)}</h2><div class="res">${s.names.map((n) => `<div class="track"><span>${esc(n)}</span>${stepper(`res:${s.id}:${n}`, r[n] || 0, `${s.label} ${n}`)}</div>`).join("")}</div></section>`; }
+      if (s.type === "calendar") return calendarHtml(s);
+      if (s.type === "buildings") return buildingsHtml(s);
+      return "";
+    }).join("");
+  }
+  const seasonOf = (s, w) => s.seasons[Math.floor((w - 1) / s.seasonEvery) % s.seasons.length];
+  function calendarHtml(s) {
+    const w = C.calendar.week, perYear = s.seasonEvery * s.seasons.length, yr = Math.floor((w - 1) / perYear) + 1, ws = weekSel ?? w;
+    return `<section class="card"><h2 class="sec">${esc(s.label)}</h2>
+      <div class="row"><span class="pill available" style="font-size:1rem">Week ${w} · ${esc(seasonOf(s, w))} · Year ${yr}</span>
+        <button class="btn sm" type="button" data-week="-1">‹ Back a week</button><button class="btn sm yellow" type="button" data-week="1">Pass a week ›</button></div>
+      <p class="sub">Tap a week to note what happens then (sections to read, events). Weeks with notes have a dot; the current week has a ring.</p>
+      <div class="weeks">${Array.from({ length: s.weeks }, (_, i) => i + 1).map((n) => `${(n - 1) % perYear === 0 ? `<span class="yearlbl">Year ${Math.floor((n - 1) / perYear) + 1}</span>` : ""}<button type="button" class="wk ${seasonOf(s, n).toLowerCase()}${n < w ? " past" : ""}${n === w ? " now" : ""}${C.calendar.notes[n] ? " has" : ""}" data-wk="${n}" data-focus="wk${n}" aria-pressed="${n === ws}" aria-label="Week ${n}, ${seasonOf(s, n)}${C.calendar.notes[n] ? ": " + esc(C.calendar.notes[n]) : ""}">${n}</button>`).join("")}</div>
+      <label class="field"><span>Week ${ws} notes (${esc(seasonOf(s, ws))})</span><input type="text" id="wkNote" data-wknote="${ws}" value="${esc(C.calendar.notes[ws] || "")}" maxlength="200" placeholder="e.g. Read section 12.3"></label>
+      ${(() => { const up = Object.keys(C.calendar.notes).map(Number).filter((n) => n >= w && C.calendar.notes[n]).sort((a, b) => a - b).slice(0, 5); return up.length ? `<p class="note">Coming up: ${up.map((n) => `week ${n}: ${esc(C.calendar.notes[n])}`).join(" · ")}</p>` : ""; })()}
+    </section>`;
+  }
+  function buildingsHtml(s) {
+    const list = [...C.buildings].sort(sortScen);
+    return `<section class="card"><h2 class="sec">${esc(s.label)}</h2>
+      <div class="row"><label class="field"><span>Number</span><input type="text" id="bNum" maxlength="8" style="width:5em"></label><label class="field" style="flex:1 1 180px"><span>Name</span><input type="text" id="bName" maxlength="60"></label>
+        <label class="field"><span>Level</span><input type="number" id="bLvl" value="1" min="0" max="9" style="width:4.5em"></label><button class="btn sm yellow" type="button" id="addBld" style="align-self:end">Add building</button></div>
+      ${list.length ? `<div class="stack">${list.map((b) => `<div class="bld"><span class="num" style="font-family:Fredoka">${esc(b.num)}</span><span>${esc(b.name)}</span>
+          <span class="blvl row" style="gap:6px"><span class="hint">Level</span>${stepper(`bl:${b.id}`, b.level, `${b.name} level`)}</span>
+          <select class="bstate" data-bstate="${b.id}" aria-label="${esc(b.name)} condition">${s.states.map((st) => `<option${st === b.state ? " selected" : ""}>${esc(st)}</option>`).join("")}</select>
+          <button class="x" type="button" data-delbld="${b.id}" aria-label="Remove ${esc(b.name)}">×</button></div>`).join("")}</div>` : `<p class="empty">No buildings yet.</p>`}</section>`;
+  }
+
+  // ---- Achievements + unlocks ----
+  function achHtml() {
+    return C.schema.lists.map((l) => { const items = C.achievements.filter((a) => a.list === l.id);
+      return `<section class="card"><h2 class="sec">${esc(l.label)} <span class="note">${items.filter((a) => a.done).length} of ${items.length}</span></h2>
+        <div class="row"><label class="vh" for="aNew-${l.id}">New ${esc(l.label)}</label><input type="text" id="aNew-${l.id}" data-anew="${l.id}" maxlength="80" placeholder="Add one" style="flex:1 1 220px"><button class="btn sm" type="button" data-addach="${l.id}">Add</button></div>
+        ${items.length ? `<div class="stack">${items.map((a) => `<div class="ach${a.done ? " done" : ""}"><label><input type="checkbox" data-achdone="${a.id}"${a.done ? " checked" : ""}><span>${esc(a.name)}</span></label>${a.done && a.date ? `<small>${esc(fmtDate(a.date))}</small>` : ""}<button class="x" type="button" data-delach="${a.id}" aria-label="Remove ${esc(a.name)}">×</button></div>`).join("")}</div>` : `<p class="empty">None yet.</p>`}</section>`; }).join("");
+  }
+  function unlocksHtml() {
+    const kinds = C.schema.unlockKinds;
+    return `<section class="card"><h2 class="sec">Unlocks</h2><p class="sub">Classes, items, buildings, envelopes… anything the campaign has opened up, and when.</p>
+      <div class="row"><label class="field"><span>Kind</span><select id="uKind">${kinds.map((k) => `<option>${esc(k)}</option>`).join("")}</select></label><label class="field" style="flex:1 1 200px"><span>What</span><input type="text" id="uName" maxlength="80"></label>
+        <label class="field" style="flex:1 1 160px"><span>From</span><input type="text" id="uFrom" maxlength="80" placeholder="e.g. Scenario 12, retirement"></label><button class="btn sm yellow" type="button" id="addUnlock" style="align-self:end">Add</button></div></section>
+      ${[...new Set([...kinds, ...C.unlocks.map((u) => u.kind)])].filter((k) => C.unlocks.some((u) => u.kind === k)).map((k) => `<section class="card"><h2 class="sec">${esc(k)}</h2><div class="stack">${C.unlocks.filter((u) => u.kind === k).map((u) => `<div class="ach"><span style="flex:1">${esc(u.name)}${u.from ? ` <small>· ${esc(u.from)}</small>` : ""}</span><small>${esc(fmtDate(u.date))}</small><button class="x" type="button" data-delunlock="${u.id}" aria-label="Remove ${esc(u.name)}">×</button></div>`).join("")}</div></section>`).join("")
+      || `<section class="card"><p class="empty">Nothing unlocked yet.</p></section>`}`;
+  }
+
+  // ---- Setup ----
+  let showCode = false, confirmDel = false;
+  function setupHtml() {
+    const sc = C.schema, trackSec = sc.sections.find((s) => s.type === "tracks");
+    const typeLbl = { number: "number", xp: "XP (with level hint)", checks: "boxes", text: "text", notes: "notes", resources: "resources" };
+    return `<section class="card"><h2 class="sec">Campaign</h2><div class="grid2">
+        <label class="field"><span>Name</span><input type="text" data-cset="name" value="${esc(C.name)}" maxlength="60"></label>
+        <label class="field"><span>Game</span><input type="text" data-cset="game" value="${esc(C.game)}" maxlength="80" list="campaignGames"></label></div></section>
+      <section class="card"><h2 class="sec">Backup code</h2>
+        <p class="sub">Keeps a copy online. Open it on another device with the code; changes made on either device are saved to the backup. Whoever has the code can open and change it.</p>
+        ${C.code ? `<div class="codebox"><span class="code" aria-label="Code ${C.code.split("").join(" ")}">${showCode ? esc(C.code) : "••••••"}</span><button class="btn sm" type="button" id="toggleCode">${showCode ? "Hide" : "Show"}</button><button class="btn sm yellow" type="button" data-copy="${esc(C.code)}">Copy code</button><button class="link" type="button" id="stopBackup">Stop backing up</button></div>`
+          : `<div class="row"><button class="btn sm yellow" type="button" id="startBackup">Make a backup code</button></div>`}
+        <p class="note" role="status" id="setupMsg">${esc(msg)}</p></section>
+      <section class="card"><h2 class="sec">What's tracked</h2>
+        <h3 class="sub2">Character fields</h3><ul class="schema">${sc.charFields.map((f, i) => `<li>${esc(f.label)} <small>${typeLbl[f.type] || f.type}${f.type === "checks" ? ` · ${f.count}` : ""}${f.type === "resources" ? ` · ${esc(f.names.join(", "))}` : ""}</small><button class="x" type="button" data-delcf="${i}" aria-label="Remove ${esc(f.label)}">×</button></li>`).join("")}</ul>
+        <div class="row"><input type="text" id="cfLabel" maxlength="30" placeholder="New field, e.g. Health" aria-label="New field name"><select id="cfType" aria-label="Field type"><option value="number">Number</option><option value="checks">Boxes</option><option value="text">Text</option><option value="notes">Notes</option><option value="resources">Resources</option></select>
+          <input type="text" id="cfExtra" maxlength="200" placeholder="Boxes: how many · Resources: names, comma-separated" aria-label="Boxes count or resource names" style="flex:1 1 220px"><button class="btn sm" type="button" id="addCf">Add field</button></div>
+        <h3 class="sub2">${esc(trackSec?.label || "Campaign tracks")}</h3><ul class="schema">${(trackSec?.items || []).map((t, i) => `<li>${esc(t.label)} <small>${t.min != null ? `from ${t.min}` : ""}${t.max != null ? ` to ${t.max}` : ""}</small><button class="x" type="button" data-deltr="${i}" aria-label="Remove ${esc(t.label)}">×</button></li>`).join("")}</ul>
+        <div class="row"><input type="text" id="trLabel" maxlength="40" placeholder="New track, e.g. Doom" aria-label="New track name"><input type="number" id="trMin" placeholder="min" aria-label="Lowest value"><input type="number" id="trMax" placeholder="max" aria-label="Highest value"><button class="btn sm" type="button" id="addTr">Add track</button></div>
+        <h3 class="sub2">Achievement lists</h3><ul class="schema">${sc.lists.map((l, i) => `<li>${esc(l.label)}<small></small>${sc.lists.length > 1 ? `<button class="x" type="button" data-dellist="${i}" aria-label="Remove ${esc(l.label)}">×</button>` : ""}</li>`).join("")}</ul>
+        <div class="row"><input type="text" id="listLabel" maxlength="40" placeholder="New list, e.g. Story flags" aria-label="New list name"><button class="btn sm" type="button" id="addList">Add list</button></div>
+        <h3 class="sub2">Kinds of unlocks</h3><input type="text" data-cset="unlockKinds" value="${esc(sc.unlockKinds.join(", "))}" aria-label="Kinds of unlocks, comma-separated" style="width:100%;box-sizing:border-box">
+        <label class="chk" style="margin-top:8px;width:max-content"><input type="checkbox" id="retOn"${sc.retirement !== false ? " checked" : ""}> Characters retire (personal goals)</label>
+        <p class="note">Removing a field hides it; anything already entered stays saved.</p>
+        <div class="row"><input type="text" id="tplName" maxlength="40" placeholder="Template name" value="${esc(C.game || C.name)}" aria-label="Template name"><button class="btn sm" type="button" id="saveTpl">Save as a template</button></div></section>
+      <section class="card"><h2 class="sec">Export</h2><div class="row"><button class="btn sm" type="button" id="export">Download a copy (.json)</button>
+        ${confirmDel ? `<span class="note">Delete this campaign from this device?</span><button class="btn sm primary" type="button" id="delYes">Delete</button><button class="link" type="button" id="delNo">Keep it</button>` : `<button class="link danger" type="button" id="delCamp">Delete campaign</button>`}</div></section>`;
+  }
+
+  /* ---------- Actions ---------- */
+  const num = (v, lo, hi) => { let n = Math.round(Number(v) || 0); if (lo != null) n = Math.max(lo, n); if (hi != null) n = Math.min(hi, n); return n; };
+  function setNum(key, v, rer = true) {
+    const p = key.split(":");
+    if (p[0] === "tr") { const t = C.schema.sections.flatMap((s) => s.items || []).find((x) => x.id === p[1]); C.tracks[p[1]] = num(v, t?.min, t?.max); }
+    else if (p[0] === "res") { (C.res[p[1]] = C.res[p[1]] || {})[p[2]] = num(v, 0); }
+    else if (p[0] === "cf") { const ch = C.characters.find((x) => x.id === p[1]), f = C.schema.charFields.find((x) => x.id === p[2]); ch.fields = ch.fields || {};
+      if (p[3] != null) { ch.fields[f.id] = { ...(ch.fields[f.id] || {}), [p[3]]: num(v, 0) }; } else ch.fields[f.id] = num(v, f.min ?? 0, f.max); }
+    else if (p[0] === "bl") { const b = C.buildings.find((x) => x.id === p[1]); b.level = num(v, 0, 9); }
+    save(rer);
+  }
+  function getNum(key) {
+    const p = key.split(":");
+    if (p[0] === "tr") return C.tracks[p[1]] || 0;
+    if (p[0] === "res") return C.res[p[1]]?.[p[2]] || 0;
+    if (p[0] === "cf") { const ch = C.characters.find((x) => x.id === p[1]); return p[3] != null ? ch.fields?.[p[2]]?.[p[3]] || 0 : Number(fieldVal(ch, C.schema.charFields.find((x) => x.id === p[2]))) || 0; }
+    if (p[0] === "bl") return C.buildings.find((x) => x.id === p[1]).level;
+  }
+  function savePlay(sid) {
+    const s = C.scenarios.find((x) => x.id === sid), result = $("pResult").value;
+    const play = { id: uid("p"), scen: sid, date: $("pDate").value || today(), result, level: $("pLevel").value === "" ? null : Number($("pLevel").value),
+      party: [...document.querySelectorAll("[data-pparty]:checked")].map((x) => x.dataset.pparty), notes: $("pNotes").value.trim() };
+    C.plays.push(play);
+    addLog(C, `${result === "win" ? "Won" : "Lost"} scenario ${s.num}${s.name ? ` (${s.name})` : ""}`);
+    for (const el of document.querySelectorAll("[data-pach]:checked")) { const a = C.achievements.find((x) => x.id === el.dataset.pach); a.done = true; a.date = play.date; addLog(C, `Achievement: ${a.name}`); }
+    const na = $("pNewAch").value.trim(); if (na) { C.achievements.push({ id: uid("a"), list: $("pNewAchList").value, name: na, done: true, date: play.date }); addLog(C, `Achievement: ${na}`); }
+    const un = $("pUnlockName").value.trim(); if (un) { C.unlocks.push({ id: uid("u"), kind: $("pUnlockKind").value, name: un, from: `Scenario ${s.num}`, date: play.date }); addLog(C, `Unlocked ${$("pUnlockKind").value.toLowerCase()}: ${un}`); }
+    if (result === "win") {
+      s.status = "done";
+      for (const n of s.unlocks || []) { let t = scenByNum(C, n); if (!t) { t = { id: uid("s"), num: n, name: "", status: "available", unlocks: [], requires: [] }; C.scenarios.push(t); addLog(C, `Scenario ${n} unlocked`); } else if (t.status === "locked") { t.status = "available"; addLog(C, `Scenario ${n} unlocked`); } }
+    }
+    playFor = null; save();
+  }
+
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    const d = b.dataset;
+    if (d.tpl) { pick = d.tpl; const t = T[pick] || DB.templates[pick]; render(); if (t?.game) $("newGame").value = t.game; return; }
+    if (b.id === "create") { const t = T[pick] || DB.templates[pick] || T.blank; const c = blankCampaign(t, $("newName").value.trim() || ($("newGame").value.trim() || t.name), $("newGame").value.trim());
+      DB.campaigns[c.id] = c; persist(); location.href = `/tools/campaigns?c=${encodeURIComponent(c.id)}#party`; return; }
+    if (b.id === "openBtn") return openCode($("openCode").value);
+    if (!C) return;
+    if (d.tab) { tab = d.tab; history.replaceState(null, "", `#${tab}`); render(); document.querySelector(`[data-tab="${tab}"]`)?.focus(); scrollTo({ top: 0 }); }
+    else if (d.step) { const [k, dir] = [d.step.slice(0, d.step.lastIndexOf(":")), Number(d.step.slice(d.step.lastIndexOf(":") + 1))]; setNum(k, getNum(k) + dir); document.querySelector(`[data-step="${d.step}"]`)?.focus({ preventScroll: true }); }
+    else if (d.box) { const p = d.box.split(":"), ch = C.characters.find((x) => x.id === p[1]), i = Number(p[3]); ch.fields = ch.fields || {}; const on = (ch.fields[p[2]] || []).length;
+      ch.fields[p[2]] = Array.from({ length: i + 1 === on ? i : i + 1 }, () => 1); save(); }
+    // scenarios
+    else if (b.id === "addScen") { const n = $("sNum").value.trim(); if (!n) return $("sNum").focus(); if (scenByNum(C, n)) { msg = ""; $("sNum").setCustomValidity("Already added"); $("sNum").reportValidity(); $("sNum").setCustomValidity(""); return; }
+      C.scenarios.push({ id: uid("s"), num: n, name: $("sName").value.trim(), status: $("sStatus").value, unlocks: [], requires: [] }); addLog(C, `Scenario ${n} added`); save(); $("sNum").focus(); }
+    else if (d.sfilter) { sFilter = d.sfilter; render(); }
+    else if (d.playform) { playFor = d.playform; render(); $("pResult")?.focus(); }
+    else if (d.cancelplay) { playFor = null; render(); }
+    else if (d.saveplay) savePlay(d.saveplay);
+    else if (d.unplay) { C.plays = C.plays.filter((p) => p.id !== d.unplay); save(); }
+    else if (d.delscen) { C.scenarios = C.scenarios.filter((s) => s.id !== d.delscen); C.plays = C.plays.filter((p) => p.scen !== d.delscen); save(); }
+    else if (d.addreq) { const a = document.querySelector(`[data-reqach="${d.addreq}"]`).value; if (!a) return; const s = C.scenarios.find((x) => x.id === d.addreq); s.requires = [...(s.requires || []), { ach: a, need: document.querySelector(`[data-reqneed="${d.addreq}"]`).value === "1" }]; save(); }
+    else if (d.unreq) { const [sid, i] = d.unreq.split(":"); C.scenarios.find((x) => x.id === sid).requires.splice(Number(i), 1); save(); }
+    // party
+    else if (b.id === "addChar") { const n = $("chName").value.trim(); if (!n) return $("chName").focus(); const ch = { id: uid("h"), name: n, cls: $("chClass").value.trim(), player: $("chPlayer").value.trim(), status: "active", joined: today(), fields: {} };
+      C.characters.push(ch); addLog(C, `${n}${ch.cls ? ` the ${ch.cls}` : ""} joined the party`); save(); $("chName").focus(); }
+    else if (d.bench) { const ch = C.characters.find((x) => x.id === d.bench); ch.status = ch.status === "active" ? "benched" : "active"; save(); }
+    else if (d.askretire) { retiring = d.askretire; render(); $("rKind")?.focus(); }
+    else if (d.cancelretire) { retiring = null; render(); }
+    else if (d.retire) { const ch = C.characters.find((x) => x.id === d.retire); ch.status = "retired"; ch.retired = today(); addLog(C, `${ch.name} retired`);
+      const un = $("rName").value.trim(); if (un) { C.unlocks.push({ id: uid("u"), kind: $("rKind").value, name: un, from: `${ch.name}'s retirement`, date: today() }); addLog(C, `Unlocked ${$("rKind").value.toLowerCase()}: ${un}`); }
+      retiring = null; save(); }
+    else if (d.unretire) { const ch = C.characters.find((x) => x.id === d.unretire); ch.status = "active"; delete ch.retired; save(); }
+    else if (d.delchar) { C.characters = C.characters.filter((x) => x.id !== d.delchar); save(); }
+    else if (d.unlinkgoal) { const g = goalsStore(); const goal = g.goals.find((x) => x.link?.campaign === C.id && x.link?.char === d.unlinkgoal); if (goal) { delete goal.link; try { localStorage.setItem(GOALS, JSON.stringify(g)); } catch (err) {} }
+      delete C.characters.find((x) => x.id === d.unlinkgoal).goalSnap; save(); }
+    // camp sections
+    else if (d.week) { C.calendar.week = num(C.calendar.week + Number(d.week), 1, C.schema.sections.find((s) => s.type === "calendar").weeks); weekSel = null; if (Number(d.week) > 0) addLog(C, `Week ${C.calendar.week} began`); save(); }
+    else if (d.wk) { weekSel = Number(d.wk); render(); $("wkNote")?.focus(); }
+    else if (b.id === "addBld") { const n = $("bName").value.trim(); if (!n) return $("bName").focus(); C.buildings.push({ id: uid("b"), num: $("bNum").value.trim(), name: n, level: num($("bLvl").value, 0, 9), state: "Normal" }); addLog(C, `Building: ${n}`); save(); }
+    else if (d.delbld) { C.buildings = C.buildings.filter((x) => x.id !== d.delbld); save(); }
+    // achievements, unlocks
+    else if (d.addach) { const el = $(`aNew-${d.addach}`), n = el.value.trim(); if (!n) return el.focus(); C.achievements.push({ id: uid("a"), list: d.addach, name: n, done: false }); save(); $(`aNew-${d.addach}`).focus(); }
+    else if (d.delach) { C.achievements = C.achievements.filter((x) => x.id !== d.delach); C.scenarios.forEach((s) => { s.requires = (s.requires || []).filter((r) => r.ach !== d.delach); }); save(); }
+    else if (b.id === "addUnlock") { const n = $("uName").value.trim(); if (!n) return $("uName").focus(); C.unlocks.push({ id: uid("u"), kind: $("uKind").value, name: n, from: $("uFrom").value.trim(), date: today() }); addLog(C, `Unlocked ${$("uKind").value.toLowerCase()}: ${n}`); save(); $("uName").focus(); }
+    else if (d.delunlock) { C.unlocks = C.unlocks.filter((x) => x.id !== d.delunlock); save(); }
+    // setup
+    else if (b.id === "addCf") { const l = $("cfLabel").value.trim(); if (!l) return $("cfLabel").focus(); const type = $("cfType").value, extra = $("cfExtra").value.trim();
+      const f = { id: uid("f"), label: l, type }; if (type === "number") f.def = 0; if (type === "checks") f.count = num(extra || 5, 1, 40); if (type === "resources") { f.names = extra.split(",").map((x) => x.trim()).filter(Boolean); if (!f.names.length) return $("cfExtra").focus(); }
+      C.schema.charFields.push(f); save(); }
+    else if (d.delcf) { C.schema.charFields.splice(Number(d.delcf), 1); save(); }
+    else if (b.id === "addTr") { const l = $("trLabel").value.trim(); if (!l) return $("trLabel").focus(); let sec = C.schema.sections.find((s) => s.type === "tracks"); if (!sec) { sec = { id: "tracks", label: "Campaign tracks", type: "tracks", items: [] }; C.schema.sections.unshift(sec); }
+      const t = { id: uid("t"), label: l, def: 0 }; if ($("trMin").value !== "") t.min = Number($("trMin").value); if ($("trMax").value !== "") t.max = Number($("trMax").value); sec.items.push(t); C.tracks[t.id] = t.min > 0 ? t.min : 0; save(); }
+    else if (d.deltr) { C.schema.sections.find((s) => s.type === "tracks").items.splice(Number(d.deltr), 1); save(); }
+    else if (b.id === "addList") { const l = $("listLabel").value.trim(); if (!l) return $("listLabel").focus(); C.schema.lists.push({ id: uid("l"), label: l, scope: "campaign" }); save(); }
+    else if (d.dellist) { C.schema.lists.splice(Number(d.dellist), 1); save(); }
+    else if (b.id === "saveTpl") { const n = $("tplName").value.trim() || C.name; const t = { id: uid("tpl"), name: n, game: C.game, icon: C.icon, blurb: `Your saved setup from “${C.name}”.`, ...copy(C.schema) };
+      DB.templates[t.id] = t; persist(); msg = `Saved “${n}” as a template. It's under Start a campaign.`; render(); setTimeout(() => { msg = ""; }, 4000); }
+    else if (b.id === "startBackup") startBackup();
+    else if (b.id === "toggleCode") { showCode = !showCode; render(); }
+    else if (b.id === "stopBackup") { delete C.code; delete C.syncedAt; delete C.dirty; persist(); msg = "Stopped backing up. The online copy stays until it's overwritten; this device won't use it."; render(); }
+    else if (d.copy) navigator.clipboard.writeText(d.copy).then(() => { $("setupMsg").textContent = "Copied!"; }, () => { $("setupMsg").textContent = d.copy; });
+    else if (b.id === "export") { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(payload(C), null, 2)], { type: "application/json" })); a.download = `${C.name.replace(/[^\w ]+/g, "").trim() || "campaign"}.json`; a.click(); }
+    else if (b.id === "delCamp") { confirmDel = true; render(); $("delNo").focus(); }
+    else if (b.id === "delNo") { confirmDel = false; render(); }
+    else if (b.id === "delYes") { delete DB.campaigns[C.id]; persist(); location.href = "/tools/campaigns"; }
+  });
+  document.addEventListener("change", (e) => {
+    const t = e.target, d = t.dataset; if (!C) return;
+    if (d.num) setNum(d.num, t.value);
+    else if (d.sedit) { const [sid, k] = d.sedit.split(":"), s = C.scenarios.find((x) => x.id === sid);
+      if (k === "unlocks") s.unlocks = t.value.split(/[,\s]+/).map((x) => x.trim()).filter(Boolean); else s[k] = t.value; if (k === "status" && t.value === "done") addLog(C, `Scenario ${s.num} marked done`); save(k === "status" || k === "unlocks"); }
+    else if (d.ctext) { const [, cid, fid] = d.ctext.split(":"), ch = C.characters.find((x) => x.id === cid); ch.fields = ch.fields || {}; ch.fields[fid] = t.value; save(false); }
+    else if (d.bstate) { C.buildings.find((x) => x.id === d.bstate).state = t.value; save(false); }
+    else if (d.achdone) { const a = C.achievements.find((x) => x.id === d.achdone); a.done = t.checked; a.date = t.checked ? today() : null; if (t.checked) addLog(C, `Achievement: ${a.name}`); save(); }
+    else if (d.wknote) { const w = Number(d.wknote); if (t.value.trim()) C.calendar.notes[w] = t.value.trim(); else delete C.calendar.notes[w]; save(); }
+    else if (d.linkgoal) { const g = goalsStore(), goal = g.goals.find((x) => x.id === t.value); if (!goal) return; goal.link = { campaign: C.id, char: d.linkgoal, campaignName: C.name, charName: C.characters.find((x) => x.id === d.linkgoal).name };
+      try { localStorage.setItem(GOALS, JSON.stringify(g)); } catch (err) {} save(); }
+    else if (t.id === "partyName") { C.partyName = t.value.trim(); save(); }
+    else if (d.cset) { if (d.cset === "unlockKinds") C.schema.unlockKinds = t.value.split(",").map((x) => x.trim()).filter(Boolean); else C[d.cset] = t.value.trim() || C[d.cset]; save(); }
+    else if (t.id === "retOn") { C.schema.retirement = t.checked; save(); }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" || e.target.tagName !== "INPUT") return;
+    const id = e.target.id, d = e.target.dataset;
+    const go = { sNum: "addScen", sName: "addScen", chName: "addChar", chClass: "addChar", chPlayer: "addChar", bName: "addBld", uName: "addUnlock", uFrom: "addUnlock", cfLabel: "addCf", trLabel: "addTr", listLabel: "addList", openCode: "openBtn" }[id];
+    if (go) { e.preventDefault(); $(go).click(); } else if (d.anew) { e.preventDefault(); document.querySelector(`[data-addach="${d.anew}"]`).click(); } else if (d.num) { e.preventDefault(); e.target.blur(); }
+  });
+
+  async function startBackup() {
+    msg = "Making a code…"; render();
+    try { const r = await ShelfSync.put(null, "campaign", payload(C)); C.code = r.code; C.syncedAt = r.updatedAt; C.dirty = false; showCode = true; msg = "Backed up. Use this code to open the campaign on another device."; persist(); }
+    catch (e) { msg = "Couldn't reach the backup service. Check your connection and try again."; }
+    render();
+  }
+  async function openCode(raw) {
+    const code = ShelfSync.clean(raw); if (code.length !== 6) { msg = "Codes are 6 letters and numbers."; return render(); }
+    msg = "Opening…"; render();
+    try {
+      const r = await ShelfSync.get(code, "campaign"); if (!r) { msg = `No campaign backed up under ${code}.`; return render(); }
+      const existing = Object.values(DB.campaigns).find((c) => c.code === code || c.id === r.data.id);
+      const c = Object.assign(existing || {}, r.data, { code, syncedAt: r.updatedAt, dirty: false }); c.id = existing?.id || r.data.id || uid("c");
+      DB.campaigns[c.id] = c; persist(); location.href = `/tools/campaigns?c=${encodeURIComponent(c.id)}`;
+    } catch (e) { msg = "Couldn't reach the backup service. Check your connection and try again."; render(); }
+  }
+
+  // Keep each character's goal snapshot current, so it travels with the campaign's backup.
+  function syncGoalSnaps() {
+    if (!C) return; let changed = false;
+    for (const ch of C.characters) { const g = linkedGoal(ch); if (!g) continue; const snap = { id: g.id, title: g.title, pct: goalPct(g), done: goalPct(g) >= 100 };
+      if (JSON.stringify(snap) !== JSON.stringify(ch.goalSnap)) { ch.goalSnap = snap; changed = true; } }
+    if (changed) save(false);
+  }
+  addEventListener("storage", (e) => { if (e.key === GOALS && C) { syncGoalSnaps(); render(); } });
+
+  /* ---------- Start ---------- */
+  if (CID && !C) { $("app").innerHTML = `<section class="card"><p class="empty">That campaign isn't on this device. <a href="/tools/campaigns">See your campaigns</a></p></section>`; }
+  else { syncGoalSnaps(); render(); pull(); }
+  fetch("/api/collection").then((r) => r.json()).then((d) => {
+    const names = (d.games || []).filter((g) => g.type === "Base game" && (g.mechanics || []).some((m) => /Campaign|Legacy/.test(m))).map((g) => g.name).sort();
+    const dl = document.createElement("datalist"); dl.id = "campaignGames"; dl.innerHTML = names.map((n) => `<option value="${esc(n)}">`).join(""); document.body.appendChild(dl);
+  }).catch(() => {});
+})();
+</script>
+<script src="/pwa.js" defer></script>
+</body>
+</html>

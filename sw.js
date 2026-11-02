@@ -2,10 +2,10 @@
 // Pages and the collection come from the network when it's there (so they stay current) and
 // from the last saved copy when it isn't. Fonts and libraries are cached once. Game night events
 // (Supabase) always go to the network.
-const VERSION = "v6";
+const VERSION = "v7";
 const SHELL = `shell-${VERSION}`, DATA = `data-${VERSION}`, LIBS = `libs-${VERSION}`;
-const PAGES = ["/", "/stats", "/tools", "/tools/initiative", "/tools/game-night", "/tools/quiz", "/tools/first-player", "/tools/event"];
-const ASSETS = ["/manifest.webmanifest", "/pwa.js", "/tools/gn-core.js", "/powered-by-bgg.png", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/icons/favicon-32.png"];
+const PAGES = ["/", "/stats", "/tools", "/tools/initiative", "/tools/game-night", "/tools/quiz", "/tools/first-player", "/tools/event", "/tools/campaigns", "/tools/goals"];
+const ASSETS = ["/manifest.webmanifest", "/pwa.js", "/tools/gn-core.js", "/tools/campaign-templates.js", "/tools/shelf-sync.js", "/powered-by-bgg.png", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/icons/favicon-32.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(SHELL).then((c) => Promise.all([...PAGES, ...ASSETS].map((u) => c.add(new Request(u, { cache: "reload" })).catch(() => {})))).then(() => self.skipWaiting()));
