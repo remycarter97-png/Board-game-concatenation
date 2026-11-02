@@ -159,6 +159,9 @@
   .status .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); } .status.off .dot { background: var(--warn); }
   @media (max-width: 520px) { .codebox { grid-template-columns: 1fr 1fr; } .codebox .code { grid-column: 1 / -1; justify-self: start; } }
   #results { display: grid; gap: 12px; }
+  .evcta { margin-top: 12px; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .evcta h2 { margin: 0 0 8px; } a.btn { text-decoration: none; color: inherit; } a.btn.yellow { color: #3d2a4f; }
+  @media (max-width: 760px) { .evcta { grid-template-columns: 1fr; } }
   footer { margin: 48px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
   @media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
   @media (max-width: 760px) {
@@ -187,11 +190,16 @@
     </div>
   </header>
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools">‹ All tools</a></nav>
+  <section class="card evcta" aria-labelledby="evH">
+    <div><h2 id="evH">Planning ahead?</h2>
+      <p class="sub" style="margin:0">Make a game night: invite people with a link, find a time that works, have everyone rate what they like and vote on games live, then build the night's schedule.</p></div>
+    <div class="row"><a class="btn yellow" href="/tools/event">📅 Plan a game night</a><span id="myEvents" class="sub" style="margin:0"></span></div>
+  </section>
   <div class="layout">
     <div class="left">
       <section class="card" aria-labelledby="whoH">
         <h2 id="whoH">Who's playing? <span class="count" id="countTag"></span></h2>
-        <p class="sub">Tap people to bring them tonight. Each person's likes, dealbreakers, favorite weights and time limit shape the picks.</p>
+        <p class="sub">Tap people to bring them tonight. Each person's ratings (complexity, mechanics and themes) and time limit shape the picks.</p>
         <div class="people" id="people"></div>
         <div class="row"><button class="btn sm" type="button" id="addPerson">+ Add a person</button></div>
         <div class="guests"><span>Guests without a profile</span>
@@ -217,26 +225,29 @@
   </div>
   <footer>People and their preferences are saved in this browser, and shared with anyone who has the group's code if you share it. "Played recently" uses Remy's logged plays on BoardGameGeek.</footer>
 </div>
+<script src="/tools/gn-core.js"></script>
 <script>
+document.head.insertAdjacentHTML("beforeend", `<style>${GN.RATING_CSS}</style>`);
 (function () {
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const KEY = "game-shelf:game-night-v2";
-  const WEIGHTS = [["light", "Light", (w) => w < 2], ["medium", "Medium", (w) => w >= 2 && w < 3], ["mheavy", "Medium-heavy", (w) => w >= 3 && w < 3.8], ["heavy", "Heavy", (w) => w >= 3.8]];
+  const WEIGHTS = GN.WEIGHTS.map((w) => [w.key, w.label, w.test]);
   const TIMES = [[0, "Any length"], [30, "30 minutes"], [45, "45 minutes"], [60, "1 hour"], [90, "1½ hours"], [120, "2 hours"], [180, "3 hours"], [240, "4 hours"]];
   const timeLabel = (m) => (TIMES.find(([v]) => v === m) || [0, `${m} min`])[1];
   const newId = () => "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  const person = (name) => ({ id: newId(), name, weights: [], likes: [], avoid: [], time: 0 });
+  const person = (name) => ({ id: newId(), name, rate: GN.blankRate(), time: 0 });
 
   let S;
   try { S = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { S = null; }
   if (!S || !Array.isArray(S.people)) { const r = person("Remy"), j = person("Jonathan"); S = { people: [r, j], selected: [r.id, j.id], guests: 0, time: 0, recentOn: false, recentDays: 30 }; }
+  S.people.forEach(GN.migrate);
   S.selected = (S.selected || []).filter((id) => S.people.some((p) => p.id === id));
   const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
   const save = () => { persist(); schedulePush(); };
 
   /* ---------- Sharing the group by code (people and their preferences; picks stay on each device) ---------- */
-  const shared = () => S.people.map(({ id, name, weights, likes, avoid, time }) => ({ id, name, weights, likes, avoid, time }));
+  const shared = () => S.people.map(({ id, name, rate, time }) => ({ id, name, rate, time }));
   const sig = () => JSON.stringify(shared());
   let pushTimer = null, online = true, showCode = false, shareMsg = "";
   function schedulePush() { if (!S.code || sig() === S.syncedSig) return renderShare(); clearTimeout(pushTimer); pushTimer = setTimeout(push, 700); renderShare("Saving…"); }
@@ -258,7 +269,7 @@
       if (!r.ok) throw new Error(r.status);
       const d = await r.json(); online = true;
       if (sig() === S.syncedSig && (!S.updatedAt || d.updatedAt > S.updatedAt)) {
-        S.people = d.people; S.selected = S.selected.filter((id) => S.people.some((p) => p.id === id));
+        S.people = d.people.map(GN.migrate); S.selected = S.selected.filter((id) => S.people.some((p) => p.id === id));
         if (editing && !S.people.some((p) => p.id === editing)) editing = null;
         S.updatedAt = d.updatedAt; S.syncedSig = sig(); persist(); all(false);
       }
@@ -283,7 +294,7 @@
       if (r.status === 404 || r.status === 400) { shareMsg = `No group found for ${code}. Check the code and try again.`; return renderShare(); }
       if (!r.ok) throw new Error(r.status);
       const d = await r.json();
-      S.people = d.people; S.selected = d.people.map((p) => p.id); S.code = code; S.updatedAt = d.updatedAt; S.syncedSig = sig(); editing = null; seen.clear(); persist();
+      S.people = d.people.map(GN.migrate); S.selected = S.people.map((p) => p.id); S.code = code; S.updatedAt = d.updatedAt; S.syncedSig = sig(); editing = null; seen.clear(); persist();
       shareMsg = `Joined. Everyone using code ${code} shares these people and their preferences.`; all();
     } catch (e) { shareMsg = "Couldn't reach the site. Check your connection and try again."; renderShare(); }
   }
@@ -310,9 +321,6 @@
   const hue = (g) => (Number(String(g.id).replace(/\D/g, "")) * 47) % 360;
   const supports = (g, n) => g.minPlayers && g.minPlayers <= n && n <= (g.maxPlayers || g.minPlayers);
   const bestAt = (g, n) => (g.bestPlayers || []).some((b) => b === n || (n >= 10 && b >= 10));
-  const tagsOf = (g) => [...(g.mechanics || []), ...(g.categories || [])];
-  const weightOk = (p, g) => !p.weights.length || (g.weight && p.weights.some((k) => WEIGHTS.find((w) => w[0] === k)[2](g.weight)));
-  const lighter = (p, g) => g.weight && p.weights.length && p.weights.every((k) => { const i = WEIGHTS.findIndex((w) => w[0] === k); return g.weight >= [2, 3, 3.8, 9][i]; });
 
   /* ---------- Matching ---------- */
   function tonight() {
@@ -330,16 +338,14 @@
       if (!supports(g, n)) { out.cut.players++; continue; }
       const t = playTime(g);
       if (limit && (!t || t > limit)) { out.cut.time++; continue; }
-      const nos = who.flatMap((p) => p.avoid.filter((a) => tagsOf(g).includes(a)).map((a) => ({ p, a })));
-      if (nos.length) { out.cut.avoid++; continue; }
+      const fit = GN.groupFit(who, g, n);
+      if (fit.out) { out.cut.avoid++; continue; }
       if (recent.has(g.id)) { out.cut.recent++; continue; }
-      const loves = who.flatMap((p) => p.likes.filter((a) => tagsOf(g).includes(a)).map((a) => ({ p, a })));
-      const misses = who.filter((p) => !weightOk(p, g));
-      const score = (bestAt(g, n) ? 3 : 0) + loves.length * 2.5 + Math.max(0, (g.rating || 6.5) - 6) * 1.5 - misses.length * 4;
-      (misses.length ? out.close : out.fits).push({ g, loves, misses, score, best: bestAt(g, n) });
+      const close = who.length && fit.min < 2.6;
+      (close ? out.close : out.fits).push({ g, fit, close, score: fit.fit * 5, best: fit.best });
     }
     out.fits.sort((a, b) => b.score - a.score || a.g.name.localeCompare(b.g.name));
-    out.close.sort((a, b) => a.misses.length - b.misses.length || b.score - a.score);
+    out.close.sort((a, b) => b.score - a.score);
     return out;
   }
   // Three picks at random, leaning hard toward the best matches; a reroll avoids repeats until every option has had a turn.
@@ -360,7 +366,7 @@
   /* ---------- Rendering ---------- */
   function renderPeople() {
     $("people").innerHTML = S.people.map((p) => {
-      const on = S.selected.includes(p.id), bits = [p.weights.length && "weights", p.likes.length && `${p.likes.length} ♥`, p.avoid.length && `${p.avoid.length} ✕`, p.time && timeLabel(p.time)].filter(Boolean);
+      const on = S.selected.includes(p.id), rc = GN.rateCount(p.rate), bits = [rc && `${rc} rated`, p.time && timeLabel(p.time)].filter(Boolean);
       return `<span class="person${on ? " on" : ""}"><button class="pick" type="button" data-toggle="${p.id}" aria-pressed="${on}">${esc(p.name)}${bits.length ? `<span class="tags">· ${esc(bits.join(" · "))}</span>` : ""}</button>
         <button class="edit" type="button" data-edit="${p.id}" aria-label="Edit ${esc(p.name)}'s preferences">Edit</button></span>`;
     }).join("") || `<p class="sub">Add the people you play with.</p>`;
@@ -371,15 +377,10 @@
   function renderEditor() {
     const p = S.people.find((x) => x.id === editing);
     if (!p) { $("editor").innerHTML = ""; return; }
-    const tagList = (key, cls) => `<div class="tlist ${cls}">${p[key].map((t) => `<span>${esc(t)}<button type="button" data-untag="${key}" data-tag="${esc(t)}" aria-label="Remove ${esc(t)}">×</button></span>`).join("")}</div>`;
-    const tagInput = (key, label) => `<div class="taginput"><input type="text" list="taglist" id="in-${key}" placeholder="Type a mechanic or category" aria-label="${label}" autocomplete="off"><button class="btn sm" type="button" data-addtag="${key}">Add</button></div>`;
     $("editor").innerHTML = `<div class="editor" role="group" aria-label="${esc(p.name)}'s preferences">
-      <h3>${esc(p.name)}'s preferences</h3>
+      <h3>${esc(p.name)}'s tastes</h3>
       <label class="field"><span>Name</span><input type="text" id="ed-name" maxlength="30" value="${esc(p.name)}"></label>
-      <div class="field"><span>Likes these weights <small>· none picked means any</small></span><div class="wchips">${WEIGHTS.map(([k, l]) =>
-        `<button class="wchip" type="button" data-weight="${k}" aria-pressed="${p.weights.includes(k)}">${l}</button>`).join("")}</div></div>
-      <div class="field"><span>Loves <small>· games with these rank higher</small></span>${tagList("likes", "love")}${tagInput("likes", "Add something they love")}</div>
-      <div class="field"><span>Won't play <small>· games with these are left out</small></span>${tagList("avoid", "no")}${tagInput("avoid", "Add a dealbreaker")}</div>
+      ${GN.ratingsHtml(p.rate, "ed-rate")}
       <label class="field"><span>Time they usually have</span><select id="ed-time">${TIMES.map(([v, l]) => `<option value="${v}"${v === p.time ? " selected" : ""}>${v ? l : "No limit"}</option>`).join("")}</select></label>
       <div class="edfoot"><button class="btn sm yellow" type="button" id="ed-done">Done</button><button class="link danger" type="button" id="ed-del">Remove ${esc(p.name)}</button><span class="sub" id="ed-msg" role="status"></span></div>
     </div>`;
@@ -397,21 +398,20 @@
     const byId = new Map([...res.fits, ...res.close].map((m) => [m.g.id, m]));
     picks = picks.filter((id) => byId.has(id)); if (!picks.length) deal(res);
     const total = res.fits.length + res.close.length;
-    const cutBits = [res.cut.time && `${res.cut.time} too long`, res.cut.avoid && `${res.cut.avoid} with a dealbreaker`, res.cut.recent && `${res.cut.recent} played recently`].filter(Boolean);
-    if (!total) { box.innerHTML = `<div class="empty">Nothing on the shelf fits ${res.n} player${res.n === 1 ? "" : "s"}${res.limit ? ` in ${timeLabel(res.limit).toLowerCase()}` : ""}${cutBits.length ? ` (${cutBits.join(", ")})` : ""}. Try more time, or loosen a dealbreaker.</div>`; return; }
+    const cutBits = [res.cut.time && `${res.cut.time} too long`, res.cut.avoid && `${res.cut.avoid} with a “won't play”`, res.cut.recent && `${res.cut.recent} played recently`].filter(Boolean);
+    if (!total) { box.innerHTML = `<div class="empty">Nothing on the shelf fits ${res.n} player${res.n === 1 ? "" : "s"}${res.limit ? ` in ${timeLabel(res.limit).toLowerCase()}` : ""}${cutBits.length ? ` (${cutBits.join(", ")})` : ""}. Try more time, or change a “won't play” rating.</div>`; return; }
     const card = (m) => { const g = m.g;
-      const why = [m.best && `<span>BGG: best with ${res.n}</span>`, ...m.loves.map(({ p, a }) => `<span>${esc(p.name)} loves ${esc(a)}</span>`),
-        res.limit && `<span>Fits ${esc(timeLabel(res.limit).toLowerCase())}</span>`,
-        ...m.misses.map((p) => `<span class="meh">${lighter(p, g) ? "Heavier" : "Lighter"} than ${esc(p.name)} likes</span>`)].filter(Boolean).join("");
+      const why = [m.best && `<span>BGG: best with ${res.n}</span>`, ...GN.reasons(m.fit).map((x) => `<span${x.good ? "" : ' class="meh"'}>${esc(x.text)}</span>`),
+        res.limit && `<span>Fits ${esc(timeLabel(res.limit).toLowerCase())}</span>`].filter(Boolean).join("");
       return `<li class="pickcard"><span class="art" style="--h:${hue(g)}">${g.thumbnail ? `<img src="${esc(g.thumbnail)}" alt="" referrerpolicy="no-referrer" onerror="this.replaceWith('🎲')">` : "🎲"}</span>
         <div class="pinfo"><a class="pname" href="${esc(g.url)}" target="_blank" rel="noopener">${esc(g.name)}</a><div class="pfacts">${esc(factLine(g))}</div>${why ? `<div class="why">${why}</div>` : ""}</div>
-        ${!m.misses.length && m.best ? `<span class="badge">★ Best fit</span>` : ""}</li>`; };
+        ${res.who.length ? `<span class="badge" title="How likely everyone is to enjoy it, from their ratings">${m.fit.pct}% fit</span>` : m.best ? `<span class="badge">★ Best fit</span>` : ""}</li>`; };
     box.innerHTML = `<p class="summary"><b>${res.fits.length}</b> game${res.fits.length === 1 ? "" : "s"} suit everyone for ${res.n} player${res.n === 1 ? "" : "s"}${res.limit ? ` in ${esc(timeLabel(res.limit).toLowerCase())}${res.limitBy.length && !res.limitBy.includes("the group") ? ` (${esc(res.limitBy.join(" & "))}'s limit)` : ""}` : ""}${res.close.length ? `, and ${res.close.length} more are close` : ""}.${cutBits.length ? ` Left out: ${esc(cutBits.join(", "))}.` : ""}</p>
-      ${!res.fits.length ? `<p class="sub">No game suits everyone's favorite weights, so these are the closest.</p>` : ""}
+      ${!res.fits.length ? `<p class="sub">No game is a sure hit for everyone, so these are the closest.</p>` : ""}
       <ul class="picks">${picks.map((id) => card(byId.get(id))).join("")}</ul>
       <div class="btns">${total > picks.length ? `<button class="btn primary" type="button" id="reroll">🎲 Reroll</button>` : ""}
         <button class="btn" type="button" id="toggleAll" aria-expanded="${showAll}">${showAll ? "Hide the full list" : `See all ${total} matches`}</button></div>
-      ${showAll ? `<ol class="alllist">${[...res.fits, ...res.close].map((m) => `<li><a href="${esc(m.g.url)}" target="_blank" rel="noopener">${esc(m.g.name)}</a><small>${m.misses.length ? "close · " : ""}${esc(factLine(m.g))}</small></li>`).join("")}</ol>` : ""}`;
+      ${showAll ? `<ol class="alllist">${[...res.fits, ...res.close].map((m) => `<li><a href="${esc(m.g.url)}" target="_blank" rel="noopener">${esc(m.g.name)}</a><small>${m.close ? "close · " : ""}${esc(factLine(m.g))}</small></li>`).join("")}</ol>` : ""}`;
   }
   function renderTonight() {
     $("groupTime").innerHTML = TIMES.map(([v, l]) => `<option value="${v}"${v === S.time ? " selected" : ""}>${l}</option>`).join("");
@@ -427,9 +427,8 @@
     else if (b.dataset.edit) { editing = editing === b.dataset.edit ? null : b.dataset.edit; renderEditor(); $("ed-name")?.focus(); }
     else if (b.id === "addPerson") { const p = person(`Player ${S.people.length + 1}`); S.people.push(p); S.selected.push(p.id); editing = p.id; save(); all(); $("ed-name").select(); }
     else if (b.id === "gMinus" || b.id === "gPlus") { S.guests = Math.max(0, Math.min(12, S.guests + (b.id === "gPlus" ? 1 : -1))); save(); seen.clear(); renderPeople(); renderResults(true); }
-    else if (b.dataset.weight) { const p = S.people.find((x) => x.id === editing), k = b.dataset.weight; p.weights = p.weights.includes(k) ? p.weights.filter((x) => x !== k) : [...p.weights, k]; save(); renderPeople(); renderEditor(); renderResults(true); document.querySelector(`[data-weight="${k}"]`)?.focus(); }
-    else if (b.dataset.addtag) addTag(b.dataset.addtag);
-    else if (b.dataset.untag) { const p = S.people.find((x) => x.id === editing), k = b.dataset.untag; p[k] = p[k].filter((t) => t !== b.dataset.tag); save(); renderPeople(); renderEditor(); renderResults(true); $(`in-${k}`)?.focus(); }
+    else if (b.dataset.rate) { const p = S.people.find((x) => x.id === editing); if (!p) return; const sel = b.dataset.rate, open = [...document.querySelectorAll("#ed-rate details")].map((d) => d.open);
+      GN.applyRateClick(p.rate, b); save(); renderPeople(); renderEditor(); document.querySelectorAll("#ed-rate details").forEach((d, i) => { d.open = open[i]; }); renderResults(true); document.querySelector(`[data-rate="${sel}"]`)?.focus({ preventScroll: true }); }
     else if (b.id === "ed-done") { const id = editing; editing = null; renderEditor(); document.querySelector(`[data-edit="${id}"]`)?.focus(); }
     else if (b.id === "ed-del") { S.people = S.people.filter((x) => x.id !== editing); S.selected = S.selected.filter((x) => x !== editing); editing = null; save(); all(); $("addPerson").focus(); }
     else if (b.id === "reroll") { renderResults(true); $("reroll")?.focus(); }
@@ -440,16 +439,7 @@
     else if (b.id === "leaveGroup") { S.code = null; S.syncedSig = null; showCode = false; shareMsg = "These people are now saved only on this device."; persist(); renderShare(); $("makeCode").focus(); }
     else if (b.dataset.copy) { navigator.clipboard.writeText(b.dataset.copy).then(() => { shareMsg = "Copied!"; renderShare(); }, () => { shareMsg = `Copy this: ${b.dataset.copy}`; renderShare(); }); }
   });
-  function addTag(key) {
-    const p = S.people.find((x) => x.id === editing), input = $(`in-${key}`), v = input.value.trim();
-    const match = tags.find((t) => t.toLowerCase() === v.toLowerCase());
-    if (!match) { $("ed-msg").textContent = v ? `“${v}” isn't a mechanic or category on the shelf. Pick one from the list.` : ""; return; }
-    if (!p[key].includes(match)) p[key].push(match);
-    const other = key === "likes" ? "avoid" : "likes"; p[other] = p[other].filter((t) => t !== match);
-    save(); renderPeople(); renderEditor(); renderResults(true); $(`in-${key}`).focus();
-  }
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && e.target.id?.startsWith("in-")) { e.preventDefault(); addTag(e.target.id.slice(3)); }
     if (e.key === "Enter" && e.target.id === "joinCode") { e.preventDefault(); joinCode(e.target.value); }
   });
   document.addEventListener("input", (e) => { if (e.target.id === "ed-name") { const p = S.people.find((x) => x.id === editing); p.name = e.target.value.trim().slice(0, 30) || p.name; save(); renderPeople(); renderResults(false); } });
@@ -461,13 +451,16 @@
     else if (t.id === "recentDays") { S.recentDays = Number(t.value); save(); renderTonight(); renderResults(true); }
   });
 
+  // Upcoming game nights saved on this device (see /tools/event).
+  try { const ev = JSON.parse(localStorage.getItem("game-shelf:events") || "{}"), today = new Date().toISOString().slice(0, 10);
+    const up = Object.entries(ev).filter(([, v]) => v?.title && (!v.when || v.when >= today)).sort((a, b) => String(a[1].when).localeCompare(String(b[1].when)));
+    if (up.length) $("myEvents").innerHTML = "Coming up: " + up.slice(0, 3).map(([c, v]) => `<a href="/tools/event?code=${c}">${esc(v.title)}</a>`).join(", ");
+  } catch (e) {}
   /* ---------- Load ---------- */
   renderPeople(); renderTonight(); renderShare();
   Promise.all([fetch("/api/collection").then((r) => r.json()), fetch("/api/plays").then((r) => r.ok ? r.json() : null).catch(() => null)]).then(([d, p]) => {
     if (!Array.isArray(d?.games)) throw new Error("no games");
     games = d.games.filter((g) => g.type === "Base game");
-    tags = [...new Set(games.flatMap(tagsOf))].sort((a, b) => a.localeCompare(b));
-    const dl = document.createElement("datalist"); dl.id = "taglist"; dl.innerHTML = tags.map((t) => `<option value="${esc(t)}">`).join(""); document.body.appendChild(dl);
     plays = p?.plays || null; status = "ok"; all();
     const fromLink = new URLSearchParams(location.search).get("group");
     if (fromLink) { history.replaceState(null, "", location.pathname); joinCode(fromLink); } else pull();

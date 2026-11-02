@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Game Night</title>
+<meta name="description" content="Plan a game night together: pick a time, rate what you like, vote on games and build the schedule.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#fff3e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1528" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Game Shelf">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
+    --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
+    --yellow: #ffd45c; --yellow-soft: #fff1c2; --mint: #8be0bd; --mint-soft: #ddf6ea;
+    --ok: #24a26b; --danger: #d43c41; --warn: #a35a00; --warn-soft: #ffe8cc;
+    --edge: 2.5px solid var(--outline); --pop: 4px 4px 0 var(--outline); --pop-sm: 3px 3px 0 var(--outline);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+      --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+      --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+    --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+    --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; color: var(--ink); font: 16px/1.5 Nunito, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header (matches the other pages) */
+  header.top { padding: 36px 0 8px; }
+  .titlebar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .brand { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+  .logo { width: 72px; height: 72px; flex: none; transform: rotate(-5deg); filter: drop-shadow(4px 4px 0 var(--outline)); transition: transform .3s; }
+  .logo:hover { transform: rotate(4deg) scale(1.05); }
+  h1 { font: 700 clamp(2rem, 4vw, 2.9rem)/1.05 Fredoka, ui-rounded, system-ui, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  h1 .hl { background: linear-gradient(transparent 62%, var(--hl, var(--yellow)) 62% 92%, transparent 92%); padding: 0 2px; }
+  .tagline { margin: 6px 0 0; color: var(--ink-2); font-size: 1.05rem; font-weight: 600; }
+  .pagenav { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); }
+  .pagenav a { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-decoration: none; }
+  .pagenav a:hover { color: var(--ink); background: var(--surface-2); }
+  .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+
+  /* Shared bits */
+  .card { background: var(--surface); border: var(--edge); border-radius: 22px; box-shadow: var(--pop); padding: 18px 20px; min-width: 0; display: grid; gap: 14px; align-content: start; }
+  h2 { font: 700 1.3rem/1.2 Fredoka, ui-rounded, sans-serif; margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  h2 small { font: 700 .88rem Nunito, sans-serif; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm);
+    background: var(--surface); color: var(--ink); font: 600 1rem Fredoka, ui-rounded, sans-serif; transition: transform .12s, box-shadow .12s; text-decoration: none; }
+  .btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.yellow { background: var(--yellow); color: #3d2a4f; }
+  .btn.big { min-height: 52px; font-size: 1.15rem; padding: 0 22px; }
+  .btn.sm { min-height: 34px; padding: 0 12px; font-size: .9rem; border-radius: 11px; }
+  .link { border: 0; background: none; padding: 4px 2px; color: var(--accent); font-weight: 800; font-size: .92rem; }
+  .link:hover { text-decoration: underline; }
+  .link.danger { color: var(--danger); }
+  input[type=text], input[type=number] { height: 44px; border: var(--edge); border-radius: 13px; background: var(--surface); padding: 0 12px; font-weight: 700; min-width: 0; box-shadow: var(--pop-sm); }
+  input:focus { outline: none; box-shadow: 0 0 0 4px var(--yellow), 3px 3px 0 4px var(--outline); }
+  input[readonly] { opacity: .65; }
+  .note { margin: 0; font-size: .88rem; color: var(--ink-2); font-weight: 600; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 2px solid var(--outline); border-radius: 12px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: none; min-height: 30px; padding: 0 12px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+  .ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ctl > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+
+  .crumbs { margin-top: 18px; } .crumbs a { color: var(--accent); font-weight: 800; text-decoration: none; } .crumbs a:hover { text-decoration: underline; }
+  main { margin-top: 12px; display: grid; gap: 22px; }
+  .sub { margin: -6px 0 0; color: var(--ink-2); font-weight: 600; font-size: .92rem; }
+  .note { margin: 0; color: var(--ink-2); font-weight: 700; font-size: .88rem; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+  .field { display: grid; gap: 6px; min-width: 0; }
+  .field > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  input[type=text], input[type=date], input[type=time], textarea, select { min-height: 42px; border: var(--edge); border-radius: 12px; background: var(--surface); color: var(--ink); font: 700 .98rem Nunito, sans-serif; padding: 0 12px; min-width: 0; }
+  textarea { padding: 8px 12px; min-height: 64px; resize: vertical; }
+  input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .slotrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .slotrow input[type=date] { width: 11.5em; } .slotrow input[type=time] { width: 8.5em; } .slotrow select { width: 7.5em; }
+  .x { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--outline); background: var(--surface); font-weight: 900; color: var(--ink-2); }
+  .invite { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chk { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 14px; border: 2px solid var(--outline); border-radius: 999px; background: var(--surface); font-weight: 800; cursor: pointer; }
+  .chk input { width: 18px; height: 18px; accent-color: var(--accent); }
+  .mylist { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .mylist a { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 10px 14px; border: var(--edge); border-radius: 14px; background: var(--surface); color: var(--ink); text-decoration: none; font-weight: 800; box-shadow: var(--pop-sm); }
+  .mylist a:hover { transform: translate(-1px, -1px); } .mylist small { color: var(--ink-2); font-weight: 700; }
+  .mylist .past { opacity: .6; }
+  /* Event */
+  .evhead { display: grid; gap: 10px; }
+  .evhead h2 { margin: 0; font: 700 clamp(1.6rem, 4vw, 2.2rem)/1.1 Fredoka, ui-rounded, sans-serif; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--ink-2); font-weight: 800; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 12px; border: 2px solid var(--outline); border-radius: 999px; font-weight: 800; font-size: .88rem; background: var(--surface-2); }
+  .pill.on { background: var(--mint); color: #3d2a4f; } .pill.wait { background: var(--yellow-soft); }
+  .live { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 800; color: var(--ink-2); }
+  .live i { width: 10px; height: 10px; border-radius: 50%; background: var(--warn); } .live.on i { background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 25%, transparent); animation: pulse 2s infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--ok) 25%, transparent); } }
+  .codebox { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--yellow-soft); border: 2px dashed var(--outline); border-radius: 16px; padding: 10px 14px; }
+  .code { font: 700 1.5rem/1 Fredoka, ui-rounded, sans-serif; letter-spacing: .16em; background: var(--surface); border: var(--edge); border-radius: 12px; padding: 6px 8px 6px 14px; }
+  .steps { position: sticky; top: 0; z-index: 5; display: flex; gap: 8px; overflow-x: auto; padding: 10px 2px; margin: -10px 0; background: var(--bg); scrollbar-width: none; }
+  .steps a { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px 0 5px; border: 2px solid var(--outline); border-radius: 999px; background: var(--surface); color: var(--ink); text-decoration: none; font: 600 .95rem Fredoka, ui-rounded, sans-serif; }
+  .steps a b { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--yellow); border: 2px solid var(--outline); font-size: .8rem; color: #3d2a4f; }
+  .steps a.done b { background: var(--mint); }
+  section.card { scroll-margin-top: 64px; }
+  h2.sec { margin: 0; font: 700 1.35rem Fredoka, ui-rounded, sans-serif; display: flex; align-items: center; justify-content: flex-start; gap: 10px; flex-wrap: wrap; }
+  h2.sec .n { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--yellow); border: 2px solid var(--outline); font-size: .95rem; color: #3d2a4f; flex: none; }
+  .whoami { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 14px; border: 2px dashed var(--outline); border-radius: 16px; background: var(--mint-soft); font-weight: 800; }
+  .whoami.ask { background: var(--yellow-soft); }
+  /* availability */
+  .avwrap { overflow-x: auto; border: 2px solid var(--line); border-radius: 16px; }
+  table.av { border-collapse: separate; border-spacing: 0; width: 100%; min-width: max-content; }
+  .av th, .av td { padding: 8px 10px; text-align: center; border-bottom: 1px solid var(--line); font-weight: 800; }
+  .av thead th { background: var(--surface-2); font-size: .85rem; vertical-align: bottom; }
+  .av thead th .d { display: block; font: 700 1rem Fredoka, ui-rounded, sans-serif; color: var(--ink); }
+  .av thead th .t { color: var(--ink-2); }
+  .av th:first-child, .av td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface); z-index: 1; min-width: 7.5em; }
+  .av thead th:first-child { background: var(--surface-2); }
+  .av tr.me td { background: var(--yellow-soft); } .av tr.me td:first-child { background: var(--yellow-soft); }
+  .av .best { box-shadow: inset 0 -4px 0 var(--mint); } .av .locked { background: color-mix(in srgb, var(--mint) 35%, var(--surface)) !important; }
+  .cell { width: 40px; height: 34px; border-radius: 10px; border: 2px solid var(--outline); background: var(--surface); font-weight: 900; font-size: 1rem; }
+  .cell.yes, .mark.yes { background: var(--mint); color: #3d2a4f; } .cell.maybe, .mark.maybe { background: var(--yellow); color: #3d2a4f; } .cell.no, .mark.no { background: var(--accent-soft); color: var(--danger); }
+  .mark { display: inline-grid; place-items: center; width: 30px; height: 26px; border-radius: 8px; border: 1.5px solid var(--line); color: var(--muted); }
+  .av tfoot td { font-size: .82rem; color: var(--ink-2); background: var(--surface-2); }
+  .addslot { display: grid; gap: 8px; border-top: 2px dashed var(--line); padding-top: 12px; }
+  /* ballot */
+  .plan { font-weight: 800; color: var(--ink-2); margin: 0; } .plan b { color: var(--ink); }
+  .glist { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .gitem { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; padding: 12px; border: var(--edge); border-radius: 18px; background: var(--surface); box-shadow: var(--pop-sm); transition: background-color .6s; }
+  .gitem.flash { background: var(--yellow-soft); }
+  .gitem.lead { box-shadow: 5px 5px 0 var(--outline); }
+  .art { --h: 30; width: 72px; height: 72px; flex: none; border: 2px solid var(--outline); border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 4px;
+    background: linear-gradient(135deg, hsl(var(--h) 90% 88%), hsl(calc(var(--h) + 35) 80% 77%)); font-size: 1.7rem; }
+  .art img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .ginfo { min-width: 0; display: grid; gap: 6px; align-content: start; }
+  .gtop { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+  .gname { min-width: 0; overflow-wrap: anywhere; font: 700 1.12rem/1.2 Fredoka, ui-rounded, sans-serif; color: var(--ink); text-decoration: none; } .gname:hover { color: var(--accent); text-decoration: underline; }
+  .gfacts { color: var(--ink-2); font-weight: 700; font-size: .82rem; }
+  .fit { flex: none; border: 2px solid var(--outline); border-radius: 999px; padding: 1px 9px; font-size: .75rem; font-weight: 800; background: var(--mint-soft); white-space: nowrap; }
+  .why { display: flex; flex-wrap: wrap; gap: 5px; }
+  .why span { font-size: .72rem; font-weight: 800; border-radius: 999px; padding: 1px 8px; border: 1.5px solid var(--outline); background: var(--mint-soft); }
+  .why span.meh { background: var(--warn-soft); border-style: dashed; }
+  .votes { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .vbtn { display: inline-flex; align-items: center; gap: 5px; min-height: 36px; padding: 0 11px; border: 2px solid var(--outline); border-radius: 12px; background: var(--surface); font-weight: 800; font-size: .88rem; color: var(--ink); }
+  .vbtn[aria-pressed="true"] { box-shadow: 2px 2px 0 var(--outline); }
+  .vbtn.v2[aria-pressed="true"] { background: var(--mint); color: #3d2a4f; } .vbtn.v1[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; } .vbtn.vn[aria-pressed="true"] { background: var(--accent-soft); color: #3d2a4f; }
+  .vbtn .c { min-width: 1.2em; padding: 0 5px; border-radius: 999px; background: var(--surface-2); font-size: .8rem; }
+  .tally { display: flex; height: 10px; border-radius: 999px; overflow: hidden; border: 1.5px solid var(--outline); background: var(--surface-2); }
+  .tally i { display: block; } .tally .t2 { background: var(--ok); } .tally .t1 { background: var(--yellow); } .tally .tn { background: var(--danger); }
+  .voters { font-size: .78rem; font-weight: 700; color: var(--ink-2); }
+  .sugg { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; list-style: none; margin: 0; padding: 0; }
+  .sugg .gitem { box-shadow: none; border-style: dashed; }
+  .addgame { display: flex; gap: 8px; flex-wrap: wrap; } .addgame input { flex: 1 1 220px; }
+  /* timeline */
+  .timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+  .timeline li { display: grid; grid-template-columns: 5.2em 18px minmax(0, 1fr) auto; gap: 12px; align-items: start; }
+  .timeline .tm { font: 700 1rem Fredoka, ui-rounded, sans-serif; text-align: right; padding-top: 10px; }
+  .timeline .rail { position: relative; align-self: stretch; }
+  .timeline .rail::before { content: ""; position: absolute; left: 7px; top: 0; bottom: 0; border-left: 3px solid var(--line); }
+  .timeline .rail::after { content: ""; position: absolute; left: 0; top: 14px; width: 12px; height: 12px; border-radius: 50%; border: 2.5px solid var(--outline); background: var(--yellow); }
+  .timeline li.small .rail::after { background: var(--surface); width: 10px; height: 10px; left: 1px; }
+  .timeline .blk { padding: 8px 0 14px; display: grid; gap: 2px; }
+  .timeline .blk b { font: 700 1.08rem Fredoka, ui-rounded, sans-serif; } .timeline .blk small { color: var(--ink-2); font-weight: 700; }
+  .timeline .over b { color: var(--danger); }
+  .tctl { display: flex; gap: 4px; padding-top: 8px; } .tctl button { width: 32px; height: 32px; border-radius: 9px; border: 2px solid var(--outline); background: var(--surface); font-weight: 900; }
+  .tctl button:disabled { opacity: .3; }
+  .series { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .series a { font-weight: 800; color: var(--accent); }
+  .empty { text-align: center; color: var(--ink-2); font-weight: 700; padding: 18px 12px; border: 2.5px dashed var(--line); border-radius: 16px; margin: 0; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  footer { margin: 40px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
+  @media (max-width: 760px) {
+    .wrap { padding: 0 16px; } header.top { padding-top: 22px; } .logo { width: 54px; height: 54px; } .brand { gap: 12px; }
+    .card { box-shadow: var(--pop-sm); padding: 16px; border-radius: 18px; } .art { width: 56px; height: 56px; }
+    .timeline li { grid-template-columns: 4.4em 16px minmax(0, 1fr) auto; gap: 8px; }
+    .gtop { flex-wrap: wrap; } .vl { display: none; } .vbtn { min-width: 64px; justify-content: center; } .gitem { gap: 10px; padding: 10px; } .vbtn { padding: 0 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <a class="brand" href="/">
+        <svg class="logo" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="3" y="3" width="66" height="66" rx="18" fill="var(--yellow)" stroke="var(--outline)" stroke-width="3"/>
+          <g transform="translate(36 10) rotate(14)"><rect x="0" y="0" width="22" height="22" rx="5" fill="#fff" stroke="var(--outline)" stroke-width="2.5"/>
+            <circle cx="6" cy="6" r="2.2" fill="var(--outline)"/><circle cx="11" cy="11" r="2.2" fill="var(--outline)"/><circle cx="16" cy="16" r="2.2" fill="var(--outline)"/></g>
+          <g transform="translate(9 20) scale(1.75)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.4" stroke-linejoin="round"/></g>
+        </svg>
+        <div>
+          <h1>Game <span class="hl">Night</span></h1>
+          <p class="tagline">Pick a time, vote on games, plan the night. Together.</p>
+        </div>
+      </a>
+      <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats">Charts</a><a href="/tools" aria-current="page">Tools</a></nav>
+    </div>
+  </header>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools/game-night">‹ Game night planner</a></nav>
+  <main id="app" aria-live="polite"><section class="card"><p>Loading…</p></section></main>
+  <footer>Anyone with an event's link can see it, add their availability, ratings and votes. Only the organizer (the device that made it) can change the details, pick the time and build the night.</footer>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="/tools/gn-core.js"></script>
+<script>
+document.head.insertAdjacentHTML("beforeend", `<style>${GN.RATING_CSS}</style>`);
+(function () {
+  const $ = (id) => document.getElementById(id), esc = GN.esc;
+  const SB_URL = "https://jrtddquxtkixthbihdsz.supabase.co";
+  const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpydGRkcXV4dGtpeHRoYmloZHN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDEyNDcsImV4cCI6MjEwOTExNzI0N30.3Ss5T2WI0mpSwNbj5NUPSOCjEMjLoYskXtFvs1x42V8";
+  const MINE = "game-shelf:events", PLANNER = "game-shelf:game-night-v2";
+  const VOTES = [[2, "😍", "Must play", "v2"], [1, "👍", "Happy to", "v1"], [-1, "👎", "Rather not", "vn"]];
+  const AV = { yes: ["✓", "Can make it"], maybe: ["?", "Maybe"], no: ["✕", "Can't"] };
+  const REPEAT = [["", "Just once"], ["week", "Every week"], ["2weeks", "Every 2 weeks"], ["month", "Every month"]];
+  const TIMES = [[0, "No limit"], [60, "1 hour"], [90, "1½ hours"], [120, "2 hours"], [180, "3 hours"], [240, "4 hours"], [300, "5 hours"]];
+  const newId = (p = "p") => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const randKey = () => [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, "0")).join("");
+  const hue = (g) => (Number(String(g.id).replace(/\D/g, "")) * 47) % 360;
+  const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") ?? d; } catch (e) { return d; } };
+  const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  let mine = load(MINE, {}); if (!mine || typeof mine !== "object") mine = {};
+  const saveMine = () => store(MINE, mine);
+
+  /* ---------- Dates ---------- */
+  const dt = (s) => new Date(s.length === 16 ? s + ":00" : s);
+  const fmtDay = (s) => dt(s).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  const fmtTime = (d) => (typeof d === "string" ? dt(d) : d).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const pad2 = (n) => String(n).padStart(2, "0");
+  const localIso = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  const shift = (s, every, k = 1) => { const d = dt(s); if (every === "week") d.setDate(d.getDate() + 7 * k); else if (every === "2weeks") d.setDate(d.getDate() + 14 * k); else if (every === "month") d.setMonth(d.getMonth() + k); return localIso(d); };
+  const hoursLabel = (h) => (h === 1 ? "1 hour" : `${String(h).replace(".5", "½")} hours`);
+
+  /* ---------- Data layer: Supabase functions + a live channel per event ---------- */
+  const sb = window.supabase?.createClient ? window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: false, autoRefreshToken: false } }) : null;
+  async function rpc(fn, args) {
+    if (!sb) throw new Error("offline");
+    const { data, error } = await sb.rpc(fn, args);
+    if (error) throw new Error(error.message || "error");
+    return data;
+  }
+  let channel = null, live = false, pollTimer = null, refreshTimer = null;
+  function watch(code) {
+    if (!sb) return;
+    channel = sb.channel(`gn:${code}`, { config: { broadcast: { self: true } } })
+      .on("broadcast", { event: "changed" }, () => { clearTimeout(refreshTimer); refreshTimer = setTimeout(refresh, 120); })
+      .subscribe((st) => { const was = live; live = st === "SUBSCRIBED"; renderLive(); if (live && !was) refresh(); });
+    clearInterval(pollTimer); pollTimer = setInterval(() => { if (!live && !document.hidden) refresh(); }, 20000);
+  }
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && E) refresh(); });
+
+  /* ---------- State ---------- */
+  const params = new URLSearchParams(location.search);
+  const CODE = (params.get("code") || params.get("e") || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  let E = null, games = [], byId = new Map(), status = "loading", msg = "", editDetails = false, showRatings = null, prevTally = new Map(), flash = new Set();
+  const me = () => mine[CODE]?.me && E?.players.find((p) => p.id === mine[CODE].me);
+  const isOrg = () => !!mine[CODE]?.key;
+  const planner = () => { const s = load(PLANNER, null); return Array.isArray(s?.people) ? s.people.map((p) => GN.migrate({ ...p })) : []; };
+
+  // Refetch the whole event. Overlapping refreshes are fine: only the newest request's answer is used.
+  let reqN = 0;
+  async function refresh() {
+    if (!CODE) return;
+    const n = ++reqN;
+    try {
+      const d = await rpc("gn_get", { p_code: CODE });
+      if (n !== reqN) return;
+      if (!d) { status = "missing"; return render(); }
+      d.players.forEach((p) => { p.rate = GN.migrate({ rate: p.rate }).rate; });
+      // My own edits that haven't reached the server yet win over what it sent back.
+      if (pendingMe) { const i = d.players.findIndex((p) => p.id === pendingMe.id); if (i >= 0) d.players[i] = { ...d.players[i], ...JSON.parse(JSON.stringify(pendingMe)) }; }
+      E = d; status = "ok"; remember(); render();
+    } catch (e) { if (status === "loading") { status = "error"; render(); } }
+  }
+  function remember() {
+    const m = mine[CODE] = mine[CODE] || {};
+    m.title = E.title; m.when = finalSlot()?.start || E.slots[0]?.start || ""; m.seen = Date.now(); saveMine();
+  }
+  const finalSlot = () => E.slots.find((s) => s.id === E.finalSlot) || null;
+
+  /* ---------- Derived ---------- */
+  function availCounts(slot) { const c = { yes: 0, maybe: 0, no: 0 }; for (const p of E.players) { const v = p.avail?.[slot.id]; if (c[v] != null) c[v]++; } return c; }
+  function bestSlot() {
+    let best = null, bs = -1;
+    for (const s of E.slots) { const c = availCounts(s), sc = c.yes * 2 + c.maybe; if (sc > bs) { bs = sc; best = s; } }
+    return bs > 0 ? best : null;
+  }
+  // Who's coming: if a time is locked, people who said yes or maybe to it; otherwise everyone in the event.
+  function attendees() {
+    const f = finalSlot();
+    if (!f) return E.players;
+    const going = E.players.filter((p) => p.avail?.[f.id] === "yes" || p.avail?.[f.id] === "maybe");
+    return going.length ? going : E.players;
+  }
+  function timeBudget() {
+    const s = finalSlot() || bestSlot() || E.slots[0];
+    const limits = attendees().map((p) => p.time).filter((t) => t > 0);
+    const slotMin = s ? s.hours * 60 : 0;
+    return Math.min(...[slotMin, ...limits].filter((x) => x > 0), 99999);
+  }
+  function tallies() {
+    const t = new Map(E.ballot.map((b) => [b.game, { 2: [], 1: [], "-1": [], score: 0 }]));
+    for (const v of E.votes) { const x = t.get(v.game); if (!x) continue; const p = E.players.find((q) => q.id === v.player); x[v.vote].push(p ? p.name : "?"); x.score += v.vote; }
+    return t;
+  }
+  const fitFor = (g) => GN.groupFit(attendees(), g, Math.max(1, attendees().length));
+  const factLine = (g) => [g.minPlayers && (g.maxPlayers && g.maxPlayers !== g.minPlayers ? `${g.minPlayers}–${g.maxPlayers} players` : `${g.minPlayers} players`), GN.playTime(g) && `${GN.playTime(g)} min`, g.weight && `weight ${g.weight.toFixed(1)}`, g.rating && `★ ${g.rating.toFixed(1)}`].filter(Boolean).join(" · ");
+  const art = (g) => `<span class="art" style="--h:${hue(g)}">${g.thumbnail ? `<img src="${esc(g.thumbnail)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith('🎲')">` : "🎲"}</span>`;
+  const teach = (g) => Math.round(5 + 5 * (g.weight || 2));
+
+  function suggestions(n = 6) {
+    const people = attendees(), count = Math.max(1, people.length), budget = timeBudget(), on = new Set(E.ballot.map((b) => b.game));
+    return games.filter((g) => !on.has(g.id) && GN.supports(g, count) && (!budget || budget > 9999 || (GN.playTime(g) && GN.playTime(g) + teach(g) <= budget)))
+      .map((g) => ({ g, fit: GN.groupFit(people, g, count) })).filter((x) => !x.fit.out).sort((a, b) => b.fit.fit - a.fit.fit).slice(0, n);
+  }
+
+  // The night's timeline: arrival, then each scheduled game (teach & set up + play), with short breaks.
+  function timeline() {
+    const f = finalSlot(); if (!f) return null;
+    const items = Array.isArray(E.schedule) ? E.schedule : [];
+    const arrive = Number(items.find((x) => x.arrive != null)?.arrive ?? 15);
+    const ids = items.filter((x) => x.game && byId.has(x.game)).map((x) => x.game);
+    let t = dt(f.start); const end = new Date(t.getTime() + f.hours * 3600e3), out = [];
+    if (arrive) { out.push({ kind: "arrive", at: new Date(t), min: arrive }); t = new Date(t.getTime() + arrive * 60e3); }
+    ids.forEach((id, i) => {
+      const g = byId.get(id), play = GN.playTime(g) || 60, tc = teach(g);
+      out.push({ kind: "game", id, g, at: new Date(t), teach: tc, play, end: new Date(t.getTime() + (tc + play) * 60e3) });
+      t = new Date(t.getTime() + (tc + play) * 60e3);
+      if (i < ids.length - 1) { out.push({ kind: "break", at: new Date(t), min: 10 }); t = new Date(t.getTime() + 10 * 60e3); }
+    });
+    return { items: out, ids, arrive, end, finish: t, over: t > end };
+  }
+  function autoSchedule() {
+    const f = finalSlot(), budget = f.hours * 60 - 15, t = tallies(), n = Math.max(1, attendees().length);
+    const ranked = E.ballot.map((b) => byId.get(b.game)).filter(Boolean).filter((g) => GN.supports(g, n))
+      .map((g) => ({ g, s: t.get(g.id).score, fit: fitFor(g) })).filter((x) => x.s > 0 || !E.votes.length)
+      .sort((a, b) => b.s - a.s || (b.fit.fit || 0) - (a.fit.fit || 0));
+    const pick = []; let used = 0;
+    for (const x of ranked) { const need = GN.playTime(x.g) + teach(x.g) + (pick.length ? 10 : 0); if (used + need <= budget) { pick.push(x.g.id); used += need; } }
+    // Longest first: heavy games go early while everyone's fresh.
+    pick.sort((a, b) => (byId.get(b).weight || 0) - (byId.get(a).weight || 0));
+    return [{ arrive: 15 }, ...pick.map((game) => ({ game }))];
+  }
+
+  /* ---------- Render ---------- */
+  function renderLive() { const el = $("live"); if (el) { el.className = "live" + (live ? " on" : ""); el.lastChild.textContent = live ? " Live" : " Reconnecting…"; } }
+  let keepTyped = true;
+  function render() {
+    const app = $("app"); if (!app) return;
+    if (E && !newSlot) resetNewSlot();
+    const y = scrollY, focusSel = document.activeElement?.dataset?.focus ? `[data-focus="${document.activeElement.dataset.focus}"]` : null;
+    const open = [...document.querySelectorAll("#myRate details")].map((d) => d.open);
+    // Live updates re-render the page: keep anything being typed (and the cursor) intact.
+    const typed = [...app.querySelectorAll("input[id]:not([type=checkbox]), textarea[id]")].map((el) => [el.id, el.value]);
+    const act0 = document.activeElement, actId = act0 && app.contains(act0) && act0.id && /^(INPUT|TEXTAREA)$/.test(act0.tagName) ? act0.id : null;
+    const sel = actId ? [act0.selectionStart, act0.selectionEnd] : null;
+    if (!CODE) app.innerHTML = createHtml();
+    else if (status === "loading") app.innerHTML = `<section class="card"><p>Opening game night ${esc(CODE)}…</p></section>`;
+    else if (status === "missing") app.innerHTML = `<section class="card"><p class="empty">No game night found for code ${esc(CODE)}. Check the link, or <a href="/tools/event">plan a new one</a>.</p></section>`;
+    else if (status === "error") app.innerHTML = `<section class="card"><p class="empty">Couldn't reach the game night service. Check your connection. <button class="link" type="button" onclick="location.reload()">Try again</button></p></section>`;
+    else app.innerHTML = eventHtml();
+    if (open.length) document.querySelectorAll("#myRate details").forEach((d, i) => { if (open[i] != null) d.open = open[i]; });
+    if (keepTyped && CODE) for (const [id, v] of typed) { const el = $(id); if (el && el.value !== v) el.value = v; }
+    keepTyped = true;
+    if (actId && $(actId)) { const el = $(actId); el.focus({ preventScroll: true }); try { el.setSelectionRange(...sel); } catch (e) {} }
+    else if (focusSel) document.querySelector(focusSel)?.focus({ preventScroll: true });
+    scrollTo(0, y);
+    if (flash.size) setTimeout(() => { document.querySelectorAll(".gitem.flash").forEach((x) => x.classList.remove("flash")); flash.clear(); }, 900);
+  }
+
+  // ---- Create screen ----
+  let draft = null;
+  function newDraft() {
+    const ppl = planner(), sat = new Date(); sat.setDate(sat.getDate() + ((6 - sat.getDay() + 7) % 7 || 7)); sat.setHours(19, 0, 0, 0);
+    const fri = new Date(sat); fri.setDate(sat.getDate() - 1);
+    return { title: "Game night", host: ppl[0]?.name || "", place: "", notes: "", repeat: "", invite: ppl.map((p) => p.id),
+      slots: [{ id: newId("s"), start: localIso(fri), hours: 4 }, { id: newId("s"), start: localIso(sat), hours: 4 }] };
+  }
+  function createHtml() {
+    draft = draft || newDraft();
+    const ppl = planner();
+    const list = Object.entries(mine).filter(([, v]) => v && v.title).sort((a, b) => String(b[1].when).localeCompare(String(a[1].when)));
+    const now = localIso(new Date());
+    return `<section class="card" aria-labelledby="newH"><h2 class="sec" id="newH">Plan a game night</h2>
+      <p class="sub">Suggest a few times, invite people with a link, and everyone marks when they're free, rates what they like and votes on games, live.</p>
+      <div class="grid2">
+        <label class="field"><span>Name</span><input type="text" data-d="title" maxlength="60" value="${esc(draft.title)}"></label>
+        <label class="field"><span>Your name (organizer)</span><input type="text" data-d="host" maxlength="30" value="${esc(draft.host)}" placeholder="Your name"></label>
+        <label class="field"><span>Where <small>(optional)</small></span><input type="text" data-d="place" maxlength="80" value="${esc(draft.place)}" placeholder="Our place"></label>
+        <label class="field"><span>Repeats</span><select data-d="repeat">${REPEAT.map(([v, l]) => `<option value="${v}"${v === draft.repeat ? " selected" : ""}>${l}</option>`).join("")}</select></label>
+      </div>
+      <label class="field"><span>Note for everyone <small>(optional)</small></span><textarea data-d="notes" maxlength="400" placeholder="Bring snacks!">${esc(draft.notes)}</textarea></label>
+      <div class="field"><span>Times to choose from</span>${draft.slots.map((s, i) => slotRow(s, i, "d")).join("")}
+        ${draft.slots.length < 8 ? `<div><button class="btn sm" type="button" id="dAddSlot">+ Another time</button></div>` : ""}</div>
+      ${ppl.length ? `<div class="field"><span>Invite from your planner <small>(their ratings come along)</small></span><div class="invite">${ppl.map((p) => `<label class="chk"><input type="checkbox" data-inv="${esc(p.id)}"${draft.invite.includes(p.id) ? " checked" : ""}>${esc(p.name)}</label>`).join("")}</div></div>` : ""}
+      <div class="row"><button class="btn yellow big" type="button" id="create">Create game night</button><span class="note" role="status">${esc(msg)}</span></div>
+    </section>
+    <section class="card" aria-labelledby="mineH"><h2 class="sec" id="mineH">Your game nights</h2>
+      ${list.length ? `<ul class="mylist">${list.map(([code, v]) => `<li><a href="/tools/event?code=${code}" class="${v.when && v.when < now.slice(0, 10) ? "past" : ""}"><span>${esc(v.title)}${v.key ? " · organizer" : ""}</span><small>${v.when ? esc(fmtDay(v.when)) : "time not set"} · ${code}</small></a></li>`).join("")}</ul>` : `<p class="note">Game nights you create or open show up here.</p>`}
+      <div class="row"><label class="vh" for="joinCode">Game night code</label><input type="text" id="joinCode" maxlength="6" placeholder="Have a code? ABC234" autocomplete="off" autocapitalize="characters"><button class="btn sm" type="button" id="joinBtn">Open</button></div>
+    </section>`;
+  }
+  function slotRow(s, i, pre) {
+    const [d, t] = s.start.split("T");
+    return `<div class="slotrow" data-slot="${i}"><label class="vh" for="${pre}d${i}">Date</label><input type="date" id="${pre}d${i}" data-${pre}slot="${i}:date" value="${d}">
+      <label class="vh" for="${pre}t${i}">Start time</label><input type="time" id="${pre}t${i}" data-${pre}slot="${i}:time" value="${t}" step="900">
+      <label class="vh" for="${pre}h${i}">How long</label><select id="${pre}h${i}" data-${pre}slot="${i}:hours">${[2, 3, 4, 5, 6, 8].map((h) => `<option value="${h}"${h === s.hours ? " selected" : ""}>${hoursLabel(h)}</option>`).join("")}</select>
+      ${pre === "d" && draft.slots.length > 1 ? `<button class="x" type="button" data-dslotdel="${i}" aria-label="Remove this time">×</button>` : ""}</div>`;
+  }
+
+  // ---- Event screen ----
+  function eventHtml() {
+    const f = finalSlot(), m = me(), org = isOrg(), link = `${location.origin}/tools/event?code=${E.code}`;
+    const ppl = attendees(), n = ppl.length;
+    const stepDone = { when: !!f, tastes: m && GN.rateCount(m.rate) > 0, games: E.votes.some((v) => v.player === m?.id), night: (E.schedule || []).some((x) => x.game) };
+    return `<section class="card evhead" aria-labelledby="evTitle">
+        <div class="row" style="justify-content:space-between"><h2 id="evTitle">${esc(E.title)}</h2><span class="live${live ? " on" : ""}" id="live"><i aria-hidden="true"></i> ${live ? "Live" : "Connecting…"}</span></div>
+        <div class="meta">${f ? `<span class="pill on">📅 ${esc(fmtDay(f.start))} · ${esc(fmtTime(f.start))}–${esc(fmtTime(new Date(dt(f.start).getTime() + f.hours * 3600e3)))}</span>` : `<span class="pill wait">🗳️ Picking a time</span>`}
+          ${E.host ? `<span>Hosted by ${esc(E.host)}</span>` : ""}${E.place ? `<span>📍 ${esc(E.place)}</span>` : ""}<span>👥 ${E.players.length} invited</span>${E.repeat ? `<span>🔁 ${esc(REPEAT.find((r) => r[0] === E.repeat)[1].toLowerCase())}</span>` : ""}</div>
+        ${E.notes ? `<p class="note">${esc(E.notes)}</p>` : ""}
+        <div class="codebox"><span class="code" aria-label="Code ${E.code.split("").join(" ")}">${E.code}</span><button class="btn sm yellow" type="button" data-copy="${esc(link)}">Copy invite link</button>
+          ${navigator.share ? `<button class="btn sm" type="button" id="shareBtn">Share…</button>` : ""}<span class="note" id="copyMsg" role="status"></span></div>
+        ${seriesHtml()}
+        ${org ? (editDetails ? detailsForm() : `<div class="row"><button class="btn sm" type="button" id="editDetails">Edit details</button>${f ? `<button class="btn sm" type="button" id="ics">📆 Add to calendar</button>` : ""}</div>`) : f ? `<div class="row"><button class="btn sm" type="button" id="ics">📆 Add to calendar</button></div>` : ""}
+      </section>
+      ${whoHtml()}
+      <nav class="steps" aria-label="Sections">${[["when", "When"], ["tastes", "Tastes"], ["games", "Games"], ["night", "The night"]].map(([k, l], i) => `<a href="#${k}" class="${stepDone[k] ? "done" : ""}"><b>${stepDone[k] ? "✓" : i + 1}</b>${l}</a>`).join("")}</nav>
+      ${whenHtml()}${tastesHtml()}${gamesHtml(n)}${nightHtml()}`;
+  }
+  function seriesHtml() {
+    if (!E.repeat && !E.prev && !E.next) return "";
+    const base = finalSlot()?.start || E.slots[0]?.start;
+    const upcoming = E.repeat && base ? [1, 2, 3].map((k) => fmtDay(shift(base, E.repeat, k))) : [];
+    return `<div class="series"><b>Series:</b>${E.prev ? `<a href="/tools/event?code=${E.prev}">‹ Previous night</a>` : ""}${E.next ? `<a href="/tools/event?code=${E.next}">Next night ›</a>` : ""}
+      ${upcoming.length ? `<span class="note">Coming up: ${esc(upcoming.join(", "))}</span>` : ""}
+      ${isOrg() && E.repeat && !E.next ? `<button class="btn sm" type="button" id="planNext">Plan the next one</button>` : ""}</div>`;
+  }
+  function detailsForm() {
+    return `<div class="grid2" style="border-top:2px dashed var(--line);padding-top:12px">
+      <label class="field"><span>Name</span><input type="text" id="edTitle" maxlength="60" value="${esc(E.title)}"></label>
+      <label class="field"><span>Where</span><input type="text" id="edPlace" maxlength="80" value="${esc(E.place)}"></label>
+      <label class="field"><span>Repeats</span><select id="edRepeat">${REPEAT.map(([v, l]) => `<option value="${v}"${v === E.repeat ? " selected" : ""}>${l}</option>`).join("")}</select></label></div>
+      <label class="field"><span>Note for everyone</span><textarea id="edNotes" maxlength="400">${esc(E.notes)}</textarea></label>
+      <div class="row"><button class="btn sm yellow" type="button" id="saveDetails">Save</button><button class="link" type="button" id="cancelDetails">Cancel</button></div>`;
+  }
+  function whoHtml() {
+    const m = me();
+    if (m) return `<div class="whoami">👋 You're <b>${esc(m.name)}</b>.<button class="link" type="button" id="notMe">Not you?</button></div>`;
+    return `<div class="whoami ask" role="group" aria-label="Who are you?"><span>Who are you?</span>
+      ${E.players.map((p) => `<button class="btn sm" type="button" data-claim="${esc(p.id)}">${esc(p.name)}</button>`).join("")}
+      <label class="vh" for="newName">Your name</label><input type="text" id="newName" maxlength="30" placeholder="${E.players.length ? "Someone else? Your name" : "Your name"}"><button class="btn sm yellow" type="button" id="joinAs">Join</button>
+      <span class="note">${esc(msg)}</span></div>`;
+  }
+  function whenHtml() {
+    const m = me(), f = finalSlot(), best = bestSlot(), org = isOrg();
+    const head = E.slots.map((s) => `<th scope="col" class="${f?.id === s.id ? "locked" : !f && best?.id === s.id ? "best" : ""}"><span class="d">${esc(fmtDay(s.start))}</span><span class="t">${esc(fmtTime(s.start))} · ${s.hours}h</span>
+      ${org && !f ? `<br><button class="btn sm" type="button" data-lock="${s.id}" style="margin-top:6px">Pick this</button>` : ""}${org && E.slots.length > 1 && !f ? ` <button class="x" type="button" data-slotdel="${s.id}" aria-label="Remove ${esc(fmtDay(s.start))}">×</button>` : ""}</th>`).join("");
+    const rows = E.players.map((p) => {
+      const mineRow = m && p.id === m.id;
+      return `<tr class="${mineRow ? "me" : ""}"><th scope="row">${esc(p.name)}${mineRow ? " (you)" : ""}</th>${E.slots.map((s) => {
+        const v = p.avail?.[s.id] || "";
+        return `<td class="${f?.id === s.id ? "locked" : ""}">${mineRow ? `<button class="cell ${v}" type="button" data-av="${s.id}" data-focus="av-${s.id}" aria-label="${esc(fmtDay(s.start))} ${esc(fmtTime(s.start))}: ${v ? AV[v][1] : "not answered"}. Tap to change.">${v ? AV[v][0] : "·"}</button>`
+          : `<span class="mark ${v}" title="${v ? AV[v][1] : "No answer yet"}">${v ? AV[v][0] : "·"}</span>`}</td>`;
+      }).join("")}</tr>`;
+    }).join("");
+    const foot = E.slots.map((s) => { const c = availCounts(s); return `<td class="${f?.id === s.id ? "locked" : ""}">${c.yes} ✓${c.maybe ? ` · ${c.maybe} ?` : ""}</td>`; }).join("");
+    return `<section class="card" id="when" aria-labelledby="whenH"><h2 class="sec" id="whenH"><span class="n">1</span>When works?</h2>
+      <p class="sub">${m ? "Tap your row: ✓ can make it, ? maybe, ✕ can't." : "Pick who you are above to mark your times."} ${f ? `<b>${esc(fmtDay(f.start))} at ${esc(fmtTime(f.start))}</b> is locked in.` : best ? `So far <b>${esc(fmtDay(best.start))}</b> works best.` : ""}</p>
+      <div class="avwrap"><table class="av"><thead><tr><th scope="col">Who</th>${head}</tr></thead><tbody>${rows || `<tr><td colspan="${E.slots.length + 1}">No one has joined yet.</td></tr>`}</tbody>
+        <tfoot><tr><td>Can make it</td>${foot}</tr></tfoot></table></div>
+      ${org ? (f ? `<div class="row"><button class="btn sm" type="button" id="unlock">Change the time</button></div>` : E.slots.length < 12 ? `<div class="addslot"><span class="note">Add another time</span>${slotRow(newSlot, 0, "n")}<div><button class="btn sm" type="button" id="addSlot">Add time</button></div></div>` : "") : ""}
+    </section>`;
+  }
+  let newSlot = null;
+  function tastesHtml() {
+    const m = me(), others = E.players.filter((p) => p.id !== m?.id);
+    const prof = m && planner().find((p) => p.name.toLowerCase() === m.name.toLowerCase());
+    const open = showRatings ?? (m ? GN.rateCount(m.rate) === 0 : false);
+    return `<section class="card" id="tastes" aria-labelledby="tastesH"><h2 class="sec" id="tastesH"><span class="n">2</span>What everyone likes</h2>
+      <p class="sub">Each person rates complexity, mechanics and themes. Suggestions lean toward games everyone is likely to enjoy, and anything rated “won't play” is left out.</p>
+      <div class="row">${E.players.map((p) => `<span class="pill">${esc(p.name)} ${GN.rateCount(p.rate) ? `· ${GN.rateCount(p.rate)} rated` : "· not rated yet"}${p.time ? ` · ${esc((TIMES.find((t) => t[0] === p.time) || [0, p.time + " min"])[1])} max` : ""}</span>`).join("")}</div>
+      ${m ? `<div class="row"><button class="btn sm ${open ? "" : "yellow"}" type="button" id="toggleRate" aria-expanded="${open}">${open ? "Hide my ratings" : GN.rateCount(m.rate) ? "Edit my ratings" : "Rate what I like"}</button>
+          ${prof && JSON.stringify(prof.rate) !== JSON.stringify(m.rate) && GN.rateCount(prof.rate) ? `<button class="btn sm" type="button" id="fromPlanner">Use my planner ratings</button>` : ""}
+          <label class="row" style="gap:8px"><span class="note">My time limit</span><select id="myTime">${TIMES.map(([v, l]) => `<option value="${v}"${v === m.time ? " selected" : ""}>${l}</option>`).join("")}</select></label></div>
+        ${open ? `<div id="myRate">${GN.ratingsHtml(m.rate, "myRateInner")}</div>` : ""}` : `<p class="note">Pick who you are above to add your ratings.</p>`}
+    </section>`;
+  }
+  function voteBox(g, t) {
+    const m = me(), mv = m ? E.votes.find((v) => v.player === m.id && v.game === g.id)?.vote : null;
+    const total = t[2].length + t[1].length + t["-1"].length || 1;
+    return `<div class="votes">${VOTES.map(([v, em, l, cls]) => `<button class="vbtn ${cls}" type="button" data-vote="${g.id}:${v}" data-focus="vote-${g.id}-${v}" aria-pressed="${mv === v}" ${m ? "" : "disabled"} aria-label="${l}: ${t[v].length}" title="${esc(t[v].join(", ") || "No one yet")}">${em}<span class="vl"> ${l}</span><span class="c">${t[v].length}</span></button>`).join("")}</div>
+      <div class="tally" aria-hidden="true"><i class="t2" style="width:${100 * t[2].length / total}%"></i><i class="t1" style="width:${100 * t[1].length / total}%"></i><i class="tn" style="width:${100 * t["-1"].length / total}%"></i></div>
+      <div class="voters">${[[2, "😍"], [1, "👍"], [-1, "👎"]].filter(([v]) => t[v].length).map(([v, em]) => `${em} ${esc(t[v].join(", "))}`).join(" · ") || "No votes yet"}</div>`;
+  }
+  function gamesHtml(n) {
+    const t = tallies(), m = me(), budget = timeBudget();
+    // Flash games whose tallies changed since the last render.
+    for (const [id, x] of t) { const sig = `${x[2].length}/${x[1].length}/${x["-1"].length}`; if (prevTally.has(id) && prevTally.get(id) !== sig) flash.add(id); prevTally.set(id, sig); }
+    const ballot = E.ballot.map((b) => ({ b, g: byId.get(b.game) })).filter((x) => x.g).map((x) => ({ ...x, t: t.get(x.g.id), fit: fitFor(x.g) }))
+      .sort((a, b) => b.t.score - a.t.score || (b.fit.fit || 0) - (a.fit.fit || 0));
+    const sug = suggestions();
+    return `<section class="card" id="games" aria-labelledby="gamesH"><h2 class="sec" id="gamesH"><span class="n">3</span>Vote on games</h2>
+      <p class="plan">Planning for <b>${n} player${n === 1 ? "" : "s"}</b>${budget < 9999 ? ` with about <b>${budget >= 60 ? hoursLabel(Math.round(budget / 30) / 2) : budget + " min"}</b>` : ""}${finalSlot() ? " (who's coming to the picked time)" : ""}. Results update live as people vote.</p>
+      ${ballot.length ? `<ul class="glist">${ballot.map((x, i) => `<li class="gitem${flash.has(x.g.id) ? " flash" : ""}${i === 0 && x.t.score > 0 ? " lead" : ""}" data-game="${x.g.id}">${art(x.g)}<div class="ginfo">
+          <div class="gtop"><a class="gname" href="${esc(x.g.url)}" target="_blank" rel="noopener">${i === 0 && x.t.score > 0 ? "🏆 " : ""}${esc(x.g.name)}</a>${x.fit.out ? `<span class="fit" style="background:var(--accent-soft)">Someone won't play</span>` : `<span class="fit" title="How likely everyone is to enjoy it, from their ratings">${x.fit.pct}% fit</span>`}</div>
+          <div class="gfacts">${esc(factLine(x.g))}${!GN.supports(x.g, Math.max(1, n)) ? " · ⚠ doesn't fit this many players" : ""}</div>
+          ${voteBox(x.g, x.t)}
+          ${isOrg() || x.b.by === m?.id ? `<div><button class="link" type="button" data-unballot="${x.g.id}">Remove from the vote</button></div>` : ""}</div></li>`).join("")}</ul>`
+        : `<p class="empty">No games up for a vote yet. Add some from the suggestions below, or search the shelf.</p>`}
+      <div class="addgame"><label class="vh" for="gameSearch">Add a game from the shelf</label><input type="text" id="gameSearch" list="gameNames" placeholder="Add any game from our shelf" autocomplete="off"><button class="btn sm" type="button" id="addGame">Add to the vote</button></div>
+      <h3 style="margin:6px 0 0;font:700 1.1rem Fredoka,ui-rounded,sans-serif">Suggested for this group</h3>
+      ${sug.length ? `<ul class="sugg">${sug.map((x) => `<li class="gitem">${art(x.g)}<div class="ginfo"><div class="gtop"><a class="gname" href="${esc(x.g.url)}" target="_blank" rel="noopener">${esc(x.g.name)}</a><span class="fit">${x.fit.pct}% fit</span></div>
+          <div class="gfacts">${esc(factLine(x.g))}</div>
+          <div class="why">${[x.fit.best && `<span>BGG: best with ${n}</span>`, ...GN.reasons(x.fit, 3).map((r) => `<span${r.good ? "" : ' class="meh"'}>${esc(r.text)}</span>`)].filter(Boolean).join("")}</div>
+          <div><button class="btn sm" type="button" data-ballot="${x.g.id}" ${m ? "" : "disabled"}>+ Add to the vote</button></div></div></li>`).join("")}</ul>`
+        : `<p class="note">${games.length ? "Nothing else on the shelf fits this group and time." : "Loading the shelf…"}</p>`}
+    </section>`;
+  }
+  function nightHtml() {
+    const f = finalSlot(), tl = timeline(), org = isOrg();
+    if (!f) return `<section class="card" id="night" aria-labelledby="nightH"><h2 class="sec" id="nightH"><span class="n">4</span>The night</h2>
+      <p class="empty">${org ? "Pick a time in step 1, then build the night's schedule from the votes." : "Once the organizer picks a time, the night's schedule shows up here."}</p></section>`;
+    const onBallot = E.ballot.map((b) => byId.get(b.game)).filter((g) => g && !tl.ids.includes(g.id));
+    return `<section class="card" id="night" aria-labelledby="nightH"><h2 class="sec" id="nightH"><span class="n">4</span>The night</h2>
+      ${tl.ids.length ? `<ol class="timeline">${tl.items.map((x) => x.kind === "arrive" ? `<li class="small"><span class="tm">${esc(fmtTime(x.at))}</span><span class="rail"></span><div class="blk"><b>Arrive & say hi</b><small>${x.min} minutes</small></div><span></span></li>`
+          : x.kind === "break" ? `<li class="small"><span class="tm">${esc(fmtTime(x.at))}</span><span class="rail"></span><div class="blk"><b>Break</b><small>${x.min} minutes</small></div><span></span></li>`
+          : `<li><span class="tm">${esc(fmtTime(x.at))}</span><span class="rail"></span><div class="blk${x.end > tl.end ? " over" : ""}"><b>${esc(x.g.name)}</b><small>~${x.teach} min to teach & set up, ~${x.play} min to play · done by ${esc(fmtTime(x.end))}${x.end > tl.end ? " (runs late)" : ""}</small></div>
+            ${org ? `<span class="tctl"><button type="button" data-mv="${x.id}:-1" aria-label="Move ${esc(x.g.name)} earlier" ${tl.ids[0] === x.id ? "disabled" : ""}>↑</button><button type="button" data-mv="${x.id}:1" aria-label="Move ${esc(x.g.name)} later" ${tl.ids.at(-1) === x.id ? "disabled" : ""}>↓</button><button type="button" data-unsched="${x.id}" aria-label="Take ${esc(x.g.name)} off the schedule">×</button></span>` : "<span></span>"}</li>`).join("")}
+          <li class="small"><span class="tm">${esc(fmtTime(tl.finish))}</span><span class="rail"></span><div class="blk"><b>${tl.over ? "Wrap up (later than planned)" : "Wrap up"}</b><small>${tl.over ? `The plan ends at ${esc(fmtTime(tl.end))}.` : `${Math.round((tl.end - tl.finish) / 60e3)} minutes to spare before ${esc(fmtTime(tl.end))}.`}</small></div><span></span></li></ol>`
+        : `<p class="empty">${org ? "No schedule yet. Build it from the votes, or add games one by one." : "The organizer hasn't built the schedule yet."}</p>`}
+      ${org ? `<div class="row"><button class="btn sm yellow" type="button" id="autoSched" ${E.ballot.length ? "" : "disabled"}>${tl.ids.length ? "Rebuild from the votes" : "Build the night from the votes"}</button>
+        ${onBallot.length ? `<label class="vh" for="schedAdd">Add a game to the schedule</label><select id="schedAdd"><option value="">Add a game…</option>${onBallot.map((g) => `<option value="${g.id}">${esc(g.name)}</option>`).join("")}</select>` : ""}
+        <label class="row" style="gap:6px"><span class="note">Arrival time</span><select id="arrive">${[0, 15, 30, 45].map((v) => `<option value="${v}"${v === tl.arrive ? " selected" : ""}>${v ? v + " min" : "None"}</option>`).join("")}</select></label></div>` : ""}
+    </section>`;
+  }
+
+  /* ---------- Actions ---------- */
+  const fail = (e) => { msg = /not_allowed/.test(e.message) ? "Only the organizer can do that." : /full/.test(e.message) ? "That's the limit for one game night." : "Couldn't save that. Check your connection and try again."; render(); setTimeout(() => { msg = ""; }, 4000); };
+  async function act(fn, args, optimistic) { if (optimistic) { optimistic(); render(); } try { await rpc(fn, args); } catch (e) { fail(e); } refresh(); }
+  const myRecord = (p) => ({ id: p.id, name: p.name, avail: p.avail || {}, rate: p.rate || GN.blankRate(), time: p.time || 0 });
+  let pushT = null, pendingMe = null, pushing = 0;
+  function pushMe() {
+    const m = me(); if (!m) return; pendingMe = myRecord(m); clearTimeout(pushT);
+    pushT = setTimeout(async () => {
+      const rec = pendingMe; pushing++;
+      try { await rpc("gn_upsert_player", { p_code: CODE, p: rec }); } catch (e) { fail(e); }
+      pushing--; if (pendingMe === rec) pendingMe = null; refresh();
+    }, 250);
+  }
+  const organize = (patch, optimistic) => act("gn_organize", { p_code: CODE, p_key: mine[CODE].key, p: patch }, optimistic);
+
+  async function create() {
+    const d = draft; if (!d.host.trim()) { msg = "Add your name so people know who's organizing."; return render(); }
+    const ppl = planner().filter((p) => d.invite.includes(p.id));
+    const hostP = ppl.find((p) => p.name.toLowerCase() === d.host.trim().toLowerCase());
+    const players = [hostP ? { ...hostP, name: d.host.trim() } : { id: newId(), name: d.host.trim(), rate: GN.blankRate(), time: 0 }, ...ppl.filter((p) => p !== hostP)].map(myRecord);
+    msg = "Creating…"; render();
+    try {
+      const key = randKey(), r = await rpc("gn_create", { p: { key, title: d.title, host: d.host, place: d.place, notes: d.notes, repeat: d.repeat, slots: d.slots, players } });
+      mine[r.code] = { key, me: players[0].id, title: d.title, when: d.slots[0]?.start || "" }; saveMine();
+      location.href = `/tools/event?code=${r.code}`;
+    } catch (e) { msg = "Couldn't create it right now. Check your connection and try again."; render(); }
+  }
+  async function planNext() {
+    const base = E.slots.filter((s) => !E.finalSlot || s.id === E.finalSlot);
+    const slots = base.map((s) => ({ id: newId("s"), start: shift(s.start, E.repeat), hours: s.hours }));
+    const players = E.players.map((p) => ({ ...myRecord(p), avail: {} }));
+    try {
+      const r = await rpc("gn_create", { p: { key: mine[CODE].key, prev: CODE, title: E.title, host: E.host, place: E.place, notes: E.notes, repeat: E.repeat, slots, players } });
+      mine[r.code] = { key: mine[CODE].key, me: mine[CODE].me, title: E.title, when: slots[0]?.start || "" }; saveMine();
+      location.href = `/tools/event?code=${r.code}`;
+    } catch (e) { fail(e); }
+  }
+  function ics() {
+    const f = finalSlot(), tl = timeline(), z = (d) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+    const s = dt(f.start), e = new Date(s.getTime() + f.hours * 3600e3), escI = (t) => String(t).replace(/[\\,;]/g, (c) => "\\" + c).replace(/\n/g, "\\n");
+    const desc = [E.notes, tl?.ids.length ? "Games: " + tl.ids.map((id) => byId.get(id).name).join(", ") : "", `${location.origin}/tools/event?code=${E.code}`].filter(Boolean).join("\n");
+    const body = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Our Game Shelf//EN", "BEGIN:VEVENT", `UID:${E.code}@ourgameshelf.com`, `DTSTAMP:${z(new Date())}`, `DTSTART:${z(s)}`, `DTEND:${z(e)}`, `SUMMARY:${escI(E.title)}`, E.place && `LOCATION:${escI(E.place)}`, `DESCRIPTION:${escI(desc)}`, "END:VEVENT", "END:VCALENDAR"].filter(Boolean).join("\r\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([body], { type: "text/calendar" })); a.download = `${E.title.replace(/[^\w ]+/g, "").trim() || "game-night"}.ics`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    const d = b.dataset, m = me();
+    if (b.id === "create") create();
+    else if (b.id === "dAddSlot") { const last = draft.slots.at(-1); draft.slots.push({ id: newId("s"), start: last ? shift(last.start, "week") : localIso(new Date()), hours: last?.hours || 4 }); render(); }
+    else if (d.dslotdel) { draft.slots.splice(Number(d.dslotdel), 1); render(); }
+    else if (b.id === "joinBtn") { const c = $("joinCode").value.toUpperCase().replace(/[^A-Z0-9]/g, ""); if (c.length === 6) location.href = `/tools/event?code=${c}`; }
+    else if (d.copy) navigator.clipboard.writeText(d.copy).then(() => { $("copyMsg").textContent = "Copied! Send it to everyone."; }, () => { $("copyMsg").textContent = d.copy; });
+    else if (b.id === "shareBtn") navigator.share({ title: E.title, text: `Help pick a time and games for ${E.title}`, url: `${location.origin}/tools/event?code=${E.code}` }).catch(() => {});
+    else if (d.claim) { mine[CODE] = { ...(mine[CODE] || {}), me: d.claim }; saveMine(); render(); }
+    else if (b.id === "joinAs") {
+      const name = $("newName").value.trim().slice(0, 30); if (!name) { msg = "Type your name first."; return render(); }
+      const existing = E.players.find((p) => p.name.toLowerCase() === name.toLowerCase());
+      if (existing) { mine[CODE] = { ...(mine[CODE] || {}), me: existing.id }; saveMine(); return render(); }
+      const prof = planner().find((p) => p.name.toLowerCase() === name.toLowerCase());
+      const rec = { id: newId(), name, avail: {}, rate: prof?.rate || GN.blankRate(), time: prof?.time || 0 };
+      mine[CODE] = { ...(mine[CODE] || {}), me: rec.id }; saveMine(); msg = ""; keepTyped = false;
+      act("gn_upsert_player", { p_code: CODE, p: rec }, () => E.players.push(rec));
+    }
+    else if (b.id === "notMe") { delete mine[CODE].me; saveMine(); render(); $("newName")?.focus(); }
+    else if (d.av && m) { const order = ["", "yes", "maybe", "no"], cur = m.avail?.[d.av] || ""; m.avail = { ...(m.avail || {}), [d.av]: order[(order.indexOf(cur) + 1) % 4] }; if (!m.avail[d.av]) delete m.avail[d.av]; render(); pushMe(); }
+    else if (d.lock) organize({ finalSlot: d.lock }, () => { E.finalSlot = d.lock; });
+    else if (b.id === "unlock") organize({ finalSlot: "" }, () => { E.finalSlot = null; });
+    else if (d.slotdel) organize({ slots: E.slots.filter((s) => s.id !== d.slotdel) }, () => { E.slots = E.slots.filter((s) => s.id !== d.slotdel); });
+    else if (b.id === "addSlot") { keepTyped = false; const s = { ...newSlot, id: newId("s") }; newSlot = null; organize({ slots: [...E.slots, s] }, () => { E.slots = [...E.slots, s]; }); }
+    else if (b.id === "editDetails") { editDetails = true; render(); $("edTitle").focus(); }
+    else if (b.id === "cancelDetails") { editDetails = false; render(); }
+    else if (b.id === "saveDetails") { keepTyped = false; const patch = { title: $("edTitle").value, place: $("edPlace").value, notes: $("edNotes").value, repeat: $("edRepeat").value }; editDetails = false; organize(patch, () => Object.assign(E, patch)); }
+    else if (b.id === "planNext") planNext();
+    else if (b.id === "ics") ics();
+    else if (b.id === "toggleRate") { showRatings = !(showRatings ?? (m ? GN.rateCount(m.rate) === 0 : false)); render(); }
+    else if (b.id === "fromPlanner" && m) { const prof = planner().find((p) => p.name.toLowerCase() === m.name.toLowerCase()); m.rate = prof.rate; if (!m.time) m.time = prof.time; render(); pushMe(); }
+    else if (d.rate && m) { showRatings = true; GN.applyRateClick(m.rate, b); const sel = d.rate; render(); document.querySelector(`[data-rate="${sel}"]`)?.focus({ preventScroll: true }); pushMe(); }
+    else if (d.vote && m) { const [g, v] = d.vote.split(":"), cur = E.votes.find((x) => x.player === m.id && x.game === g), nv = cur && cur.vote === Number(v) ? 0 : Number(v);
+      act("gn_vote", { p_code: CODE, p_player: m.id, p_game: g, p_vote: nv }, () => { E.votes = E.votes.filter((x) => !(x.player === m.id && x.game === g)); if (nv) E.votes.push({ player: m.id, game: g, vote: nv }); }); }
+    else if (d.ballot && m) addToBallot(d.ballot);
+    else if (b.id === "addGame") { const v = $("gameSearch").value.trim().toLowerCase(), g = games.find((x) => x.name.toLowerCase() === v) || games.find((x) => x.name.toLowerCase().startsWith(v));
+      if (!v || !g) { msg = "Pick a game from the list."; return render(); } if (!m) { msg = "Pick who you are first."; return render(); } addToBallot(g.id); }
+    else if (d.unballot) act("gn_ballot_remove", { p_code: CODE, p_game: d.unballot }, () => { E.ballot = E.ballot.filter((x) => x.game !== d.unballot); });
+    else if (b.id === "autoSched") { const s = autoSchedule(); organize({ schedule: s }, () => { E.schedule = s; }); }
+    else if (d.mv) { const [id, dir] = d.mv.split(":"), ids = timeline().ids, i = ids.indexOf(id), j = i + Number(dir); [ids[i], ids[j]] = [ids[j], ids[i]]; setSchedule(ids); }
+    else if (d.unsched) setSchedule(timeline().ids.filter((x) => x !== d.unsched));
+  });
+  function addToBallot(id) { const m = me(); keepTyped = false; act("gn_ballot_add", { p_code: CODE, p_game: id, p_by: m.id }, () => { if (!E.ballot.some((x) => x.game === id)) E.ballot.push({ game: id, by: m.id }); }); }
+  function setSchedule(ids, arrive = timeline().arrive) { const s = [{ arrive }, ...ids.map((game) => ({ game }))]; organize({ schedule: s }, () => { E.schedule = s; }); }
+
+  document.addEventListener("input", (e) => {
+    const t = e.target;
+    if (t.dataset.d) draft[t.dataset.d] = t.value;
+  });
+  document.addEventListener("change", (e) => {
+    const t = e.target, m = me();
+    if (t.dataset.d) draft[t.dataset.d] = t.value;
+    else if (t.dataset.inv) { draft.invite = t.checked ? [...draft.invite, t.dataset.inv] : draft.invite.filter((x) => x !== t.dataset.inv); }
+    else if (t.dataset.dslot || t.dataset.nslot) {
+      const [i, part] = (t.dataset.dslot || t.dataset.nslot).split(":"), s = t.dataset.dslot ? draft.slots[Number(i)] : newSlot;
+      const [dd, tt] = s.start.split("T");
+      if (part === "date" && t.value) s.start = `${t.value}T${tt}`; else if (part === "time" && t.value) s.start = `${dd}T${t.value}`; else if (part === "hours") s.hours = Number(t.value);
+    }
+    else if (t.id === "myTime" && m) { m.time = Number(t.value); render(); pushMe(); }
+    else if (t.id === "schedAdd" && t.value) setSchedule([...timeline().ids, t.value]);
+    else if (t.id === "arrive") setSchedule(timeline().ids, Number(t.value));
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    if (e.target.id === "newName") { e.preventDefault(); $("joinAs").click(); }
+    if (e.target.id === "gameSearch") { e.preventDefault(); $("addGame").click(); }
+    if (e.target.id === "joinCode") { e.preventDefault(); $("joinBtn").click(); }
+  });
+
+  /* ---------- Start ---------- */
+  window.__gn = () => ({ E, live, reqN });
+  const resetNewSlot = () => { const last = E?.slots.at(-1); newSlot = { id: "", start: last ? shift(last.start, "week") : localIso(new Date()), hours: last?.hours || 4 }; };
+  fetch("/api/collection").then((r) => r.json()).then((d) => {
+    games = (d.games || []).filter((g) => g.type === "Base game").sort((a, b) => a.name.localeCompare(b.name)); byId = new Map(games.map((g) => [g.id, g]));
+    const dl = document.createElement("datalist"); dl.id = "gameNames"; dl.innerHTML = games.map((g) => `<option value="${esc(g.name)}">`).join(""); document.body.appendChild(dl);
+    if (E) render();
+  }).catch(() => {});
+  if (CODE) { refresh(); watch(CODE); } else { status = "ok"; render(); }
+  if (CODE && !sb) { status = "error"; render(); }
+})();
+</script>
+<script src="/pwa.js" defer></script>
+</body>
+</html>

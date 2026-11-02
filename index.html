@@ -1441,6 +1441,7 @@ function renderPager(pages) {
 let rowAll = null;        // a row opened with "See all"
 let dealt = null;         // rows from "Deal new rows"; null = our usual rows
 let hot = null;           // BGG's hotness list from the last sync
+let played = null;        // ids of games Remy has played (BGG "played" list from the last sync); null = unknown
 const rowsMode = () => state.view === "rows" && !state.q && !rowAll;
 const byRating = (a, b) => (b.rating || 0) - (a.rating || 0) || a.name.localeCompare(b.name);
 const hasIn = (k, v) => (g) => (g[k] || []).includes(v);
@@ -1449,6 +1450,7 @@ const pt = (g) => g.playTime || g.maxTime || g.minTime || 0;
 // Our usual rows. Rows with fewer than 3 games (after filters) are skipped.
 const ROWS = [
   { title: "Top 10 on BoardGameGeek", ranked: true, pick: (g) => g.rank, sort: (a, b) => a.rank - b.rank, max: 10 },
+  { title: "On the shelf, not played yet", pick: (g) => played && !played.has(g.id) },
   { title: "Perfect for two", pick: (g) => (g.bestPlayers || []).includes(2) },
   { title: "Team up: cooperative games", pick: hasIn("mechanics", "Cooperative Game") },
   { title: "Quick games, 30 minutes or less", pick: (g) => pt(g) && pt(g) <= 30 },
@@ -2016,6 +2018,7 @@ async function load() {
     tileGroups = buildTileGroups(groups);
     byId = new Map(data.games.map((g) => [g.id, g]));
     hot = data.hot || null;
+    played = Array.isArray(data.plays?.items) && data.plays.items.length ? new Set(data.plays.items.map((x) => String(x.id))) : null;
     mechNames = new Set(data.games.flatMap((g) => g.mechanics || [])); catNames = new Set(data.games.flatMap((g) => g.categories || []));
     // One list of every mechanic and category, each with how many games have it.
     const counts = new Map(), kinds = new Map();
