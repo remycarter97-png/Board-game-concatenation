@@ -9,7 +9,8 @@
 //                         (weeks and seasons), buildings / list (entries with optional number and level, and a
 //                         state), rotation (whose turn it is to lead; moves on after every logged attempt)
 // Optional:               words (the game's own names: Mission, Crew member, Lost…), campLabel (tab name for
-//                         the sections), startScenarios (numbers to create up front; no names), goals (personal
+//                         the sections), events (a log of event cards drawn: kind, season, number, choice,
+//                         outcome, what happened to the card), startScenarios (numbers to create up front; no names), goals (personal
 //                         goals on or off), retirement (characters can be retired / lost)
 (function () {
   // XP needed for levels 1–9 in Gloomhaven-family games.
@@ -42,6 +43,7 @@
         ] },
         { id: "supply", label: "Outpost supply", type: "resources", names: FH_RESOURCES },
         { id: "calendar", label: "Calendar", type: "calendar", weeks: 80, seasonEvery: 10, seasons: ["Summer", "Winter"] },
+        { id: "events", label: "Event cards", type: "events", kinds: ["Outpost", "Road"], choices: ["A", "B"], fates: ["Back in the deck", "Removed from the game"] },
         { id: "buildings", label: "Buildings", type: "buildings", states: ["Normal", "Damaged", "Wrecked"] },
       ],
       lists: [{ id: "stickers", label: "Campaign stickers", scope: "campaign" }, { id: "party", label: "Party achievements", scope: "party" }],

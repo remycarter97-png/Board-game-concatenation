@@ -464,6 +464,7 @@
           <p class="sub">${esc(s.hint || "")}</p>` : `<p class="empty">Add ${W("character").toLowerCase()}s to the ${W("party").toLowerCase()} first.</p>`}</section>`; }
       if (s.type === "resources") { const r = C.res[s.id] || {}; return `<section class="card"><h2 class="sec">${esc(s.label)}</h2><div class="res">${s.names.map((n) => `<div class="track"><span>${esc(n)}</span>${stepper(`res:${s.id}:${n}`, r[n] || 0, `${s.label} ${n}`)}</div>`).join("")}</div></section>`; }
       if (s.type === "calendar") return calendarHtml(s);
+      if (s.type === "events") return eventsHtml(s);
       if (s.type === "buildings" || s.type === "list") return buildingsHtml(s);
       return "";
     }).join("");
@@ -481,6 +482,32 @@
     </section>`;
   }
   // A list section: buildings, planets, research projects… each entry has a name, an optional number and level, and a state.
+  // Event cards drawn (Frosthaven's outpost and road events): which card, the choice made, what happened, and where the card went.
+  let evFilter = "all";
+  function eventsHtml(s) {
+    const cal = C.schema.sections.find((x) => x.type === "calendar"), season = cal ? seasonOf(cal, C.calendar.week) : "";
+    const all = (C.events = C.events || []), list = all.filter((e) => evFilter === "all" || e.kind === evFilter);
+    const removed = all.filter((e) => e.fate === s.fates[1]);
+    const avail = C.scenarios.filter((x) => x.status !== "locked").sort(sortScen);
+    return `<section class="card"><h2 class="sec">${esc(s.label)} <span class="note">${all.length}</span></h2>
+      <p class="sub">Log each event card as you resolve it.${cal ? ` Week and season come from the calendar (week ${C.calendar.week}, ${esc(season.toLowerCase())}).` : ""}</p>
+      <div class="playform">
+        <div class="row"><label class="field"><span>Card</span><select id="evKind">${s.kinds.map((k) => `<option>${esc(k)}</option>`).join("")}</select></label>
+          ${cal ? `<label class="field"><span>Season</span><select id="evSeason">${cal.seasons.map((x) => `<option${x === season ? " selected" : ""}>${esc(x)}</option>`).join("")}</select></label>` : ""}
+          <label class="field"><span>Number</span><input type="text" id="evNum" maxlength="10" style="width:5.5em" placeholder="e.g. 12"></label>
+          <label class="field"><span>Choice</span><select id="evChoice"><option value="">—</option>${s.choices.map((c) => `<option>${esc(c)}</option>`).join("")}</select></label>
+          <label class="field"><span>Card went</span><select id="evFate">${s.fates.map((f) => `<option>${esc(f)}</option>`).join("")}</select></label></div>
+        <div class="row"><label class="field" style="flex:1 1 260px"><span>What happened</span><input type="text" id="evOutcome" maxlength="300" placeholder="e.g. Lost 2 lumber, gained 1 morale"></label>
+          ${avail.length ? `<label class="field"><span>On the way to <small>(road)</small></span><select id="evScen"><option value="">—</option>${avail.map((x) => `<option value="${esc(x.num)}">${esc(W("scenario"))} ${esc(x.num)}${x.name ? ` · ${esc(x.name)}` : ""}</option>`).join("")}</select></label>` : ""}
+          <button class="btn sm yellow" type="button" id="logEvent" style="align-self:end">Log card</button></div></div>
+      <div class="filters" role="group" aria-label="Show">${["all", ...s.kinds].map((k) => `<button type="button" data-evfilter="${esc(k)}" aria-pressed="${evFilter === k}">${k === "all" ? "All" : esc(k)} · ${k === "all" ? all.length : all.filter((e) => e.kind === k).length}</button>`).join("")}</div>
+      ${list.length ? `<div class="stack">${list.map((e) => `<div class="ach" style="flex-wrap:wrap"><span class="pill ${e.kind === s.kinds[0] ? "available" : ""}">${esc(e.kind)}${e.season ? ` · ${esc(e.season)}` : ""} ${esc(e.num || "")}</span>
+          ${e.choice ? `<span class="pill">Chose ${esc(e.choice)}</span>` : ""}<span style="flex:1 1 180px">${esc(e.outcome || "")}${e.scen ? ` <small>· on the way to ${esc(W("scenario").toLowerCase())} ${esc(e.scen)}</small>` : ""}</span>
+          <small>${e.fate === s.fates[1] ? "🗑 " : "↩ "}${esc(e.fate)}${e.week ? ` · week ${e.week}` : ""} · ${esc(fmtDate(e.date))}</small>
+          <button class="x" type="button" data-delevent="${e.id}" aria-label="Delete this entry">×</button></div>`).join("")}</div>` : `<p class="empty">No cards logged${evFilter === "all" ? "" : " of this kind"} yet.</p>`}
+      ${removed.length ? `<p class="note">Removed from the game: ${removed.map((e) => `${esc(e.kind)}${e.season ? ` ${esc(e.season.toLowerCase())}` : ""} ${esc(e.num || "?")}`).join(", ")}</p>` : ""}
+    </section>`;
+  }
   function buildingsHtml(s) {
     const list = [...listOf(s)].sort(sortScen), lvl = s.level !== false, nmb = s.numbered !== false, one = s.item || "building", sid = s.id;
     return `<section class="card"><h2 class="sec">${esc(s.label)} ${list.length ? `<span class="note">${list.length}</span>` : ""}</h2>
@@ -619,6 +646,12 @@
     else if (d.addbld) { const sec = C.schema.sections.find((x) => x.id === d.addbld), sid = sec.id, n = $(`bName-${sid}`).value.trim(); if (!n) return $(`bName-${sid}`).focus();
       listOf(sec).push({ id: uid("b"), num: $(`bNum-${sid}`)?.value.trim() || "", name: n, level: $(`bLvl-${sid}`) ? num($(`bLvl-${sid}`).value, 0, 9) : null, state: sec.states[0] }); addLog(C, `${sec.item ? sec.item[0].toUpperCase() + sec.item.slice(1) : "Building"}: ${n}`); save(); $(`bName-${sid}`)?.focus(); }
     else if (d.delbld) { const [sid, id] = d.delbld.split(":"), sec = C.schema.sections.find((x) => x.id === sid), l = listOf(sec); l.splice(l.findIndex((x) => x.id === id), 1); save(); }
+    else if (b.id === "logEvent") { const sec = C.schema.sections.find((x) => x.type === "events"), num_ = $("evNum").value.trim(), outcome = $("evOutcome").value.trim();
+      if (!num_ && !outcome) return $("evNum").focus();
+      const e = { id: uid("e"), kind: $("evKind").value, season: $("evSeason")?.value || "", num: num_, choice: $("evChoice").value, outcome, fate: $("evFate").value, scen: $("evScen")?.value || "", week: C.schema.sections.some((x) => x.type === "calendar") ? C.calendar.week : null, date: today() };
+      (C.events = C.events || []).unshift(e); addLog(C, `${e.kind} event${e.num ? ` ${e.num}` : ""}${e.choice ? ` (chose ${e.choice})` : ""}${e.fate === sec.fates[1] ? ", removed" : ""}`); save(); $("evNum")?.focus(); }
+    else if (d.delevent) { C.events = C.events.filter((x) => x.id !== d.delevent); save(); }
+    else if (d.evfilter) { evFilter = d.evfilter; render(); }
     else if (d.rot) { C.rotation = (C.rotation || 0) + Number(d.rot); save(); }
     // achievements, unlocks
     else if (d.addach) { const el = $(`aNew-${d.addach}`), n = el.value.trim(); if (!n) return el.focus(); C.achievements.push({ id: uid("a"), list: d.addach, name: n, done: false }); save(); $(`aNew-${d.addach}`).focus(); }
@@ -666,7 +699,7 @@
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Enter" || e.target.tagName !== "INPUT") return;
     const id = e.target.id, d = e.target.dataset;
-    const go = { sNum: "addScen", sName: "addScen", chName: "addChar", chClass: "addChar", chPlayer: "addChar", bName: "addBld", uName: "addUnlock", uFrom: "addUnlock", cfLabel: "addCf", trLabel: "addTr", listLabel: "addList", openCode: "openBtn" }[id];
+    const go = { evNum: "logEvent", evOutcome: "logEvent", sNum: "addScen", sName: "addScen", chName: "addChar", chClass: "addChar", chPlayer: "addChar", bName: "addBld", uName: "addUnlock", uFrom: "addUnlock", cfLabel: "addCf", trLabel: "addTr", listLabel: "addList", openCode: "openBtn" }[id];
     if (go) { e.preventDefault(); $(go).click(); } else if (d.bname) { e.preventDefault(); document.querySelector(`[data-addbld="${d.bname}"]`).click(); } else if (d.anew) { e.preventDefault(); document.querySelector(`[data-addach="${d.anew}"]`).click(); } else if (d.num) { e.preventDefault(); e.target.blur(); }
   });
 
@@ -696,6 +729,11 @@
   }
   addEventListener("storage", (e) => { if (e.key === GOALS && C) { syncGoalSnaps(); render(); } });
 
+  // Campaigns started from a setup before it gained a section get the new section added.
+  for (const c of Object.values(DB.campaigns)) {
+    const tpl = T[c.template]; if (!tpl) continue;
+    for (const [i, sec] of tpl.sections.entries()) if (!c.schema.sections.some((x) => x.id === sec.id)) { c.schema.sections.splice(Math.min(i, c.schema.sections.length), 0, copy(sec)); c.updated = Date.now(); if (c.code) c.dirty = true; persist(); }
+  }
   /* ---------- Start ---------- */
   if (CID && !C) { $("app").innerHTML = `<section class="card"><p class="empty">That campaign isn't on this device. <a href="/tools/campaigns">See your campaigns</a></p></section>`; }
   else { syncGoalSnaps(); render(); pull(); }
