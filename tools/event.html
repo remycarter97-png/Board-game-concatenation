@@ -267,7 +267,9 @@ document.head.insertAdjacentHTML("beforeend", `<style>${GN.RATING_CSS}</style>`)
     channel = sb.channel(`gn:${code}`, { config: { broadcast: { self: true } } })
       .on("broadcast", { event: "changed" }, () => { clearTimeout(refreshTimer); refreshTimer = setTimeout(refresh, 120); })
       .subscribe((st) => { const was = live; live = st === "SUBSCRIBED"; renderLive(); if (live && !was) refresh(); });
-    clearInterval(pollTimer); pollTimer = setInterval(() => { if (!live && !document.hidden) refresh(); }, 20000);
+    // A safety net: check now and then even when live (every 20s if the live connection is down).
+    let ticks = 0;
+    clearInterval(pollTimer); pollTimer = setInterval(() => { ticks++; if (!document.hidden && (!live || ticks % 3 === 0)) refresh(); }, 20000);
   }
   document.addEventListener("visibilitychange", () => { if (!document.hidden && E) refresh(); });
 
@@ -558,14 +560,17 @@ document.head.insertAdjacentHTML("beforeend", `<style>${GN.RATING_CSS}</style>`)
 
   /* ---------- Actions ---------- */
   const fail = (e) => { msg = /not_allowed/.test(e.message) ? "Only the organizer can do that." : /full/.test(e.message) ? "That's the limit for one game night." : "Couldn't save that. Check your connection and try again."; render(); setTimeout(() => { msg = ""; }, 4000); };
-  async function act(fn, args, optimistic) { if (optimistic) { optimistic(); render(); } try { await rpc(fn, args); } catch (e) { fail(e); } refresh(); }
+  // Tell everyone else on this event to refetch. The database also announces every change; this is a
+  // second, direct path so updates still arrive instantly if that one is slow or down.
+  const ping = () => { try { channel?.send({ type: "broadcast", event: "changed", payload: {} }); } catch (e) {} };
+  async function act(fn, args, optimistic) { if (optimistic) { optimistic(); render(); } try { await rpc(fn, args); ping(); } catch (e) { fail(e); } refresh(); }
   const myRecord = (p) => ({ id: p.id, name: p.name, avail: p.avail || {}, rate: p.rate || GN.blankRate(), time: p.time || 0 });
   let pushT = null, pendingMe = null, pushing = 0;
   function pushMe() {
     const m = me(); if (!m) return; pendingMe = myRecord(m); clearTimeout(pushT);
     pushT = setTimeout(async () => {
       const rec = pendingMe; pushing++;
-      try { await rpc("gn_upsert_player", { p_code: CODE, p: rec }); } catch (e) { fail(e); }
+      try { await rpc("gn_upsert_player", { p_code: CODE, p: rec }); ping(); } catch (e) { fail(e); }
       pushing--; if (pendingMe === rec) pendingMe = null; refresh();
     }, 250);
   }
