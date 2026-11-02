@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shelf Finder</title>
+<meta name="description" content="Search for a game and see exactly where it lives on our shelves.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#fff3e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1528" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Game Shelf">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
+    --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
+    --yellow: #ffd45c; --yellow-soft: #fff1c2; --mint: #8be0bd; --mint-soft: #ddf6ea;
+    --ok: #24a26b; --danger: #d43c41; --warn: #a35a00; --warn-soft: #ffe8cc;
+    --edge: 2.5px solid var(--outline); --pop: 4px 4px 0 var(--outline); --pop-sm: 3px 3px 0 var(--outline);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+      --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+      --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+    --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+    --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; color: var(--ink); font: 16px/1.5 Nunito, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header (matches the other pages) */
+  header.top { padding: 36px 0 8px; }
+  .titlebar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .brand { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+  .logo { width: 72px; height: 72px; flex: none; transform: rotate(-5deg); filter: drop-shadow(4px 4px 0 var(--outline)); transition: transform .3s; }
+  .logo:hover { transform: rotate(4deg) scale(1.05); }
+  h1 { font: 700 clamp(2rem, 4vw, 2.9rem)/1.05 Fredoka, ui-rounded, system-ui, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  h1 .hl { background: linear-gradient(transparent 62%, var(--hl, var(--yellow)) 62% 92%, transparent 92%); padding: 0 2px; }
+  .tagline { margin: 6px 0 0; color: var(--ink-2); font-size: 1.05rem; font-weight: 600; }
+  .pagenav { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); }
+  .pagenav a { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-decoration: none; }
+  .pagenav a:hover { color: var(--ink); background: var(--surface-2); }
+  .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+
+  /* Shared bits */
+  .card { background: var(--surface); border: var(--edge); border-radius: 22px; box-shadow: var(--pop); padding: 18px 20px; min-width: 0; display: grid; gap: 14px; align-content: start; }
+  h2 { font: 700 1.3rem/1.2 Fredoka, ui-rounded, sans-serif; margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  h2 small { font: 700 .88rem Nunito, sans-serif; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm);
+    background: var(--surface); color: var(--ink); font: 600 1rem Fredoka, ui-rounded, sans-serif; transition: transform .12s, box-shadow .12s; text-decoration: none; }
+  .btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.yellow { background: var(--yellow); color: #3d2a4f; }
+  .btn.big { min-height: 52px; font-size: 1.15rem; padding: 0 22px; }
+  .btn.sm { min-height: 34px; padding: 0 12px; font-size: .9rem; border-radius: 11px; }
+  .link { border: 0; background: none; padding: 4px 2px; color: var(--accent); font-weight: 800; font-size: .92rem; }
+  .link:hover { text-decoration: underline; }
+  .link.danger { color: var(--danger); }
+  input[type=text], input[type=number] { height: 44px; border: var(--edge); border-radius: 13px; background: var(--surface); padding: 0 12px; font-weight: 700; min-width: 0; box-shadow: var(--pop-sm); }
+  input:focus { outline: none; box-shadow: 0 0 0 4px var(--yellow), 3px 3px 0 4px var(--outline); }
+  input[readonly] { opacity: .65; }
+  .note { margin: 0; font-size: .88rem; color: var(--ink-2); font-weight: 600; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 2px solid var(--outline); border-radius: 12px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: none; min-height: 30px; padding: 0 12px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+  .ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ctl > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+
+  .crumbs { margin-top: 18px; } .crumbs a { color: var(--accent); font-weight: 800; text-decoration: none; } .crumbs a:hover { text-decoration: underline; }
+  main { margin-top: 12px; display: grid; gap: 20px; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .sub { margin: -4px 0 0; color: var(--ink-2); font-weight: 600; font-size: .92rem; }
+  .note { margin: 0; color: var(--ink-2); font-weight: 700; font-size: .86rem; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .field { display: grid; gap: 5px; min-width: 0; }
+  .field > span { font: 600 .74rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+  input[type=text], input[type=number], input[type=password], select, textarea { min-height: 40px; border: var(--edge); border-radius: 12px; background: var(--surface); color: var(--ink); font: 700 .95rem Nunito, sans-serif; padding: 0 10px; min-width: 0; }
+  input[type=number] { width: 4.5em; } textarea { padding: 8px 10px; width: 100%; box-sizing: border-box; min-height: 110px; }
+  input:focus-visible, select:focus-visible, button:focus-visible, textarea:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  h2.sec { margin: 0; font: 700 1.3rem Fredoka, ui-rounded, sans-serif; display: flex; gap: 10px; align-items: center; justify-content: flex-start; flex-wrap: wrap; }
+  .empty { text-align: center; color: var(--ink-2); font-weight: 700; padding: 16px 12px; border: 2.5px dashed var(--line); border-radius: 16px; margin: 0; }
+  .x { width: 30px; height: 30px; flex: none; border-radius: 50%; border: 2px solid var(--outline); background: var(--surface); font-weight: 900; color: var(--ink-2); }
+  .search { display: flex; gap: 8px; } .search input { flex: 1; min-height: 52px; font-size: 1.1rem; border-radius: 16px; box-shadow: var(--pop-sm); }
+  .found { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: start; }
+  .art { --h: 30; width: 96px; height: 96px; border: 2px solid var(--outline); border-radius: 14px; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 5px;
+    background: linear-gradient(135deg, hsl(var(--h) 90% 88%), hsl(calc(var(--h) + 35) 80% 77%)); font-size: 2.2rem; }
+  .art img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .found h3 { margin: 0; font: 700 1.4rem/1.15 Fredoka, ui-rounded, sans-serif; }
+  .where { margin: 6px 0 0; font: 700 1.25rem/1.25 Fredoka, ui-rounded, sans-serif; color: var(--accent); }
+  .where small { display: block; font: 800 1rem Nunito, sans-serif; color: var(--ink); }
+  /* units */
+  .units { display: grid; gap: 18px; }
+  .unit h3 { margin: 0; font: 700 1.15rem Fredoka, ui-rounded, sans-serif; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .grid { display: grid; gap: 6px; padding: 8px; border: 3px solid var(--outline); border-radius: 12px; background: #c9a77c; max-width: 760px; }
+  .cb { min-height: 86px; border: 2px solid #8a6a45; border-radius: 6px; background: #f7ecd9; padding: 5px; text-align: left; display: flex; flex-direction: column; gap: 2px; overflow: hidden; font: inherit; color: #3d2a4f; position: relative; }
+  .cb .rc { font: 700 .66rem Fredoka, ui-rounded, sans-serif; color: #8a6a45; }
+  .cb .t { font-size: .7rem; font-weight: 800; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cb .more { font-size: .66rem; font-weight: 800; color: #8a6a45; }
+  .cb[aria-pressed="true"] { outline: 3px solid var(--accent); outline-offset: 1px; }
+  .cb.hit { background: var(--yellow); box-shadow: 0 0 0 4px var(--accent); }
+  .cb .t.hit { background: var(--accent); color: #fff; border-radius: 4px; padding: 0 3px; }
+  .mini .cb { min-height: 34px; }
+  .cubelist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; counter-reset: n; }
+  .cubelist li { counter-increment: n; display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 2px solid var(--line); border-radius: 12px; background: var(--surface); font-weight: 800; flex-wrap: wrap; }
+  .cubelist li::before { content: counter(n); min-width: 1.8em; text-align: center; font: 700 .85rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); }
+  .cubelist li.hit { background: var(--yellow-soft); border-color: var(--accent); }
+  .cubelist li span.nm { flex: 1 1 140px; min-width: 0; } .cubelist li .unk { color: var(--warn); }
+  .cubelist button.mv { width: 30px; height: 30px; border-radius: 9px; border: 2px solid var(--outline); background: var(--surface); font-weight: 900; }
+  .cubelist button:disabled { opacity: .3; }
+  .panel { display: grid; gap: 10px; padding: 14px; border: 2px dashed var(--outline); border-radius: 16px; background: var(--yellow-soft); }
+  .lock { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px; border: 2px solid var(--outline); border-radius: 999px; font-weight: 800; font-size: .8rem; background: var(--surface-2); }
+  .pill.on { background: var(--mint); color: #3d2a4f; }
+  .unplaced { display: flex; flex-wrap: wrap; gap: 6px; }
+  .unplaced button { min-height: 32px; padding: 0 10px; border-radius: 999px; border: 2px solid var(--outline); background: var(--surface); font-weight: 800; font-size: .84rem; color: var(--ink); }
+  footer { margin: 40px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
+  @media (max-width: 760px) { .wrap { padding: 0 16px; } header.top { padding-top: 22px; } .logo { width: 54px; height: 54px; } .brand { gap: 12px; } .card { box-shadow: var(--pop-sm); padding: 16px; border-radius: 18px; } .art { width: 72px; height: 72px; } .cb { min-height: 64px; } .cb .t:nth-of-type(n+4) { display: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <a class="brand" href="/">
+        <svg class="logo" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="3" y="3" width="66" height="66" rx="18" fill="var(--yellow)" stroke="var(--outline)" stroke-width="3"/>
+          <g transform="translate(36 10) rotate(14)"><rect x="0" y="0" width="22" height="22" rx="5" fill="#fff" stroke="var(--outline)" stroke-width="2.5"/>
+            <circle cx="6" cy="6" r="2.2" fill="var(--outline)"/><circle cx="11" cy="11" r="2.2" fill="var(--outline)"/><circle cx="16" cy="16" r="2.2" fill="var(--outline)"/></g>
+          <g transform="translate(9 20) scale(1.75)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.4" stroke-linejoin="round"/></g>
+        </svg>
+        <div>
+          <h1>Shelf <span class="hl">Finder</span></h1>
+          <p class="tagline">Where does it live?</p>
+        </div>
+      </a>
+      <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats">Charts</a><a href="/tools" aria-current="page">Tools</a></nav>
+    </div>
+  </header>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools">‹ All tools</a></nav>
+  <main id="app"><section class="card"><p>Loading the shelves…</p></section></main>
+  <footer>The shelf map is shared: anyone can look things up, and changes need the edit PIN. Rows count from the top and columns from the left; games standing up count from the left, stacked games from the bottom.</footer>
+</div>
+<script src="/tools/shelf-core.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id), SM = window.ShelfMap;
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const PINKEY = "game-shelf:shelf-pin", uid = (p) => p + Math.random().toString(36).slice(2, 7);
+  let MAP = SM.empty(), base = null, exists = false, games = [], byId = new Map(), pin = null, editing = false, sel = null, query = "", msg = "", saving = "", showUnplaced = false, pastes = false;
+  try { pin = localStorage.getItem(PINKEY); } catch (e) {}
+  const hue = (g) => (Number(String(g.id).replace(/\D/g, "")) * 47) % 360;
+  const nameOf = (it) => (it.g ? byId.get(it.g)?.name || it.name || "?" : it.name || "?");
+
+  async function loadMap(keepMsg) {
+    try { const r = await SM.get(); if (r) { MAP = { ...SM.empty(), ...r.data }; base = r.updatedAt; exists = true; } else { MAP = SM.empty(); exists = false; } if (!keepMsg) saving = ""; }
+    catch (e) { saving = "Couldn't reach the shelf map. Check your connection."; }
+    render();
+  }
+  let saveT = null;
+  function changed() { render(); clearTimeout(saveT); saving = "Saving…"; saveT = setTimeout(save, 500); }
+  async function save() {
+    try { const r = await SM.put(pin, MAP, base); base = r.updatedAt; exists = true; saving = "Saved"; }
+    catch (e) {
+      if (/conflict/.test(e.message)) { saving = "Someone else changed the shelves just now, so this page reloaded their version. Make your change again."; await loadMap(true); return; }
+      if (/wrong_pin/.test(e.message)) { saving = "That PIN doesn't match. Unlock again."; editing = false; pin = null; try { localStorage.removeItem(PINKEY); } catch (err) {} }
+      else saving = "Couldn't save. Check your connection; your change is on this page only.";
+    }
+    render();
+  }
+
+  /* ---------- Render ---------- */
+  function render() {
+    const y = scrollY, foc = document.activeElement?.dataset?.focus || (document.activeElement?.id && document.activeElement.tagName === "INPUT" ? `#${document.activeElement.id}` : null);
+    const caret = document.activeElement?.selectionStart;
+    $("app").innerHTML = searchHtml() + unitsHtml() + (editing ? editHtml() : "") + lockHtml();
+    if (foc) { const el = foc.startsWith("#") ? document.querySelector(foc) : document.querySelector(`[data-focus="${foc}"]`); el?.focus({ preventScroll: true }); if (caret != null && el?.setSelectionRange) try { el.setSelectionRange(caret, caret); } catch (e) {} }
+    scrollTo(0, y);
+  }
+  function matchGame(q) {
+    const v = q.trim().toLowerCase(); if (!v) return null;
+    return games.find((g) => g.name.toLowerCase() === v) || games.find((g) => g.name.toLowerCase().startsWith(v)) || games.find((g) => g.name.toLowerCase().includes(v)) || null;
+  }
+  function searchHtml() {
+    const g = matchGame(query), p = g && SM.find(MAP, g.id);
+    let res = "";
+    if (query.trim() && !g) {
+      const unk = SM.cubesInOrder(MAP).flatMap((x) => (MAP.cubes[x.k]?.items || []).map((it, i) => ({ x, it, i }))).find(({ it }) => !it.g && it.name?.toLowerCase().includes(query.trim().toLowerCase()));
+      res = unk ? foundHtml({ name: unk.it.name, id: null }, { ...unk.x, i: unk.i, n: MAP.cubes[unk.x.k].items.length, stack: !!MAP.cubes[unk.x.k].stack }) : `<p class="empty">No game on our shelf matches “${esc(query)}”.</p>`;
+    } else if (g) res = foundHtml(g, p);
+    return `<section class="card"><h2 class="sec">Where does it live?</h2>
+      <div class="search"><label class="vh" for="q">Search for a game</label><input type="text" id="q" list="gameNames" value="${esc(query)}" placeholder="Search for a game" autocomplete="off"></div>${res}</section>`;
+  }
+  function foundHtml(g, p) {
+    const art = `<span class="art" style="--h:${g.id ? hue(g) : 30}">${g.thumbnail ? `<img src="${esc(g.thumbnail)}" alt="" referrerpolicy="no-referrer" onerror="this.replaceWith('🎲')">` : "🎲"}</span>`;
+    if (!p) {
+      const s = g.id ? SM.suggest(MAP, g, byId) : null;
+      return `<div class="found">${art}<div><h3>${esc(g.name)}</h3><p class="where">Not on the shelves yet</p>
+        ${s ? `<p class="note">By our order (${esc(SM.RULES[MAP.rule].label.toLowerCase())}), it would go in ${esc(s.text)}.</p>` : ""}
+        ${editing && g.id ? `<div class="row" style="margin-top:8px">${s ? `<button class="btn sm yellow" type="button" data-place="${g.id}" data-at="${esc(s.k)}:${s.index}">Put it there</button>` : ""}${sel ? `<button class="btn sm" type="button" data-place="${g.id}" data-at="${esc(sel)}:end">Add to the selected cube</button>` : `<span class="note">Or tap a cube below, then add it there.</span>`}</div>` : ""}</div></div>`;
+    }
+    const t = SM.placeText(MAP, p), cb = MAP.cubes[p.k];
+    return `<div class="found">${art}<div><h3>${esc(g.name)}</h3><p class="where">${esc(p.unit.name)}<small>Row ${p.r}, column ${p.c} · ${esc(t.pos)}</small></p>
+        <p class="note">${p.stack ? "Stacked, bottom to top" : "Left to right"}: ${cb.items.map((it, i) => i === p.i ? `<b style="color:var(--accent)">${esc(nameOf(it))}</b>` : esc(nameOf(it))).join(" · ")}</p>
+        <div class="grid mini" style="grid-template-columns:repeat(${p.unit.cols},minmax(0,1fr));max-width:${Math.min(320, 70 * p.unit.cols)}px;margin-top:8px" aria-hidden="true">${cellRange(p.unit).map(([r, c]) => `<span class="cb${r === p.r && c === p.c ? " hit" : ""}"></span>`).join("")}</div></div></div>`;
+  }
+  const cellRange = (u) => { const out = []; for (let r = 1; r <= u.rows; r++) for (let c = 1; c <= u.cols; c++) out.push([r, c]); return out; };
+  function unitsHtml() {
+    const hitId = matchGame(query)?.id;
+    if (!MAP.units.length) return `<section class="card"><h2 class="sec">Our shelves</h2><p class="empty">No shelves mapped yet.${editing ? " Add your first unit below." : " Unlock editing below to add them."}</p></section>`;
+    return `<section class="card"><h2 class="sec">Our shelves</h2><p class="sub">Tap a cube to see what's in it${editing ? " and change it" : ""}.</p><div class="units">${MAP.units.map((u) => `<div class="unit">
+        <h3>${esc(u.name)} <span class="note">${u.rows} × ${u.cols}</span></h3>
+        <div class="grid" style="grid-template-columns:repeat(${u.cols},minmax(0,1fr))">${cellRange(u).map(([r, c]) => { const k = SM.key(u.id, r, c), cb = MAP.cubes[k], items = cb?.items || [];
+          const shown = cb?.stack ? [...items].reverse() : items;
+          return `<button type="button" class="cb${items.some((it) => it.g === hitId) ? " hit" : ""}" data-cube="${k}" data-focus="cube-${k}" aria-pressed="${sel === k}" aria-label="${esc(u.name)} row ${r} column ${c}: ${items.length} game${items.length === 1 ? "" : "s"}">
+            <span class="rc">${r}·${c}${cb?.stack ? " ≡" : ""}</span>${shown.slice(0, 5).map((it) => `<span class="t${it.g && it.g === hitId ? " hit" : ""}">${esc(nameOf(it))}</span>`).join("")}${items.length > 5 ? `<span class="more">+${items.length - 5} more</span>` : ""}</button>`; }).join("")}</div>
+        ${sel && sel.startsWith(u.id + ":") ? cubePanel(u, sel) : ""}</div>`).join("")}</div></section>`;
+  }
+  function cubePanel(u, k) {
+    const [, r, c] = k.split(":"), cb = MAP.cubes[k] || { stack: false, items: [] }, hitId = matchGame(query)?.id, n = cb.items.length;
+    const allCubes = SM.cubesInOrder(MAP);
+    return `<div class="panel" style="margin-top:10px" aria-label="${esc(u.name)} row ${r} column ${c}"><div class="row" style="justify-content:space-between"><b>${esc(u.name)} · row ${r}, column ${c}</b><button class="link" type="button" data-cube="${k}">Close</button></div>
+      ${editing ? `<label class="chk row" style="gap:8px;font-weight:800"><input type="checkbox" id="stack"${cb.stack ? " checked" : ""}> Games are stacked (count from the bottom)</label>` : `<span class="note">${cb.stack ? "Stacked, listed bottom to top." : "Standing up, listed left to right."}</span>`}
+      ${n ? `<ol class="cubelist">${cb.items.map((it, i) => `<li class="${it.g && it.g === hitId ? "hit" : ""}"><span class="nm${it.g ? "" : " unk"}">${esc(nameOf(it))}${it.g ? "" : " <small>(not matched to our collection)</small>"}</span>
+          ${editing ? `<button class="mv" type="button" data-mv="${k}:${i}:-1" data-focus="mv${k}${i}-1" aria-label="Move ${esc(nameOf(it))} ${cb.stack ? "down" : "left"}"${i ? "" : " disabled"}>${cb.stack ? "↓" : "←"}</button><button class="mv" type="button" data-mv="${k}:${i}:1" data-focus="mv${k}${i}1" aria-label="Move ${esc(nameOf(it))} ${cb.stack ? "up" : "right"}"${i < n - 1 ? "" : " disabled"}>${cb.stack ? "↑" : "→"}</button>
+            <select data-moveto="${k}:${i}" aria-label="Move ${esc(nameOf(it))} to another cube"><option value="">Move to…</option>${allCubes.filter((x) => x.k !== k).map((x) => `<option value="${x.k}">${esc(x.unit.name)} · ${x.r},${x.c}</option>`).join("")}</select>
+            <button class="x" type="button" data-rm="${k}:${i}" aria-label="Take ${esc(nameOf(it))} off the shelf">×</button>` : ""}</li>`).join("")}</ol>` : `<p class="note">Empty.</p>`}
+      ${editing ? `<div class="row"><label class="vh" for="addHere">Add a game here</label><input type="text" id="addHere" list="gameNames" placeholder="Add a game here" style="flex:1 1 200px"><button class="btn sm yellow" type="button" id="addHereBtn">Add</button>
+          <button class="link" type="button" id="pasteToggle">${pastes ? "Hide list" : "Paste a list"}</button></div>
+        ${pastes ? `<label class="field"><span>One game per line, ${cb.stack ? "bottom to top" : "left to right"}. Replaces what's here.</span><textarea id="pasteBox"></textarea></label><div><button class="btn sm" type="button" id="pasteBtn">Fill this cube</button></div>` : ""}` : ""}
+      <span class="note" role="status" id="cubeMsg"></span></div>`;
+  }
+  function editHtml() {
+    const placed = new Set(SM.cubesInOrder(MAP).flatMap((x) => (MAP.cubes[x.k]?.items || []).map((it) => it.g)));
+    const unplaced = games.filter((g) => g.type === "Base game" && !placed.has(g.id));
+    return `<section class="card"><h2 class="sec">Edit the shelves</h2>
+      <div class="row"><label class="field"><span>Order rule</span><select id="rule">${Object.entries(SM.RULES).map(([k, r]) => `<option value="${k}"${k === MAP.rule ? " selected" : ""}>${esc(r.label)}</option>`).join("")}</select></label></div>
+      <p class="note">The order rule is used to suggest where a game that isn't on the shelves yet should go.</p>
+      ${MAP.units.length ? `<div class="field"><span>Units</span>${MAP.units.map((u, i) => `<div class="row" style="padding:6px 0;border-bottom:1px dashed var(--line)">
+          <input type="text" data-uname="${u.id}" value="${esc(u.name)}" maxlength="40" aria-label="Unit name" style="flex:1 1 200px"><label class="row" style="gap:4px"><span class="note">rows</span><input type="number" data-urows="${u.id}" value="${u.rows}" min="1" max="10"></label><label class="row" style="gap:4px"><span class="note">columns</span><input type="number" data-ucols="${u.id}" value="${u.cols}" min="1" max="10"></label>
+          <button class="mv btn sm" type="button" data-umv="${i}:-1"${i ? "" : " disabled"} aria-label="Move ${esc(u.name)} up">↑</button><button class="btn sm" type="button" data-umv="${i}:1"${i < MAP.units.length - 1 ? "" : " disabled"} aria-label="Move ${esc(u.name)} down">↓</button><button class="link danger" type="button" data-udel="${u.id}">Remove</button></div>`).join("")}</div>` : ""}
+      <div class="row"><label class="field" style="flex:1 1 200px"><span>New unit</span><input type="text" id="uName" maxlength="40" placeholder="e.g. Living room Kallax"></label><label class="field"><span>Rows</span><input type="number" id="uRows" value="4" min="1" max="10"></label><label class="field"><span>Columns</span><input type="number" id="uCols" value="4" min="1" max="10"></label><button class="btn sm yellow" type="button" id="addUnit" style="align-self:end">Add unit</button></div>
+      <div class="field"><span>Base games not on the shelves (${unplaced.length})</span>
+        ${unplaced.length ? `<button class="link" type="button" id="toggleUnplaced" style="justify-self:start">${showUnplaced ? "Hide" : "Show"} them</button>${showUnplaced ? `<div class="unplaced">${unplaced.map((g) => `<button type="button" data-find="${g.id}">${esc(g.name)}</button>`).join("")}</div>` : ""}` : `<p class="note">Every base game has a spot. 🎉</p>`}</div>
+    </section>`;
+  }
+  function lockHtml() {
+    return `<section class="card"><div class="lock">${editing ? `<span class="pill on">Editing</span><span class="note" role="status">${esc(saving)}</span><button class="btn sm" type="button" id="lockBtn">Done editing</button>`
+      : `<span class="note">${exists ? "Enter the PIN to change the shelves." : "Choose a PIN (4+ characters) to start mapping the shelves. You'll both use it to make changes."}</span>
+         <label class="vh" for="pinIn">PIN</label><input type="password" id="pinIn" inputmode="numeric" autocomplete="off" style="width:8em" placeholder="PIN"><button class="btn sm yellow" type="button" id="unlockBtn">${exists ? "Unlock" : "Set PIN and start"}</button><span class="note" role="status">${esc(msg || saving)}</span>`}</div></section>`;
+  }
+
+  /* ---------- Actions ---------- */
+  const at = (k) => SM.cube(MAP, k);
+  function removeEverywhere(id) { for (const k of Object.keys(MAP.cubes)) MAP.cubes[k].items = MAP.cubes[k].items.filter((it) => it.g !== id); }
+  function place(id, k, index) { removeEverywhere(id); const cb = at(k); cb.items.splice(index == null || index === "end" ? cb.items.length : Math.min(Number(index), cb.items.length), 0, { g: id }); sel = k; changed(); }
+  document.addEventListener("click", async (e) => {
+    const b = e.target.closest("button"); if (!b) return; const d = b.dataset;
+    if (d.cube) { sel = sel === d.cube ? null : d.cube; pastes = false; render(); return; }
+    if (b.id === "unlockBtn") { const p = $("pinIn").value.trim(); if (p.length < 4) { msg = "PINs are at least 4 characters."; return render(); }
+      if (exists) { try { if (!(await SM.checkPin(p))) { msg = "That PIN doesn't match."; return render(); } } catch (err) { msg = "Couldn't check the PIN. Check your connection."; return render(); } }
+      pin = p; editing = true; msg = ""; saving = ""; try { localStorage.setItem(PINKEY, p); } catch (err) {} if (!exists) await save(); render(); return; }
+    if (b.id === "lockBtn") { editing = false; try { localStorage.removeItem(PINKEY); } catch (err) {} pin = null; render(); return; }
+    if (d.find) { query = byId.get(d.find).name; render(); scrollTo({ top: 0, behavior: "smooth" }); return; }
+    if (!editing) return;
+    if (d.place) { const [k1, k2, k3, idx] = d.at.split(":"); place(d.place, `${k1}:${k2}:${k3}`, idx); }
+    else if (b.id === "addUnit") { const n = $("uName").value.trim() || `Shelf ${MAP.units.length + 1}`; MAP.units.push({ id: uid("u"), name: n, rows: Math.max(1, Math.min(10, Number($("uRows").value) || 4)), cols: Math.max(1, Math.min(10, Number($("uCols").value) || 4)) }); changed(); }
+    else if (d.umv) { const [i, dir] = d.umv.split(":").map(Number); [MAP.units[i], MAP.units[i + dir]] = [MAP.units[i + dir], MAP.units[i]]; changed(); }
+    else if (d.udel) { const u = MAP.units.find((x) => x.id === d.udel), cnt = Object.entries(MAP.cubes).filter(([k]) => k.startsWith(u.id + ":")).reduce((a, [, c]) => a + c.items.length, 0);
+      if (cnt && !confirm(`${u.name} has ${cnt} game${cnt === 1 ? "" : "s"} on it. Remove it anyway? They'll be off the shelves.`)) return;
+      MAP.units = MAP.units.filter((x) => x.id !== u.id); for (const k of Object.keys(MAP.cubes)) if (k.startsWith(u.id + ":")) delete MAP.cubes[k]; if (sel?.startsWith(u.id + ":")) sel = null; changed(); }
+    else if (d.mv) { const [u, r, c, i, dir] = d.mv.split(":"), k = `${u}:${r}:${c}`, list = at(k).items, a = Number(i), z = a + Number(dir); [list[a], list[z]] = [list[z], list[a]]; changed(); }
+    else if (d.rm) { const [u, r, c, i] = d.rm.split(":"); at(`${u}:${r}:${c}`).items.splice(Number(i), 1); changed(); }
+    else if (b.id === "addHereBtn") { const g = matchGame($("addHere").value); if (!g) { $("cubeMsg").textContent = "Pick a game from the list."; return; } const was = SM.find(MAP, g.id); place(g.id, sel, "end"); if (was) setTimeout(() => { const m = $("cubeMsg"); if (m) m.textContent = `Moved from ${SM.placeText(MAP, was).where}.`; }, 0); $("addHere")?.focus(); }
+    else if (b.id === "pasteToggle") { pastes = !pastes; render(); $("pasteBox")?.focus(); }
+    else if (b.id === "pasteBtn") { const lines = $("pasteBox").value.split("\n").map((x) => x.trim()).filter(Boolean); const items = lines.map((l) => { const g = matchGame(l); return g ? { g: g.id } : { name: l.slice(0, 80) }; });
+      for (const it of items) if (it.g) removeEverywhere(it.g); at(sel).items = items; pastes = false; changed(); }
+    else if (b.id === "toggleUnplaced") { showUnplaced = !showUnplaced; render(); }
+  });
+  document.addEventListener("input", (e) => { if (e.target.id === "q") { query = e.target.value; render(); } });
+  document.addEventListener("change", (e) => {
+    const t = e.target, d = t.dataset; if (!editing) return;
+    if (t.id === "rule") { MAP.rule = t.value; changed(); }
+    else if (t.id === "stack") { at(sel).stack = t.checked; changed(); }
+    else if (d.uname) { MAP.units.find((x) => x.id === d.uname).name = t.value.trim() || "Shelf"; changed(); }
+    else if (d.urows || d.ucols) { const u = MAP.units.find((x) => x.id === (d.urows || d.ucols)), v = Math.max(1, Math.min(10, Number(t.value) || 1)), nr = d.urows ? v : u.rows, nc = d.ucols ? v : u.cols;
+      const lost = Object.entries(MAP.cubes).filter(([k, c]) => { const [id, r, cc] = k.split(":"); return id === u.id && (Number(r) > nr || Number(cc) > nc) && c.items.length; });
+      if (lost.length && !confirm(`Shrinking ${u.name} takes ${lost.reduce((a, [, c]) => a + c.items.length, 0)} games off the shelves. Go ahead?`)) { render(); return; }
+      lost.forEach(([k]) => delete MAP.cubes[k]); u.rows = nr; u.cols = nc; changed(); }
+    else if (d.moveto && t.value) { const [u, r, c, i] = d.moveto.split(":"), it = at(`${u}:${r}:${c}`).items.splice(Number(i), 1)[0]; at(t.value).items.push(it); sel = t.value; changed(); }
+  });
+  document.addEventListener("keydown", (e) => { if (e.key !== "Enter") return; const id = e.target.id; const go = { pinIn: "unlockBtn", addHere: "addHereBtn", uName: "addUnit" }[id]; if (go) { e.preventDefault(); $(go)?.click(); } });
+
+  /* ---------- Start ---------- */
+  const q0 = new URLSearchParams(location.search).get("game");
+  Promise.all([fetch("/api/collection").then((r) => r.json()).catch(() => ({})), loadMap()]).then(async ([d]) => {
+    games = (d.games || []).slice().sort((a, b) => a.name.localeCompare(b.name)); byId = new Map(games.map((g) => [g.id, g]));
+    const dl = document.createElement("datalist"); dl.id = "gameNames"; dl.innerHTML = games.map((g) => `<option value="${esc(g.name)}">`).join(""); document.body.appendChild(dl);
+    if (q0) query = byId.get(q0)?.name || q0;
+    if (pin && exists) { try { editing = await SM.checkPin(pin); } catch (e) {} if (!editing) { pin = null; try { localStorage.removeItem(PINKEY); } catch (e) {} } }
+    render();
+  });
+  // Pick up changes made on the other phone when coming back to this page (not mid-save).
+  addEventListener("focus", () => { if (!/Saving/.test(saving)) loadMap(true); });
+})();
+</script>
+<script src="/pwa.js" defer></script>
+</body>
+</html>

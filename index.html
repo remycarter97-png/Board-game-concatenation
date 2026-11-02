@@ -713,6 +713,8 @@
     .side .bigcover { width: 120px; min-height: 0; padding: 10px; flex: none; }
     .side .bigcover img { max-height: 160px; }
   }
+  .shelfline { display: inline-flex; align-items: center; gap: 6px; margin: 4px 0 10px; padding: 6px 12px; border: 2px solid var(--outline); border-radius: 999px; background: var(--yellow-soft); color: var(--ink); font-weight: 700; font-size: .9rem; text-decoration: none; }
+  .shelfline:hover { background: var(--yellow); }
 </style>
 </head>
 <body>
@@ -1588,6 +1590,15 @@ document.addEventListener("focusin", (e) => { heroPaused = !!e.target.closest?.(
 /* ---------- Detail view ---------- */
 let lastFocus = null;
 // Our own notes from BGG (the comment on each of our collection entries), for the game and its add-ons.
+// Where the game lives on our shelves (from the Shelf finder's map, loaded once when needed).
+let shelfMap = null, shelfLoading = false;
+function shelfHtml(g) {
+  if (!window.ShelfMap) return "";
+  if (!shelfMap) { if (!shelfLoading) { shelfLoading = true; ShelfMap.get().then((r) => { shelfMap = r ? r.data : ShelfMap.empty(); const el = document.getElementById("d-shelf"); if (el && detailId) el.innerHTML = shelfHtml(byId.get(detailId)); }).catch(() => { shelfMap = ShelfMap.empty(); }); } return ""; }
+  if (!shelfMap.units?.length || !g) return "";
+  const p = ShelfMap.find(shelfMap, g.id);
+  return `<a class="shelfline" href="/tools/shelves?game=${encodeURIComponent(g.id)}">📍 ${p ? `<b>${esc(p.unit.name)}</b> · row ${p.r}, column ${p.c} · ${esc(ShelfMap.placeText(shelfMap, p).pos)}` : "Not on the shelf map yet"}</a>`;
+}
 function notesHtml(g, kids) {
   const list = [...(g.notes || []).map((n) => ({ ...n })), ...kids.flatMap((k) => (k.notes || []).map((n) => ({ ...n, on: k.name })))];
   if (!list.length) return "";
@@ -1647,6 +1658,7 @@ function openDetail(id, dir = 0) {
         ${stat("Playing time", timeText(g))}
         ${stat("Weight", g.weight ? `${g.weight.toFixed(2)} <small style="color:var(--muted);font-weight:500">/ 5</small>` : "")}
       </dl>
+      <div id="d-shelf">${shelfHtml(g)}</div>
       ${notesHtml(g, kids)}
       ${g.description ? `<p class="desc clamp" id="d-desc">${esc(g.description.trim())}</p><button class="linkbtn" id="d-more" hidden>Read more</button>` : ""}
       ${g.mechanics?.length ? `<div class="sec"><h4>Mechanics</h4><div class="tags">${g.mechanics.map((x) => `<button class="tag" data-mech="${esc(x)}" title="Show games with this mechanic">${esc(x)}</button>`).join("")}</div></div>` : ""}
@@ -2045,6 +2057,7 @@ async function load() {
 renderSort();
 load();
 </script>
+<script src="/tools/shelf-core.js" defer></script>
 <script src="/pwa.js" defer></script>
 </body>
 </html>
