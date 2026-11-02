@@ -308,8 +308,12 @@
           return `<li><a href="/tools/campaigns?c=${encodeURIComponent(c.id)}"><span style="font-size:1.6rem" aria-hidden="true">${esc(c.icon || "📜")}</span><b>${esc(c.name)}</b>
             <small>${esc(c.game || "Campaign")} · ${done} scenario${done === 1 ? "" : "s"} done${act.length ? ` · ${esc(act.map((x) => x.name).join(", "))}` : ""}</small>${c.code ? `<small>Backed up · ${esc(c.code)}</small>` : ""}</a></li>`; }).join("")}</ul></section>` : ""}
       <section class="card" aria-labelledby="newH"><h2 class="sec" id="newH">Start a campaign</h2>
-        <p class="sub">Pick a setup. It decides what gets tracked (character stats, campaign tracks, achievement lists); you add scenarios, achievements and unlocks as you play, so nothing is spoiled.</p>
-        <div class="tpls" role="group" aria-label="Setup">${tpls.map((t) => `<button class="tpl" type="button" data-tpl="${esc(t.id)}" aria-pressed="${t.id === sel.id}"><span class="ic" aria-hidden="true">${esc(t.icon || "📜")}</span><b>${esc(t.name)}</b><span>${esc(t.blurb || "Your saved setup.")}</span></button>`).join("")}</div>
+        <p class="sub">Pick a setup from the list. It decides what gets tracked (character stats, campaign tracks, achievement lists); you add scenarios, achievements and unlocks as you play, so nothing is spoiled.</p>
+        <label class="field" style="max-width:440px"><span>Setup</span><select id="tplPick">
+          <optgroup label="Ready-made">${window.CAMPAIGN_ORDER.map((k) => T[k]).map((t) => `<option value="${esc(t.id)}"${t.id === sel.id ? " selected" : ""}>${esc(t.icon || "")} ${esc(t.name)}</option>`).join("")}</optgroup>
+          ${mine.length ? `<optgroup label="Your setups">${mine.map((t) => `<option value="${esc(t.id)}"${t.id === sel.id ? " selected" : ""}>${esc(t.icon || "")} ${esc(t.name)}</option>`).join("")}</optgroup>` : ""}
+        </select></label>
+        <p class="note" id="tplBlurb">${esc(sel.blurb || "Your saved setup.")}</p>
         <div class="grid2"><label class="field"><span>Campaign name</span><input type="text" id="newName" maxlength="60" placeholder="${esc(sel.name)}${sel.id === "blank" ? "" : " campaign"}"></label>
           <label class="field"><span>Game</span><input type="text" id="newGame" maxlength="80" list="campaignGames" value="${esc(sel.game || "")}" placeholder="Which game?"></label></div>
         <div class="row"><button class="btn yellow big" type="button" id="create">Start campaign</button></div>
@@ -604,7 +608,7 @@
   document.addEventListener("click", (e) => {
     const b = e.target.closest("button"); if (!b) return;
     const d = b.dataset;
-    if (d.tpl) { pick = d.tpl; const t = T[pick] || DB.templates[pick]; render(); if (t?.game) $("newGame").value = t.game; return; }
+
     if (b.id === "create") { const t = T[pick] || DB.templates[pick] || T.blank; const c = blankCampaign(t, $("newName").value.trim() || ($("newGame").value.trim() || t.name), $("newGame").value.trim());
       DB.campaigns[c.id] = c; persist(); location.href = `/tools/campaigns?c=${encodeURIComponent(c.id)}#party`; return; }
     if (b.id === "openBtn") return openCode($("openCode").value);
@@ -680,7 +684,9 @@
     else if (b.id === "delYes") { delete DB.campaigns[C.id]; persist(); location.href = "/tools/campaigns"; }
   });
   document.addEventListener("change", (e) => {
-    const t = e.target, d = t.dataset; if (!C) return;
+    const t = e.target, d = t.dataset;
+    if (t.id === "tplPick") { pick = t.value; const tp = T[pick] || DB.templates[pick]; const nm = $("newName").value; render(); $("newName").value = nm; $("newGame").value = tp?.game || ""; $("tplPick").focus(); return; }
+    if (!C) return;
     if (d.num) setNum(d.num, t.value);
     else if (d.sedit) { const [sid, k] = d.sedit.split(":"), s = C.scenarios.find((x) => x.id === sid);
       if (k === "unlocks") s.unlocks = t.value.split(/[,\s]+/).map((x) => x.trim()).filter(Boolean); else s[k] = t.value; if (k === "status" && t.value === "done") addLog(C, `${W("scenario")} ${s.num} marked done`); save(k === "status" || k === "unlocks"); }
