@@ -237,14 +237,20 @@
 
   /* ---------- Campaign model ---------- */
   function blankCampaign(tpl, name, game) {
-    const schema = copy({ charFields: tpl.charFields, sections: tpl.sections, lists: tpl.lists, unlockKinds: tpl.unlockKinds, retirement: tpl.retirement });
+    const schema = copy({ charFields: tpl.charFields, sections: tpl.sections, lists: tpl.lists, unlockKinds: tpl.unlockKinds, retirement: tpl.retirement, goals: tpl.goals, words: tpl.words || {}, campLabel: tpl.campLabel });
     const c = { id: uid("c"), name: name || tpl.name, game: game || tpl.game || "", template: tpl.id, icon: tpl.icon || "📜", schema, created: today(), updated: Date.now(),
       partyName: "", tracks: {}, res: {}, calendar: { week: 1, notes: {} }, buildings: [], scenarios: [], characters: [], achievements: [], unlocks: [], plays: [], log: [] };
-    for (const s of schema.sections) if (s.type === "tracks") for (const t of s.items) c.tracks[t.id] = t.def ?? 0;
+    for (const s of schema.sections) if (s.type === "tracks") for (const t of s.items) c.tracks[t.id] = t.def ?? (t.type === "text" ? "" : 0);
+    if (tpl.startScenarios) for (let n = tpl.startScenarios.from; n <= tpl.startScenarios.to; n++) c.scenarios.push({ id: uid("s"), num: String(n), name: "", status: tpl.startScenarios.status || "available", unlocks: [], requires: [] });
     addLog(c, `Campaign started${c.game ? ` (${c.game})` : ""}`);
     return c;
   }
   function addLog(c, text) { c.log.unshift({ date: today(), text }); c.log = c.log.slice(0, 300); }
+  // Per-game words: "Mission" instead of "Scenario", "Crew member" instead of "Character", etc.
+  const W = (k) => ({ scenario: "Scenario", scenarios: "Scenarios", character: "Character", party: "Party", active: "In the party", benched: "On the bench", retired: "Retired", retire: "Retire", retiredOne: "Retired", cls: "Class", player: "Player", bench: "Bench", unbench: "Back in the party", partyName: "Party name", ...(C?.schema.words || {}) })[k];
+  const hasGoals = () => (C.schema.goals ?? C.schema.retirement) !== false, canRetire = () => C.schema.retirement !== false;
+  const listOf = (s) => s.type === "buildings" ? C.buildings : ((C.items = C.items || {})[s.id] = C.items[s.id] || []);
+  const rotation = () => { const act = C.characters.filter((x) => x.status === "active"); return act.length ? act[((C.rotation || 0) % act.length + act.length) % act.length] : null; };
   const fieldVal = (ch, f) => ch.fields?.[f.id] ?? (f.type === "checks" ? [] : f.type === "resources" ? {} : f.def ?? (f.type === "number" || f.type === "xp" ? 0 : ""));
   const levelFor = (f, xp) => { let l = 1; (f.thresholds || []).forEach((t, i) => { if (xp >= t) l = i + 1; }); return l; };
   const scenByNum = (c, n) => c.scenarios.find((s) => String(s.num).toLowerCase() === String(n).toLowerCase());
@@ -315,7 +321,7 @@
   }
 
   // ---- Campaign ----
-  const TABS = () => [["overview", "Overview"], ["scenarios", "Scenarios"], ["party", "Party"], ...(C.schema.sections.length ? [["camp", C.schema.sections[0].label]] : []), ["achievements", "Achievements"], ["unlocks", "Unlocks"], ["setup", "Setup"]];
+  const TABS = () => [["overview", "Overview"], ["scenarios", W("scenarios")], ["party", W("party")], ...(C.schema.sections.length ? [["camp", C.schema.campLabel || C.schema.sections[0].label]] : []), ...(C.schema.lists.length ? [["achievements", W("achievements") || "Achievements"]] : []), ["unlocks", "Unlocks"], ["setup", "Setup"]];
   function syncHtml() { return `<span class="sync${/Offline|gone/.test(syncState) ? " off" : ""}" id="syncline">${C.code ? `<i aria-hidden="true"></i>${esc(syncState || `Backed up · ${C.code}`)}` : `<span class="note">Saved on this device</span>`}</span>`; }
   function campaignHtml() {
     if (!TABS().some(([k]) => k === tab)) tab = "overview";
@@ -333,14 +339,14 @@
     const tr = C.schema.sections.filter((x) => x.type === "tracks").flatMap((x) => x.items);
     const ready = act.filter((ch) => readyToRetire(ch));
     return `<section class="card"><h2 class="sec">At a glance</h2>
-        <dl class="tiles"><div><dt>Scenarios done</dt><dd>${done}</dd></div><div><dt>Available</dt><dd>${avail}</dd></div><div><dt>Plays logged</dt><dd>${C.plays.length}</dd></div>
-          <div><dt>Achievements</dt><dd>${C.achievements.filter((a) => a.done).length}</dd></div><div><dt>Unlocks</dt><dd>${C.unlocks.length}</dd></div><div><dt>Retired</dt><dd>${C.characters.filter((x) => x.status === "retired").length}</dd></div>
+        <dl class="tiles"><div><dt>${esc(W("scenarios"))} done</dt><dd>${done}</dd></div><div><dt>Available</dt><dd>${avail}</dd></div><div><dt>Plays logged</dt><dd>${C.plays.length}</dd></div>
+          ${C.schema.lists.length ? `<div><dt>Achievements</dt><dd>${C.achievements.filter((a) => a.done).length}</dd></div>` : ""}<div><dt>Unlocks</dt><dd>${C.unlocks.length}</dd></div>${canRetire() ? `<div><dt>${esc(W("retired"))}</dt><dd>${C.characters.filter((x) => x.status === "retired").length}</dd></div>` : ""}${rotSec() && rotation() ? `<div><dt>${esc(rotSec().label)}</dt><dd style="font-size:1.1rem">${esc(rotation().name)}</dd></div>` : ""}
           ${tr.map((t) => `<div><dt>${esc(t.label)}</dt><dd>${C.tracks[t.id] ?? t.def ?? 0}</dd></div>`).join("")}
           ${C.schema.sections.some((x) => x.type === "calendar") ? `<div><dt>Week</dt><dd>${C.calendar.week}</dd></div>` : ""}</dl>
         ${ready.length ? `<p class="goal ready">🎉 ${esc(ready.map((x) => x.name).join(" and "))} finished ${ready.length === 1 ? "their personal goal and is" : "their personal goals and are"} ready to retire. <button class="link" type="button" data-tab="party">Go to the party</button></p>` : ""}
       </section>
-      <section class="card"><h2 class="sec">The party</h2>
-        ${act.length ? `<div class="row">${act.map((ch) => `<span class="pill">${esc(ch.name)}${ch.cls ? ` · ${esc(ch.cls)}` : ""}${C.schema.charFields.some((f) => f.id === "level") ? ` · L${esc(fieldVal(ch, { id: "level", def: 1 }))}` : ""}</span>`).join("")}</div>` : `<p class="empty">No one in the party yet. <button class="link" type="button" data-tab="party">Add characters</button></p>`}
+      <section class="card"><h2 class="sec">${esc(W("party"))}</h2>
+        ${act.length ? `<div class="row">${act.map((ch) => `<span class="pill">${esc(ch.name)}${ch.cls ? ` · ${esc(ch.cls)}` : ""}${C.schema.charFields.some((f) => f.id === "level") ? ` · L${esc(fieldVal(ch, { id: "level", def: 1 }))}` : ""}</span>`).join("")}</div>` : `<p class="empty">No one yet. <button class="link" type="button" data-tab="party">Add ${esc(W("character").toLowerCase())}s</button></p>`}
         ${avail ? `<p class="note">Up next: ${s.filter((x) => x.status === "available").sort(sortScen).slice(0, 6).map((x) => `#${esc(x.num)}${x.name ? ` ${esc(x.name)}` : ""}`).join(", ")}</p>` : ""}</section>
       <section class="card"><h2 class="sec">History</h2>${C.log.length ? `<ul class="log">${C.log.slice(0, 25).map((l) => `<li><time>${esc(fmtDate(l.date))}</time>${esc(l.text)}</li>`).join("")}</ul>` : `<p class="empty">Nothing yet.</p>`}</section>`;
   }
@@ -350,31 +356,35 @@
   function scenariosHtml() {
     const counts = { all: C.scenarios.length, available: 0, done: 0, locked: 0 }; C.scenarios.forEach((s) => counts[s.status]++);
     const list = C.scenarios.filter((s) => sFilter === "all" || s.status === sFilter).sort(sortScen);
-    return `<section class="card"><h2 class="sec">Scenarios</h2>
-      <p class="sub">Add scenarios as your game makes them available. Mark which ones each unlocks and what they need, then log each attempt: a win marks it done and opens what it unlocks.</p>
+    const w = W("scenario").toLowerCase(), ws = W("scenarios").toLowerCase();
+    return `<section class="card"><h2 class="sec">${esc(W("scenarios"))}</h2>
+      <p class="sub">Add ${ws} as your game makes them available. Mark which ones each unlocks and what they need, then log each attempt: a win marks it done and opens what it unlocks.</p>
       <div class="row"><label class="field"><span>Number</span><input type="text" id="sNum" maxlength="12" style="width:6em" placeholder="1"></label>
-        <label class="field" style="flex:1 1 200px"><span>Name (optional)</span><input type="text" id="sName" maxlength="80" placeholder="Scenario name"></label>
+        <label class="field" style="flex:1 1 200px"><span>Name (optional)</span><input type="text" id="sName" maxlength="80" placeholder="${esc(W("scenario"))} name"></label>
         <label class="field"><span>Status</span><select id="sStatus"><option value="available">Available</option><option value="locked">Locked</option><option value="done">Done</option></select></label>
-        <button class="btn sm yellow" type="button" id="addScen" style="align-self:end">Add scenario</button></div>
+        <button class="btn sm yellow" type="button" id="addScen" style="align-self:end">Add ${esc(w)}</button></div>
+      <details data-key="range"><summary class="note" style="cursor:pointer">Add a run of ${esc(ws)} by number</summary><div class="row" style="margin-top:8px">
+        <label class="field"><span>From</span><input type="number" id="rFrom" min="0" max="999" style="width:5em"></label><label class="field"><span>To</span><input type="number" id="rTo" min="0" max="999" style="width:5em"></label>
+        <label class="field"><span>Status</span><select id="rStatus"><option value="available">Available</option><option value="locked">Locked</option></select></label><button class="btn sm" type="button" id="addRange" style="align-self:end">Add them</button></div></details>
       <div class="filters" role="group" aria-label="Show">${[["all", "All"], ["available", "Available"], ["done", "Done"], ["locked", "Locked"]].map(([k, l]) => `<button type="button" data-sfilter="${k}" aria-pressed="${sFilter === k}">${l} · ${counts[k]}</button>`).join("")}</div>
-      ${list.length ? `<ul class="scen">${list.map(scenHtml).join("")}</ul>` : `<p class="empty">${C.scenarios.length ? "None here." : "No scenarios yet. Add the first one above."}</p>`}</section>`;
+      ${list.length ? `<ul class="scen">${list.map(scenHtml).join("")}</ul>` : `<p class="empty">${C.scenarios.length ? "None here." : `No ${esc(ws)} yet. Add the first one above.`}</p>`}</section>`;
   }
   function scenHtml(s) {
     const need = unmet(C, s), plays = C.plays.filter((p) => p.scen === s.id);
     const allAch = C.achievements;
-    return `<li><details data-key="s-${s.id}"><summary><span class="num">${esc(s.num)}</span><span class="nm">${esc(s.name || "Scenario " + s.num)}${need.length && s.status !== "done" ? ` <span class="warn">⚠ needs ${esc(need.map((r) => (r.need ? "" : "no ") + achName(C, r.ach)).join(", "))}</span>` : ""}</span>
+    return `<li><details data-key="s-${s.id}"><summary><span class="num">${esc(s.num)}</span><span class="nm">${esc(s.name || W("scenario") + " " + s.num)}${need.length && s.status !== "done" ? ` <span class="warn">⚠ needs ${esc(need.map((r) => (r.need ? "" : "no ") + achName(C, r.ach)).join(", "))}</span>` : ""}</span>
         ${plays.length ? `<span class="note">${plays.length} ${plays.length === 1 ? "try" : "tries"}</span>` : ""}<span class="pill ${s.status}">${s.status === "done" ? "✓ Done" : s.status === "available" ? "Available" : "Locked"}</span></summary>
       <div class="sbody">
         <div class="grid2"><label class="field"><span>Name</span><input type="text" data-sedit="${s.id}:name" value="${esc(s.name)}" maxlength="80"></label>
           <label class="field"><span>Status</span><select data-sedit="${s.id}:status">${["available", "locked", "done"].map((v) => `<option value="${v}"${v === s.status ? " selected" : ""}>${v[0].toUpperCase() + v.slice(1)}</option>`).join("")}</select></label>
-          <label class="field"><span>Unlocks scenarios <small>(numbers, comma-separated)</small></span><input type="text" data-sedit="${s.id}:unlocks" value="${esc((s.unlocks || []).join(", "))}" placeholder="e.g. 3, 4"></label></div>
+          <label class="field"><span>Unlocks ${esc(W("scenarios").toLowerCase())} <small>(numbers, comma-separated)</small></span><input type="text" data-sedit="${s.id}:unlocks" value="${esc((s.unlocks || []).join(", "))}" placeholder="e.g. 3, 4"></label></div>
         <div class="field"><span>Needs <small>(achievements that must, or must not, be in place)</small></span>
           ${(s.requires || []).length ? `<div class="checks">${s.requires.map((r, i) => `<span class="pill">${r.need ? "" : "Not "}${esc(achName(C, r.ach))}<button class="x" style="width:22px;height:22px" type="button" data-unreq="${s.id}:${i}" aria-label="Remove requirement">×</button></span>`).join("")}</div>` : ""}
           ${allAch.length ? `<div class="row"><select data-reqach="${s.id}" aria-label="Achievement"><option value="">Add a requirement…</option>${allAch.map((a) => `<option value="${a.id}">${esc(a.name)}</option>`).join("")}</select><select data-reqneed="${s.id}" aria-label="Must it be complete?"><option value="1">must be complete</option><option value="0">must NOT be complete</option></select><button class="btn sm" type="button" data-addreq="${s.id}">Add</button></div>` : `<p class="note">Add achievements in the Achievements tab to use them as requirements.</p>`}
           <input type="text" data-sedit="${s.id}:reqText" value="${esc(s.reqText || "")}" placeholder="Other requirements, in your words" aria-label="Other requirements"></div>
         <label class="field"><span>Notes</span><textarea data-sedit="${s.id}:notes" maxlength="2000">${esc(s.notes || "")}</textarea></label>
-        ${plays.length ? `<div class="field"><span>Attempts</span><ul class="plays">${plays.map((p) => `<li><span class="pill ${p.result}">${p.result === "win" ? "Win" : "Loss"}</span>${esc(fmtDate(p.date))}${p.level != null && p.level !== "" ? ` · level ${esc(p.level)}` : ""}${p.party?.length ? ` · ${esc(p.party.map((id) => C.characters.find((x) => x.id === id)?.name || "?").join(", "))}` : ""}${p.notes ? ` · ${esc(p.notes)}` : ""}<button class="x" style="width:22px;height:22px" type="button" data-unplay="${p.id}" aria-label="Delete this attempt">×</button></li>`).join("")}</ul></div>` : ""}
-        ${playFor === s.id ? playForm(s) : `<div class="row"><button class="btn sm yellow" type="button" data-playform="${s.id}">Log an attempt</button><button class="link danger" type="button" data-delscen="${s.id}">Delete scenario</button></div>`}
+        ${plays.length ? `<div class="field"><span>Attempts</span><ul class="plays">${plays.map((p) => `<li><span class="pill ${p.result}">${p.result === "win" ? "Win" : "Loss"}</span>${esc(fmtDate(p.date))}${p.level != null && p.level !== "" ? ` · level ${esc(p.level)}` : ""}${p.lead ? ` · ${esc(rotSec()?.label || "Lead")}: ${esc(p.lead)}` : ""}${p.party?.length ? ` · ${esc(p.party.map((id) => C.characters.find((x) => x.id === id)?.name || "?").join(", "))}` : ""}${p.notes ? ` · ${esc(p.notes)}` : ""}<button class="x" style="width:22px;height:22px" type="button" data-unplay="${p.id}" aria-label="Delete this attempt">×</button></li>`).join("")}</ul></div>` : ""}
+        ${playFor === s.id ? playForm(s) : `<div class="row"><button class="btn sm yellow" type="button" data-playform="${s.id}">Log an attempt</button><button class="link danger" type="button" data-delscen="${s.id}">Delete ${esc(W("scenario").toLowerCase())}</button></div>`}
       </div></details></li>`;
   }
   function playForm(s) {
@@ -382,11 +392,12 @@
     return `<div class="playform" role="group" aria-label="Log an attempt at scenario ${esc(s.num)}">
       <div class="row"><label class="field"><span>Date</span><input type="date" id="pDate" value="${today()}"></label>
         <label class="field"><span>Result</span><select id="pResult"><option value="win">Win</option><option value="loss">Loss</option></select></label>
-        <label class="field"><span>Scenario level</span><input type="number" id="pLevel" min="0" max="10" style="width:5em"></label></div>
+        <label class="field"><span>${esc(W("scenario"))} level</span><input type="number" id="pLevel" min="0" max="10" style="width:5em"></label>
+        ${rotSec() && rotation() ? `<span class="pill available" style="align-self:end">${esc(rotSec().label)}: ${esc(rotation().name)}</span>` : ""}</div>
       ${act.length ? `<div class="field"><span>Who played</span><div class="checks">${act.map((ch) => `<label class="chk"><input type="checkbox" data-pparty="${ch.id}"${ch.status === "active" ? " checked" : ""}>${esc(ch.name)}</label>`).join("")}</div></div>` : ""}
       ${open.length ? `<div class="field"><span>Achievements gained</span><div class="checks">${open.map((a) => `<label class="chk"><input type="checkbox" data-pach="${a.id}">${esc(a.name)}</label>`).join("")}</div></div>` : ""}
-      <div class="row"><label class="field" style="flex:1 1 200px"><span>New achievement gained</span><input type="text" id="pNewAch" maxlength="80" placeholder="Name, if it's new"></label>
-        <label class="field"><span>List</span><select id="pNewAchList">${C.schema.lists.map((l) => `<option value="${l.id}">${esc(l.label)}</option>`).join("")}</select></label></div>
+      ${C.schema.lists.length ? `<div class="row"><label class="field" style="flex:1 1 200px"><span>New achievement gained</span><input type="text" id="pNewAch" maxlength="80" placeholder="Name, if it's new"></label>
+        <label class="field"><span>List</span><select id="pNewAchList">${C.schema.lists.map((l) => `<option value="${l.id}">${esc(l.label)}</option>`).join("")}</select></label></div>` : ""}
       <div class="row"><label class="field"><span>Also unlocked</span><select id="pUnlockKind">${C.schema.unlockKinds.map((k) => `<option>${esc(k)}</option>`).join("")}</select></label>
         <label class="field" style="flex:1 1 200px"><span>Name</span><input type="text" id="pUnlockName" maxlength="80" placeholder="Optional"></label></div>
       <label class="field"><span>Notes</span><input type="text" id="pNotes" maxlength="300" placeholder="How it went"></label>
@@ -395,15 +406,16 @@
   }
 
   // ---- Party ----
-  function readyToRetire(ch) { const g = linkedGoal(ch); return ch.status !== "retired" && (g ? goalPct(g) >= 100 : ch.goalSnap?.done); }
+  const rotSec = () => C.schema.sections.find((x) => x.type === "rotation");
+  function readyToRetire(ch) { if (!hasGoals()) return false; const g = linkedGoal(ch); return ch.status !== "retired" && (g ? goalPct(g) >= 100 : ch.goalSnap?.done); }
   function linkedGoal(ch) { return goalsStore().goals.find((g) => g.link?.campaign === C.id && g.link?.char === ch.id) || null; }
   let retiring = null;
   function partyHtml() {
-    const groups = [["active", "In the party"], ["benched", "On the bench"], ["retired", "Retired"]];
-    return `<section class="card"><h2 class="sec">Party</h2>
-      <div class="row"><label class="field" style="flex:1 1 220px"><span>Party name</span><input type="text" id="partyName" maxlength="60" value="${esc(C.partyName)}" placeholder="Our party"></label></div>
-      <div class="row"><label class="field"><span>Character name</span><input type="text" id="chName" maxlength="40"></label><label class="field"><span>Class</span><input type="text" id="chClass" maxlength="40"></label>
-        <label class="field"><span>Player</span><input type="text" id="chPlayer" maxlength="30" list="playerNames"></label><button class="btn sm yellow" type="button" id="addChar" style="align-self:end">Add character</button></div>
+    const groups = [["active", W("active")], ["benched", W("benched")], ["retired", W("retired")]];
+    return `<section class="card"><h2 class="sec">${esc(W("party"))}</h2>
+      ${W("partyName") ? `<div class="row"><label class="field" style="flex:1 1 220px"><span>${esc(W("partyName"))}</span><input type="text" id="partyName" maxlength="60" value="${esc(C.partyName)}" placeholder="Our party"></label></div>` : ""}
+      <div class="row"><label class="field"><span>${esc(W("character"))} name</span><input type="text" id="chName" maxlength="40"></label>${W("cls") ? `<label class="field"><span>${esc(W("cls"))}</span><input type="text" id="chClass" maxlength="40"></label>` : ""}
+        ${W("player") ? `<label class="field"><span>${esc(W("player"))}</span><input type="text" id="chPlayer" maxlength="30" list="playerNames"></label>` : ""}<button class="btn sm yellow" type="button" id="addChar" style="align-self:end">Add ${esc(W("character").toLowerCase())}</button></div>
       <datalist id="playerNames">${[...new Set(C.characters.map((x) => x.player).filter(Boolean))].map((p) => `<option value="${esc(p)}">`).join("")}</datalist></section>
       ${groups.map(([st, label]) => { const list = C.characters.filter((x) => x.status === st); return list.length || st === "active" ? `<section class="card"><h2 class="sec">${label} <span class="note">${list.length}</span></h2>
         ${list.length ? `<div class="chars">${list.map(charHtml).join("")}</div>` : `<p class="empty">No one yet.</p>`}</section>` : ""; }).join("")}`;
@@ -413,19 +425,19 @@
     const pct = g ? goalPct(g) : ch.goalSnap?.pct;
     return `<article class="char${ret ? " retired" : ""}" aria-label="${esc(ch.name)}">
       <div class="row" style="justify-content:space-between"><div><h3>${esc(ch.name)}</h3><div class="cls">${esc([ch.cls, ch.player && `played by ${ch.player}`].filter(Boolean).join(" · "))}</div></div>
-        ${ret ? `<span class="pill">Retired ${esc(fmtDate(ch.retired))}</span>` : ""}</div>
+        ${ret ? `<span class="pill">${esc(W("retiredOne"))} ${esc(fmtDate(ch.retired))}</span>` : ""}</div>
       ${ret ? `<details data-key="rf-${ch.id}"><summary class="hint">Final stats</summary><div class="cfields" style="margin-top:8px">${C.schema.charFields.map((f) => fieldHtml(ch, f, ret)).join("")}</div></details>` : `<div class="cfields">${C.schema.charFields.map((f) => fieldHtml(ch, f, ret)).join("")}</div>`}
-      ${C.schema.retirement !== false ? `<div class="goal${readyToRetire(ch) ? " ready" : ""}"><b>Personal goal</b>
+      ${hasGoals() ? `<div class="goal${readyToRetire(ch) ? " ready" : ""}"><b>Personal goal</b>
         ${g ? `<span>${esc(g.title)}</span><div class="bar"><i style="width:${pct}%"></i></div><span class="hint" style="color:inherit">${pct}% · <a href="/tools/goals#${esc(g.id)}">Open in goals</a></span>`
           : ch.goalSnap ? `<span>${esc(ch.goalSnap.title)}</span><div class="bar"><i style="width:${ch.goalSnap.pct}%"></i></div><span class="hint">${ch.goalSnap.pct}% (from the last time this device saw it)</span>`
           : ret ? `<span class="hint">None linked.</span>` : `<div class="row">${goals.length ? `<select data-linkgoal="${ch.id}" aria-label="Link a goal"><option value="">Link a goal…</option>${goals.map((x) => `<option value="${esc(x.id)}">${esc(x.title)}</option>`).join("")}</select>` : ""}
               <a class="btn sm" href="/tools/goals?campaign=${encodeURIComponent(C.id)}&char=${encodeURIComponent(ch.id)}">+ New goal</a></div>`}
         ${readyToRetire(ch) ? `<b>🎉 Goal complete: ready to retire</b>` : ""}</div>` : ""}
-      ${ret ? `<div class="row"><button class="link" type="button" data-unretire="${ch.id}">Undo retirement</button></div>`
-        : retiring === ch.id ? `<div class="playform"><b>Retire ${esc(ch.name)}?</b><div class="row"><label class="field"><span>Did it unlock anything?</span><select id="rKind">${C.schema.unlockKinds.map((k) => `<option>${esc(k)}</option>`).join("")}</select></label><label class="field" style="flex:1 1 160px"><span>Name</span><input type="text" id="rName" maxlength="80" placeholder="Optional"></label></div>
-            <div class="row"><button class="btn sm yellow" type="button" data-retire="${ch.id}">Retire</button><button class="link" type="button" data-cancelretire="1">Cancel</button></div></div>`
-        : `<div class="row">${C.schema.retirement !== false ? `<button class="btn sm${readyToRetire(ch) ? " yellow" : ""}" type="button" data-askretire="${ch.id}">Retire…</button>` : ""}
-            <button class="btn sm" type="button" data-bench="${ch.id}">${ch.status === "active" ? "Bench" : "Back in the party"}</button>${g ? `<button class="link" type="button" data-unlinkgoal="${ch.id}">Unlink goal</button>` : ""}<button class="link danger" type="button" data-delchar="${ch.id}">Delete</button></div>`}
+      ${ret ? `<div class="row"><button class="link" type="button" data-unretire="${ch.id}">Undo</button></div>`
+        : retiring === ch.id ? `<div class="playform"><b>${esc(W("retire"))}: ${esc(ch.name)}?</b><div class="row"><label class="field"><span>Did it unlock anything?</span><select id="rKind">${C.schema.unlockKinds.map((k) => `<option>${esc(k)}</option>`).join("")}</select></label><label class="field" style="flex:1 1 160px"><span>Name</span><input type="text" id="rName" maxlength="80" placeholder="Optional"></label></div>
+            <div class="row"><button class="btn sm yellow" type="button" data-retire="${ch.id}">${esc(W("retire"))}</button><button class="link" type="button" data-cancelretire="1">Cancel</button></div></div>`
+        : `<div class="row">${canRetire() ? `<button class="btn sm${readyToRetire(ch) ? " yellow" : ""}" type="button" data-askretire="${ch.id}">${esc(W("retire"))}…</button>` : ""}
+            <button class="btn sm" type="button" data-bench="${ch.id}">${esc(ch.status === "active" ? W("bench") : W("unbench"))}</button>${g ? `<button class="link" type="button" data-unlinkgoal="${ch.id}">Unlink goal</button>` : ""}<button class="link danger" type="button" data-delchar="${ch.id}">Delete</button></div>`}
     </article>`;
   }
   function fieldHtml(ch, f, ro) {
@@ -438,6 +450,7 @@
         <div class="boxes">${Array.from({ length: f.count }, (_, i) => `<button class="box${f.group && (i + 1) % f.group === 0 ? " gap" : ""}" type="button" data-box="${key}:${i}" data-focus="${key}:${i}" aria-pressed="${i < on}" aria-label="${esc(f.label)} ${i + 1}">${i < on ? "✓" : ""}</button>`).join("")}</div></div>`; }
     if (f.type === "resources") return `<details class="cf block" data-key="${key}"><summary><b>${esc(f.label)}</b> <span class="hint">${esc(f.names.filter((n) => v[n]).map((n) => `${n} ${v[n]}`).join(" · ") || "none")}</span></summary>
         <div class="res" style="margin-top:6px">${f.names.map((n) => `<div class="track" style="padding:4px 8px"><span>${esc(n)}</span>${stepper(`${key}:${n}`, v[n] || 0, `${ch.name} ${n}`)}</div>`).join("")}</div></details>`;
+    if (f.type === "select") return `<label class="cf"><span>${esc(f.label)}</span><select data-ctext="${key}">${["", ...f.options].map((o) => `<option value="${esc(o)}"${o === v ? " selected" : ""}>${esc(o || "—")}</option>`).join("")}</select></label>`;
     if (f.type === "notes") return `<label class="cf block"><span>${esc(f.label)}</span><textarea data-ctext="${key}" maxlength="3000" rows="2">${esc(v)}</textarea></label>`;
     return `<label class="cf"><span>${esc(f.label)}</span><input type="text" data-ctext="${key}" value="${esc(v)}" maxlength="120"></label>`;
   }
@@ -446,10 +459,12 @@
   let weekSel = null;
   function campHtml() {
     return C.schema.sections.map((s) => {
-      if (s.type === "tracks") return `<section class="card"><h2 class="sec">${esc(s.label)}</h2>${s.items.length ? `<div class="tracks">${s.items.map((t) => `<div class="track"><span>${esc(t.label)}</span>${stepper(`tr:${t.id}`, C.tracks[t.id] ?? t.def ?? 0, t.label)}</div>`).join("")}</div>` : `<p class="empty">No tracks yet. Add them in Setup.</p>`}</section>`;
+      if (s.type === "tracks") return `<section class="card"><h2 class="sec">${esc(s.label)}</h2>${s.items.length ? `<div class="tracks">${s.items.map((t) => `<div class="track"><span>${esc(t.label)}</span>${t.type === "text" ? `<input type="text" data-trtext="${t.id}" value="${esc(C.tracks[t.id] ?? t.def ?? "")}" maxlength="40" aria-label="${esc(t.label)}" style="width:8em">` : stepper(`tr:${t.id}`, C.tracks[t.id] ?? t.def ?? 0, t.label)}</div>`).join("")}</div>` : `<p class="empty">No tracks yet. Add them in Setup.</p>`}</section>`;
+      if (s.type === "rotation") { const cur = rotation(); return `<section class="card"><h2 class="sec">${esc(s.label)}</h2>${cur ? `<div class="row"><span class="pill available" style="font-size:1.05rem">${esc(s.label)}: ${esc(cur.name)}</span><button class="btn sm" type="button" data-rot="-1">‹ Previous</button><button class="btn sm" type="button" data-rot="1">Next ›</button></div>
+          <p class="sub">${esc(s.hint || "")}</p>` : `<p class="empty">Add ${W("character").toLowerCase()}s to the ${W("party").toLowerCase()} first.</p>`}</section>`; }
       if (s.type === "resources") { const r = C.res[s.id] || {}; return `<section class="card"><h2 class="sec">${esc(s.label)}</h2><div class="res">${s.names.map((n) => `<div class="track"><span>${esc(n)}</span>${stepper(`res:${s.id}:${n}`, r[n] || 0, `${s.label} ${n}`)}</div>`).join("")}</div></section>`; }
       if (s.type === "calendar") return calendarHtml(s);
-      if (s.type === "buildings") return buildingsHtml(s);
+      if (s.type === "buildings" || s.type === "list") return buildingsHtml(s);
       return "";
     }).join("");
   }
@@ -465,15 +480,16 @@
       ${(() => { const up = Object.keys(C.calendar.notes).map(Number).filter((n) => n >= w && C.calendar.notes[n]).sort((a, b) => a - b).slice(0, 5); return up.length ? `<p class="note">Coming up: ${up.map((n) => `week ${n}: ${esc(C.calendar.notes[n])}`).join(" · ")}</p>` : ""; })()}
     </section>`;
   }
+  // A list section: buildings, planets, research projects… each entry has a name, an optional number and level, and a state.
   function buildingsHtml(s) {
-    const list = [...C.buildings].sort(sortScen);
-    return `<section class="card"><h2 class="sec">${esc(s.label)}</h2>
-      <div class="row"><label class="field"><span>Number</span><input type="text" id="bNum" maxlength="8" style="width:5em"></label><label class="field" style="flex:1 1 180px"><span>Name</span><input type="text" id="bName" maxlength="60"></label>
-        <label class="field"><span>Level</span><input type="number" id="bLvl" value="1" min="0" max="9" style="width:4.5em"></label><button class="btn sm yellow" type="button" id="addBld" style="align-self:end">Add building</button></div>
-      ${list.length ? `<div class="stack">${list.map((b) => `<div class="bld"><span class="num" style="font-family:Fredoka">${esc(b.num)}</span><span>${esc(b.name)}</span>
-          <span class="blvl row" style="gap:6px"><span class="hint">Level</span>${stepper(`bl:${b.id}`, b.level, `${b.name} level`)}</span>
-          <select class="bstate" data-bstate="${b.id}" aria-label="${esc(b.name)} condition">${s.states.map((st) => `<option${st === b.state ? " selected" : ""}>${esc(st)}</option>`).join("")}</select>
-          <button class="x" type="button" data-delbld="${b.id}" aria-label="Remove ${esc(b.name)}">×</button></div>`).join("")}</div>` : `<p class="empty">No buildings yet.</p>`}</section>`;
+    const list = [...listOf(s)].sort(sortScen), lvl = s.level !== false, nmb = s.numbered !== false, one = s.item || "building", sid = s.id;
+    return `<section class="card"><h2 class="sec">${esc(s.label)} ${list.length ? `<span class="note">${list.length}</span>` : ""}</h2>
+      <div class="row">${nmb ? `<label class="field"><span>Number</span><input type="text" id="bNum-${sid}" maxlength="8" style="width:5em"></label>` : ""}<label class="field" style="flex:1 1 180px"><span>Name</span><input type="text" id="bName-${sid}" data-bname="${sid}" maxlength="60"></label>
+        ${lvl ? `<label class="field"><span>Level</span><input type="number" id="bLvl-${sid}" value="1" min="0" max="9" style="width:4.5em"></label>` : ""}<button class="btn sm yellow" type="button" data-addbld="${sid}" style="align-self:end">Add ${esc(one)}</button></div>
+      ${list.length ? `<div class="stack">${list.map((b) => `<div class="bld"${nmb ? "" : ' style="grid-template-columns:minmax(0,1fr) auto auto"'}>${nmb ? `<span class="num" style="font-family:Fredoka">${esc(b.num)}</span>` : ""}<span>${esc(b.name)}</span>
+          ${lvl ? `<span class="blvl row" style="gap:6px"><span class="hint">Level</span>${stepper(`bl:${sid}:${b.id}`, b.level, `${b.name} level`)}</span>` : ""}
+          <select class="bstate" data-bstate="${sid}:${b.id}" aria-label="${esc(b.name)} state">${s.states.map((st) => `<option${st === b.state ? " selected" : ""}>${esc(st)}</option>`).join("")}</select>
+          <button class="x" type="button" data-delbld="${sid}:${b.id}" aria-label="Remove ${esc(b.name)}">×</button></div>`).join("")}</div>` : `<p class="empty">None yet.</p>`}</section>`;
   }
 
   // ---- Achievements + unlocks ----
@@ -514,7 +530,8 @@
         <h3 class="sub2">Achievement lists</h3><ul class="schema">${sc.lists.map((l, i) => `<li>${esc(l.label)}<small></small>${sc.lists.length > 1 ? `<button class="x" type="button" data-dellist="${i}" aria-label="Remove ${esc(l.label)}">×</button>` : ""}</li>`).join("")}</ul>
         <div class="row"><input type="text" id="listLabel" maxlength="40" placeholder="New list, e.g. Story flags" aria-label="New list name"><button class="btn sm" type="button" id="addList">Add list</button></div>
         <h3 class="sub2">Kinds of unlocks</h3><input type="text" data-cset="unlockKinds" value="${esc(sc.unlockKinds.join(", "))}" aria-label="Kinds of unlocks, comma-separated" style="width:100%;box-sizing:border-box">
-        <label class="chk" style="margin-top:8px;width:max-content"><input type="checkbox" id="retOn"${sc.retirement !== false ? " checked" : ""}> Characters retire (personal goals)</label>
+        <label class="chk" style="margin-top:8px;width:max-content"><input type="checkbox" id="retOn"${sc.retirement !== false ? " checked" : ""}> ${esc(W("character"))}s can be marked “${esc(W("retiredOne").toLowerCase())}”</label>
+        <label class="chk" style="margin-top:8px;width:max-content"><input type="checkbox" id="goalsOn"${hasGoals() ? " checked" : ""}> Personal goals</label>
         <p class="note">Removing a field hides it; anything already entered stays saved.</p>
         <div class="row"><input type="text" id="tplName" maxlength="40" placeholder="Template name" value="${esc(C.game || C.name)}" aria-label="Template name"><button class="btn sm" type="button" id="saveTpl">Save as a template</button></div></section>
       <section class="card"><h2 class="sec">Export</h2><div class="row"><button class="btn sm" type="button" id="export">Download a copy (.json)</button>
@@ -529,7 +546,7 @@
     else if (p[0] === "res") { (C.res[p[1]] = C.res[p[1]] || {})[p[2]] = num(v, 0); }
     else if (p[0] === "cf") { const ch = C.characters.find((x) => x.id === p[1]), f = C.schema.charFields.find((x) => x.id === p[2]); ch.fields = ch.fields || {};
       if (p[3] != null) { ch.fields[f.id] = { ...(ch.fields[f.id] || {}), [p[3]]: num(v, 0) }; } else ch.fields[f.id] = num(v, f.min ?? 0, f.max); }
-    else if (p[0] === "bl") { const b = C.buildings.find((x) => x.id === p[1]); b.level = num(v, 0, 9); }
+    else if (p[0] === "bl") { const b = listOf(C.schema.sections.find((x) => x.id === p[1])).find((x) => x.id === p[2]); b.level = num(v, 0, 9); }
     save(rer);
   }
   function getNum(key) {
@@ -537,20 +554,22 @@
     if (p[0] === "tr") return C.tracks[p[1]] || 0;
     if (p[0] === "res") return C.res[p[1]]?.[p[2]] || 0;
     if (p[0] === "cf") { const ch = C.characters.find((x) => x.id === p[1]); return p[3] != null ? ch.fields?.[p[2]]?.[p[3]] || 0 : Number(fieldVal(ch, C.schema.charFields.find((x) => x.id === p[2]))) || 0; }
-    if (p[0] === "bl") return C.buildings.find((x) => x.id === p[1]).level;
+    if (p[0] === "bl") return listOf(C.schema.sections.find((x) => x.id === p[1])).find((x) => x.id === p[2]).level;
   }
   function savePlay(sid) {
     const s = C.scenarios.find((x) => x.id === sid), result = $("pResult").value;
     const play = { id: uid("p"), scen: sid, date: $("pDate").value || today(), result, level: $("pLevel").value === "" ? null : Number($("pLevel").value),
       party: [...document.querySelectorAll("[data-pparty]:checked")].map((x) => x.dataset.pparty), notes: $("pNotes").value.trim() };
     C.plays.push(play);
-    addLog(C, `${result === "win" ? "Won" : "Lost"} scenario ${s.num}${s.name ? ` (${s.name})` : ""}`);
+    const cap = rotSec() && rotation(); if (cap) play.lead = cap.name;
+    addLog(C, `${result === "win" ? "Won" : "Lost"} ${W("scenario").toLowerCase()} ${s.num}${s.name ? ` (${s.name})` : ""}${cap ? ` (${rotSec().label.toLowerCase()}: ${cap.name})` : ""}`);
+    if (cap) C.rotation = (C.rotation || 0) + 1; // the lead passes on after every attempt
     for (const el of document.querySelectorAll("[data-pach]:checked")) { const a = C.achievements.find((x) => x.id === el.dataset.pach); a.done = true; a.date = play.date; addLog(C, `Achievement: ${a.name}`); }
-    const na = $("pNewAch").value.trim(); if (na) { C.achievements.push({ id: uid("a"), list: $("pNewAchList").value, name: na, done: true, date: play.date }); addLog(C, `Achievement: ${na}`); }
-    const un = $("pUnlockName").value.trim(); if (un) { C.unlocks.push({ id: uid("u"), kind: $("pUnlockKind").value, name: un, from: `Scenario ${s.num}`, date: play.date }); addLog(C, `Unlocked ${$("pUnlockKind").value.toLowerCase()}: ${un}`); }
+    const na = $("pNewAch")?.value.trim(); if (na) { C.achievements.push({ id: uid("a"), list: $("pNewAchList").value, name: na, done: true, date: play.date }); addLog(C, `Achievement: ${na}`); }
+    const un = $("pUnlockName").value.trim(); if (un) { C.unlocks.push({ id: uid("u"), kind: $("pUnlockKind").value, name: un, from: `${W("scenario")} ${s.num}`, date: play.date }); addLog(C, `Unlocked ${$("pUnlockKind").value.toLowerCase()}: ${un}`); }
     if (result === "win") {
       s.status = "done";
-      for (const n of s.unlocks || []) { let t = scenByNum(C, n); if (!t) { t = { id: uid("s"), num: n, name: "", status: "available", unlocks: [], requires: [] }; C.scenarios.push(t); addLog(C, `Scenario ${n} unlocked`); } else if (t.status === "locked") { t.status = "available"; addLog(C, `Scenario ${n} unlocked`); } }
+      for (const n of s.unlocks || []) { let t = scenByNum(C, n); if (!t) { t = { id: uid("s"), num: n, name: "", status: "available", unlocks: [], requires: [] }; C.scenarios.push(t); addLog(C, `${W("scenario")} ${n} unlocked`); } else if (t.status === "locked") { t.status = "available"; addLog(C, `${W("scenario")} ${n} unlocked`); } }
     }
     playFor = null; save();
   }
@@ -569,7 +588,10 @@
       ch.fields[p[2]] = Array.from({ length: i + 1 === on ? i : i + 1 }, () => 1); save(); }
     // scenarios
     else if (b.id === "addScen") { const n = $("sNum").value.trim(); if (!n) return $("sNum").focus(); if (scenByNum(C, n)) { msg = ""; $("sNum").setCustomValidity("Already added"); $("sNum").reportValidity(); $("sNum").setCustomValidity(""); return; }
-      C.scenarios.push({ id: uid("s"), num: n, name: $("sName").value.trim(), status: $("sStatus").value, unlocks: [], requires: [] }); addLog(C, `Scenario ${n} added`); save(); $("sNum").focus(); }
+      C.scenarios.push({ id: uid("s"), num: n, name: $("sName").value.trim(), status: $("sStatus").value, unlocks: [], requires: [] }); addLog(C, `${W("scenario")} ${n} added`); save(); $("sNum").focus(); }
+    else if (b.id === "addRange") { const a = num($("rFrom").value, 0, 999), z = num($("rTo").value, 0, 999); if (!$("rFrom").value || !$("rTo").value || z < a || z - a > 200) return $("rFrom").focus();
+      let added = 0; for (let k = a; k <= z; k++) if (!scenByNum(C, k)) { C.scenarios.push({ id: uid("s"), num: String(k), name: "", status: $("rStatus").value, unlocks: [], requires: [] }); added++; }
+      if (added) addLog(C, `${W("scenarios")} ${a}–${z} added`); save(); }
     else if (d.sfilter) { sFilter = d.sfilter; render(); }
     else if (d.playform) { playFor = d.playform; render(); $("pResult")?.focus(); }
     else if (d.cancelplay) { playFor = null; render(); }
@@ -579,13 +601,13 @@
     else if (d.addreq) { const a = document.querySelector(`[data-reqach="${d.addreq}"]`).value; if (!a) return; const s = C.scenarios.find((x) => x.id === d.addreq); s.requires = [...(s.requires || []), { ach: a, need: document.querySelector(`[data-reqneed="${d.addreq}"]`).value === "1" }]; save(); }
     else if (d.unreq) { const [sid, i] = d.unreq.split(":"); C.scenarios.find((x) => x.id === sid).requires.splice(Number(i), 1); save(); }
     // party
-    else if (b.id === "addChar") { const n = $("chName").value.trim(); if (!n) return $("chName").focus(); const ch = { id: uid("h"), name: n, cls: $("chClass").value.trim(), player: $("chPlayer").value.trim(), status: "active", joined: today(), fields: {} };
-      C.characters.push(ch); addLog(C, `${n}${ch.cls ? ` the ${ch.cls}` : ""} joined the party`); save(); $("chName").focus(); }
+    else if (b.id === "addChar") { const n = $("chName").value.trim(); if (!n) return $("chName").focus(); const ch = { id: uid("h"), name: n, cls: $("chClass")?.value.trim() || "", player: $("chPlayer")?.value.trim() || "", status: "active", joined: today(), fields: {} };
+      C.characters.push(ch); addLog(C, `${n}${ch.cls ? ` the ${ch.cls}` : ""} joined the ${W("party").toLowerCase()}`); save(); $("chName").focus(); }
     else if (d.bench) { const ch = C.characters.find((x) => x.id === d.bench); ch.status = ch.status === "active" ? "benched" : "active"; save(); }
     else if (d.askretire) { retiring = d.askretire; render(); $("rKind")?.focus(); }
     else if (d.cancelretire) { retiring = null; render(); }
-    else if (d.retire) { const ch = C.characters.find((x) => x.id === d.retire); ch.status = "retired"; ch.retired = today(); addLog(C, `${ch.name} retired`);
-      const un = $("rName").value.trim(); if (un) { C.unlocks.push({ id: uid("u"), kind: $("rKind").value, name: un, from: `${ch.name}'s retirement`, date: today() }); addLog(C, `Unlocked ${$("rKind").value.toLowerCase()}: ${un}`); }
+    else if (d.retire) { const ch = C.characters.find((x) => x.id === d.retire); ch.status = "retired"; ch.retired = today(); addLog(C, `${ch.name} ${W("retiredOne").toLowerCase()}`);
+      const un = $("rName").value.trim(); if (un) { C.unlocks.push({ id: uid("u"), kind: $("rKind").value, name: un, from: `${ch.name} (${W("retiredOne").toLowerCase()})`, date: today() }); addLog(C, `Unlocked ${$("rKind").value.toLowerCase()}: ${un}`); }
       retiring = null; save(); }
     else if (d.unretire) { const ch = C.characters.find((x) => x.id === d.unretire); ch.status = "active"; delete ch.retired; save(); }
     else if (d.delchar) { C.characters = C.characters.filter((x) => x.id !== d.delchar); save(); }
@@ -594,8 +616,10 @@
     // camp sections
     else if (d.week) { C.calendar.week = num(C.calendar.week + Number(d.week), 1, C.schema.sections.find((s) => s.type === "calendar").weeks); weekSel = null; if (Number(d.week) > 0) addLog(C, `Week ${C.calendar.week} began`); save(); }
     else if (d.wk) { weekSel = Number(d.wk); render(); $("wkNote")?.focus(); }
-    else if (b.id === "addBld") { const n = $("bName").value.trim(); if (!n) return $("bName").focus(); C.buildings.push({ id: uid("b"), num: $("bNum").value.trim(), name: n, level: num($("bLvl").value, 0, 9), state: "Normal" }); addLog(C, `Building: ${n}`); save(); }
-    else if (d.delbld) { C.buildings = C.buildings.filter((x) => x.id !== d.delbld); save(); }
+    else if (d.addbld) { const sec = C.schema.sections.find((x) => x.id === d.addbld), sid = sec.id, n = $(`bName-${sid}`).value.trim(); if (!n) return $(`bName-${sid}`).focus();
+      listOf(sec).push({ id: uid("b"), num: $(`bNum-${sid}`)?.value.trim() || "", name: n, level: $(`bLvl-${sid}`) ? num($(`bLvl-${sid}`).value, 0, 9) : null, state: sec.states[0] }); addLog(C, `${sec.item ? sec.item[0].toUpperCase() + sec.item.slice(1) : "Building"}: ${n}`); save(); $(`bName-${sid}`)?.focus(); }
+    else if (d.delbld) { const [sid, id] = d.delbld.split(":"), sec = C.schema.sections.find((x) => x.id === sid), l = listOf(sec); l.splice(l.findIndex((x) => x.id === id), 1); save(); }
+    else if (d.rot) { C.rotation = (C.rotation || 0) + Number(d.rot); save(); }
     // achievements, unlocks
     else if (d.addach) { const el = $(`aNew-${d.addach}`), n = el.value.trim(); if (!n) return el.focus(); C.achievements.push({ id: uid("a"), list: d.addach, name: n, done: false }); save(); $(`aNew-${d.addach}`).focus(); }
     else if (d.delach) { C.achievements = C.achievements.filter((x) => x.id !== d.delach); C.scenarios.forEach((s) => { s.requires = (s.requires || []).filter((r) => r.ach !== d.delach); }); save(); }
@@ -626,9 +650,10 @@
     const t = e.target, d = t.dataset; if (!C) return;
     if (d.num) setNum(d.num, t.value);
     else if (d.sedit) { const [sid, k] = d.sedit.split(":"), s = C.scenarios.find((x) => x.id === sid);
-      if (k === "unlocks") s.unlocks = t.value.split(/[,\s]+/).map((x) => x.trim()).filter(Boolean); else s[k] = t.value; if (k === "status" && t.value === "done") addLog(C, `Scenario ${s.num} marked done`); save(k === "status" || k === "unlocks"); }
+      if (k === "unlocks") s.unlocks = t.value.split(/[,\s]+/).map((x) => x.trim()).filter(Boolean); else s[k] = t.value; if (k === "status" && t.value === "done") addLog(C, `${W("scenario")} ${s.num} marked done`); save(k === "status" || k === "unlocks"); }
     else if (d.ctext) { const [, cid, fid] = d.ctext.split(":"), ch = C.characters.find((x) => x.id === cid); ch.fields = ch.fields || {}; ch.fields[fid] = t.value; save(false); }
-    else if (d.bstate) { C.buildings.find((x) => x.id === d.bstate).state = t.value; save(false); }
+    else if (d.bstate) { const [sid, id] = d.bstate.split(":"), b = listOf(C.schema.sections.find((x) => x.id === sid)).find((x) => x.id === id); b.state = t.value; addLog(C, `${b.name}: ${t.value}`); save(false); }
+    else if (d.trtext) { C.tracks[d.trtext] = t.value.trim(); save(); }
     else if (d.achdone) { const a = C.achievements.find((x) => x.id === d.achdone); a.done = t.checked; a.date = t.checked ? today() : null; if (t.checked) addLog(C, `Achievement: ${a.name}`); save(); }
     else if (d.wknote) { const w = Number(d.wknote); if (t.value.trim()) C.calendar.notes[w] = t.value.trim(); else delete C.calendar.notes[w]; save(); }
     else if (d.linkgoal) { const g = goalsStore(), goal = g.goals.find((x) => x.id === t.value); if (!goal) return; goal.link = { campaign: C.id, char: d.linkgoal, campaignName: C.name, charName: C.characters.find((x) => x.id === d.linkgoal).name };
@@ -636,12 +661,13 @@
     else if (t.id === "partyName") { C.partyName = t.value.trim(); save(); }
     else if (d.cset) { if (d.cset === "unlockKinds") C.schema.unlockKinds = t.value.split(",").map((x) => x.trim()).filter(Boolean); else C[d.cset] = t.value.trim() || C[d.cset]; save(); }
     else if (t.id === "retOn") { C.schema.retirement = t.checked; save(); }
+    else if (t.id === "goalsOn") { C.schema.goals = t.checked; save(); }
   });
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Enter" || e.target.tagName !== "INPUT") return;
     const id = e.target.id, d = e.target.dataset;
     const go = { sNum: "addScen", sName: "addScen", chName: "addChar", chClass: "addChar", chPlayer: "addChar", bName: "addBld", uName: "addUnlock", uFrom: "addUnlock", cfLabel: "addCf", trLabel: "addTr", listLabel: "addList", openCode: "openBtn" }[id];
-    if (go) { e.preventDefault(); $(go).click(); } else if (d.anew) { e.preventDefault(); document.querySelector(`[data-addach="${d.anew}"]`).click(); } else if (d.num) { e.preventDefault(); e.target.blur(); }
+    if (go) { e.preventDefault(); $(go).click(); } else if (d.bname) { e.preventDefault(); document.querySelector(`[data-addbld="${d.bname}"]`).click(); } else if (d.anew) { e.preventDefault(); document.querySelector(`[data-addach="${d.anew}"]`).click(); } else if (d.num) { e.preventDefault(); e.target.blur(); }
   });
 
   async function startBackup() {
