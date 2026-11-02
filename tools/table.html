@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Table Tracker</title>
+<meta name="description" content="Track action points, resources, rounds, phases and turn order, set up for how your game works.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#fff3e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1528" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Game Shelf">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
+    --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
+    --yellow: #ffd45c; --yellow-soft: #fff1c2; --mint: #8be0bd; --mint-soft: #ddf6ea;
+    --ok: #24a26b; --danger: #d43c41; --warn: #a35a00; --warn-soft: #ffe8cc;
+    --edge: 2.5px solid var(--outline); --pop: 4px 4px 0 var(--outline); --pop-sm: 3px 3px 0 var(--outline);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+      --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+      --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+    --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+    --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; color: var(--ink); font: 16px/1.5 Nunito, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header (matches the other pages) */
+  header.top { padding: 36px 0 8px; }
+  .titlebar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .brand { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+  .logo { width: 72px; height: 72px; flex: none; transform: rotate(-5deg); filter: drop-shadow(4px 4px 0 var(--outline)); transition: transform .3s; }
+  .logo:hover { transform: rotate(4deg) scale(1.05); }
+  h1 { font: 700 clamp(2rem, 4vw, 2.9rem)/1.05 Fredoka, ui-rounded, system-ui, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  h1 .hl { background: linear-gradient(transparent 62%, var(--hl, var(--yellow)) 62% 92%, transparent 92%); padding: 0 2px; }
+  .tagline { margin: 6px 0 0; color: var(--ink-2); font-size: 1.05rem; font-weight: 600; }
+  .pagenav { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); }
+  .pagenav a { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-decoration: none; }
+  .pagenav a:hover { color: var(--ink); background: var(--surface-2); }
+  .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+
+  /* Shared bits */
+  .card { background: var(--surface); border: var(--edge); border-radius: 22px; box-shadow: var(--pop); padding: 18px 20px; min-width: 0; display: grid; gap: 14px; align-content: start; }
+  h2 { font: 700 1.3rem/1.2 Fredoka, ui-rounded, sans-serif; margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  h2 small { font: 700 .88rem Nunito, sans-serif; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm);
+    background: var(--surface); color: var(--ink); font: 600 1rem Fredoka, ui-rounded, sans-serif; transition: transform .12s, box-shadow .12s; text-decoration: none; }
+  .btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.yellow { background: var(--yellow); color: #3d2a4f; }
+  .btn.big { min-height: 52px; font-size: 1.15rem; padding: 0 22px; }
+  .btn.sm { min-height: 34px; padding: 0 12px; font-size: .9rem; border-radius: 11px; }
+  .link { border: 0; background: none; padding: 4px 2px; color: var(--accent); font-weight: 800; font-size: .92rem; }
+  .link:hover { text-decoration: underline; }
+  .link.danger { color: var(--danger); }
+  input[type=text], input[type=number] { height: 44px; border: var(--edge); border-radius: 13px; background: var(--surface); padding: 0 12px; font-weight: 700; min-width: 0; box-shadow: var(--pop-sm); }
+  input:focus { outline: none; box-shadow: 0 0 0 4px var(--yellow), 3px 3px 0 4px var(--outline); }
+  input[readonly] { opacity: .65; }
+  .note { margin: 0; font-size: .88rem; color: var(--ink-2); font-weight: 600; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 2px solid var(--outline); border-radius: 12px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: none; min-height: 30px; padding: 0 12px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+  .ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ctl > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+
+  .crumbs { margin-top: 18px; } .crumbs a { color: var(--accent); font-weight: 800; text-decoration: none; } .crumbs a:hover { text-decoration: underline; }
+  main { margin-top: 12px; display: grid; gap: 18px; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .sub { margin: -4px 0 0; color: var(--ink-2); font-weight: 600; font-size: .92rem; }
+  .note { margin: 0; color: var(--ink-2); font-weight: 700; font-size: .86rem; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .field { display: grid; gap: 5px; min-width: 0; }
+  .field > span { font: 600 .74rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+  .field small { text-transform: none; letter-spacing: 0; font: 600 .78rem Nunito, sans-serif; color: var(--muted); }
+  input[type=text], input[type=number], select, textarea { min-height: 38px; border: var(--edge); border-radius: 12px; background: var(--surface); color: var(--ink); font: 700 .95rem Nunito, sans-serif; padding: 0 10px; min-width: 0; }
+  input[type=number] { width: 5em; } textarea { padding: 8px 10px; width: 100%; box-sizing: border-box; min-height: 80px; }
+  input:focus-visible, select:focus-visible, button:focus-visible, textarea:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  h2.sec { margin: 0; font: 700 1.3rem Fredoka, ui-rounded, sans-serif; display: flex; gap: 10px; align-items: center; justify-content: flex-start; flex-wrap: wrap; }
+  h3.s3 { margin: 4px 0 0; font: 700 1.05rem Fredoka, ui-rounded, sans-serif; }
+  .chk { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; cursor: pointer; } .chk input { width: 18px; height: 18px; accent-color: var(--accent); }
+  .x { width: 30px; height: 30px; flex: none; border-radius: 50%; border: 2px solid var(--outline); background: var(--surface); font-weight: 900; color: var(--ink-2); }
+  .ed { display: grid; gap: 12px; padding: 14px; border: 2px dashed var(--outline); border-radius: 16px; background: var(--yellow-soft); }
+  .edrow { display: flex; flex-wrap: wrap; gap: 6px; align-items: end; padding: 6px 8px; border: 2px solid var(--line); border-radius: 12px; background: var(--surface); }
+  /* session */
+  .bar2 { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; padding: 10px 14px; border: var(--edge); border-radius: 18px; background: var(--surface); box-shadow: var(--pop-sm); }
+  .rnd { font: 700 1.25rem Fredoka, ui-rounded, sans-serif; } .rnd small { font-size: .95rem; color: var(--ink-2); }
+  .phases { display: flex; flex-wrap: wrap; gap: 4px; }
+  .phases span { padding: 2px 10px; border-radius: 999px; border: 2px solid var(--line); font-weight: 800; font-size: .82rem; color: var(--ink-2); }
+  .phases span.on { background: var(--yellow); border-color: var(--outline); color: #3d2a4f; }
+  .players { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
+  .pl { display: grid; gap: 10px; align-content: start; padding: 14px; border: var(--edge); border-radius: 18px; background: var(--surface); box-shadow: var(--pop-sm); }
+  .pl.now { background: var(--yellow-soft); box-shadow: 5px 5px 0 var(--outline); outline: 3px solid var(--accent); outline-offset: 2px; }
+  .pl.passed { opacity: .6; }
+  .pl h3 { margin: 0; font: 700 1.25rem Fredoka, ui-rounded, sans-serif; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .tag { font: 700 .72rem Nunito, sans-serif; padding: 1px 8px; border-radius: 999px; border: 1.5px solid var(--outline); background: var(--surface); }
+  .tag.turn { background: var(--accent); color: #fff; } .tag.first { background: var(--mint); color: #3d2a4f; }
+  .ap { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .apnum { font: 700 2.2rem/1 Fredoka, ui-rounded, sans-serif; } .apnum small { font-size: 1rem; color: var(--ink-2); }
+  .pips { display: flex; flex-wrap: wrap; gap: 4px; } .pips i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--outline); background: var(--surface); } .pips i.on { background: var(--accent); } .pips i.bank { background: var(--mint); }
+  .acts { display: flex; flex-wrap: wrap; gap: 6px; }
+  .acts button { min-height: 36px; padding: 0 10px; border-radius: 11px; border: 2px solid var(--outline); background: var(--surface); font-weight: 800; font-size: .88rem; color: var(--ink); }
+  .acts button b { margin-left: 4px; padding: 0 6px; border-radius: 999px; background: var(--surface-2); }
+  .acts button:disabled { opacity: .35; }
+  .res { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
+  .rs { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 4px 8px; border: 2px solid var(--line); border-radius: 12px; font-weight: 800; font-size: .92rem; }
+  .rs small { color: var(--ink-2); font-weight: 700; }
+  .stepper { display: inline-flex; align-items: center; border: 2px solid var(--outline); border-radius: 10px; overflow: hidden; background: var(--surface); flex: none; }
+  .stepper button { width: 30px; height: 30px; border: 0; background: none; font-size: 1.05rem; font-weight: 900; color: var(--ink); }
+  .stepper output { min-width: 2.6em; text-align: center; font: 700 .95rem Fredoka, ui-rounded, sans-serif; border-left: 2px solid var(--line); border-right: 2px solid var(--line); padding: 4px 0; }
+  .order { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .order span { display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px 2px 10px; border: 2px solid var(--outline); border-radius: 999px; font-weight: 800; background: var(--surface); }
+  .order span.now { background: var(--accent); color: #fff; } .order span.passed { text-decoration: line-through; opacity: .6; }
+  .order button { width: 24px; height: 24px; border-radius: 50%; border: 0; background: none; font-weight: 900; color: inherit; }
+  .log { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: .88rem; font-weight: 700; color: var(--ink-2); }
+  .examples { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .ex { text-align: left; display: grid; gap: 4px; padding: 12px; border: var(--edge); border-radius: 16px; background: var(--surface); font: inherit; color: var(--ink); }
+  .ex b { font: 700 1.05rem Fredoka, ui-rounded, sans-serif; } .ex span { font-size: .84rem; font-weight: 600; color: var(--ink-2); }
+  .ex[aria-pressed="true"] { background: var(--yellow-soft); outline: 3px solid var(--outline); }
+  footer { margin: 40px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
+  @media (max-width: 760px) { .wrap { padding: 0 16px; } header.top { padding-top: 22px; } .logo { width: 54px; height: 54px; } .brand { gap: 12px; } .card { box-shadow: var(--pop-sm); padding: 16px; border-radius: 18px; } .players { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <a class="brand" href="/">
+        <svg class="logo" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="3" y="3" width="66" height="66" rx="18" fill="var(--yellow)" stroke="var(--outline)" stroke-width="3"/>
+          <g transform="translate(36 10) rotate(14)"><rect x="0" y="0" width="22" height="22" rx="5" fill="#fff" stroke="var(--outline)" stroke-width="2.5"/>
+            <circle cx="6" cy="6" r="2.2" fill="var(--outline)"/><circle cx="11" cy="11" r="2.2" fill="var(--outline)"/><circle cx="16" cy="16" r="2.2" fill="var(--outline)"/></g>
+          <g transform="translate(9 20) scale(1.75)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.4" stroke-linejoin="round"/></g>
+        </svg>
+        <div>
+          <h1>Table <span class="hl">Tracker</span></h1>
+          <p class="tagline">Actions, resources, rounds and turns, your game's way.</p>
+        </div>
+      </a>
+      <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats">Charts</a><a href="/tools" aria-current="page">Tools</a></nav>
+    </div>
+  </header>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools">‹ All tools</a></nav>
+  <main id="app"></main>
+  <footer>The game in progress and your setups are saved in this browser, so you can close the page and pick up where you left off.</footer>
+</div>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const KEY = "game-shelf:table", uid = (p) => p + Math.random().toString(36).slice(2, 8), copy = (o) => JSON.parse(JSON.stringify(o));
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { return null; } };
+  let DB = load() || { setups: {}, session: null, names: ["Remy", "Jonathan"] }; DB.setups = DB.setups || {};
+  const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} };
+
+  /* ---------- A setup describes the game's rules; examples to start from ---------- */
+  // actions: per (allowance), refresh ("turn": refills when your turn starts; "round": refills for everyone each round),
+  //          carry (how many unused points you can keep, 0 = none), costs (named actions and what they cost), upgrades (per-player +/-)
+  // resources: per player (or shared), with start, min, max and income added each new round
+  // rounds: max (0 = no limit), phases (names, in order); order: "fixed" or "rotate" (first player passes on each round);
+  // passing: players pass, and the round ends when everyone has passed
+  const R = (label, o = {}) => ({ id: uid("r"), label, start: 0, min: 0, max: null, income: 0, shared: false, ...o });
+  const EXAMPLES = [
+    { id: "fixed", name: "Fixed actions per turn", blurb: "Everyone gets 3 actions on their turn. Unused ones are lost.",
+      actions: { per: 3, refresh: "turn", carry: 0, costs: [{ label: "Action", cost: 1 }], upgrades: false }, resources: [], rounds: { max: 0, phases: [] }, order: "fixed", passing: false },
+    { id: "costs", name: "Actions that cost different amounts", blurb: "4 action points a turn; moves cost 1, attacks 2, specials 3. Upgrades add points.",
+      actions: { per: 4, refresh: "turn", carry: 0, costs: [{ label: "Move", cost: 1 }, { label: "Attack", cost: 2 }, { label: "Special", cost: 3 }], upgrades: true }, resources: [], rounds: { max: 0, phases: [] }, order: "fixed", passing: false },
+    { id: "carry", name: "Bank unused actions", blurb: "3 points a turn, and you can save up to 2 unused points for your next turn.",
+      actions: { per: 3, refresh: "turn", carry: 2, costs: [{ label: "Basic", cost: 1 }, { label: "Big", cost: 2 }], upgrades: true }, resources: [], rounds: { max: 0, phases: [] }, order: "fixed", passing: false },
+    { id: "round", name: "Actions per round, pass when done", blurb: "Everyone gets 2 actions each round (like workers). Take turns until everyone passes; the first player rotates.",
+      actions: { per: 2, refresh: "round", carry: 0, costs: [{ label: "Place", cost: 1 }], upgrades: true }, resources: [], rounds: { max: 0, phases: [] }, order: "rotate", passing: true },
+    { id: "economy", name: "Resources, phases and rounds", blurb: "No action points: track coins, wood and stone with income each round, 3 phases and 8 rounds.",
+      actions: null, resources: [R("Coins", { start: 5, income: 2 }), R("Wood", { income: 1 }), R("Stone"), R("Points")], rounds: { max: 8, phases: ["Income", "Actions", "Clean-up"] }, order: "rotate", passing: false },
+    { id: "all", name: "A bit of everything", blurb: "Action points with costs and banking, resources with income, a shared supply, phases and a round limit.",
+      actions: { per: 3, refresh: "turn", carry: 1, costs: [{ label: "Move", cost: 1 }, { label: "Build", cost: 2 }], upgrades: true },
+      resources: [R("Gold", { start: 3, income: 1 }), R("Health", { start: 10, max: 10 }), R("Supply", { start: 20, shared: true })], rounds: { max: 10, phases: ["Draw", "Actions", "End"] }, order: "rotate", passing: false },
+    { id: "blank", name: "Start from scratch", blurb: "Nothing switched on. Add the rules your game uses.", actions: null, resources: [], rounds: { max: 0, phases: [] }, order: "fixed", passing: false },
+  ];
+  let pickId = "fixed", draft = null;
+  const allSetups = () => [...EXAMPLES, ...Object.values(DB.setups)];
+  function pickSetup(id) { pickId = id; draft = copy(allSetups().find((x) => x.id === id) || EXAMPLES[0]); draft.resources.forEach((r) => { r.id = r.id || uid("r"); }); }
+  pickSetup("fixed");
+
+  /* ---------- Session (the game being played) ---------- */
+  let S = DB.session, undo = [];
+  const allow = (p) => S.setup.actions ? Math.max(0, S.setup.actions.per + (p.bonus || 0)) : 0;
+  const current = () => S.players.find((p) => p.id === S.order[S.turn]);
+  const log = (t) => { S.log.unshift(`R${S.round}${S.setup.rounds.phases.length ? ` · ${S.setup.rounds.phases[S.phase]}` : ""}: ${t}`); S.log = S.log.slice(0, 80); };
+  const snap = () => { undo.push(JSON.stringify(S)); if (undo.length > 40) undo.shift(); };
+  const commit = () => { DB.session = S; persist(); render(); };
+  function refill(p) { const a = S.setup.actions; if (!a) return; const keep = a.carry > 0 ? Math.min(p.ap, a.carry) : 0; p.banked = keep; p.ap = allow(p) + keep; }
+  function start(names) {
+    const setup = copy(draft);
+    const players = names.map((n) => ({ id: uid("p"), name: n, ap: 0, banked: 0, bonus: 0, passed: false, res: Object.fromEntries(setup.resources.filter((r) => !r.shared).map((r) => [r.id, r.start])) }));
+    S = { setup, players, order: players.map((p) => p.id), first: 0, turn: 0, round: 1, phase: 0, shared: Object.fromEntries(setup.resources.filter((r) => r.shared).map((r) => [r.id, r.start])), log: [] };
+    // Points that refill on your turn arrive when your turn starts; per-round points go to everyone now.
+    if (setup.actions) players.forEach((p, i) => { p.ap = setup.actions.refresh === "turn" && i > 0 ? 0 : allow(p); });
+    log(`Game started: ${players.map((p) => p.name).join(", ")}`); undo = []; commit();
+  }
+  const clampR = (r, v) => Math.max(r.min ?? -Infinity, Math.min(r.max ?? Infinity, v));
+  function newRound() {
+    const max = S.setup.rounds.max;
+    if (max && S.round >= max) { log("Last round finished"); S.over = true; return; }
+    S.round++; S.phase = 0; S.players.forEach((p) => { p.passed = false; });
+    if (S.setup.order === "rotate") S.first = (S.first + 1) % S.order.length;
+    S.turn = S.first;
+    for (const r of S.setup.resources) if (r.income) { if (r.shared) S.shared[r.id] = clampR(r, (S.shared[r.id] || 0) + r.income); else S.players.forEach((p) => { p.res[r.id] = clampR(r, (p.res[r.id] || 0) + r.income); }); }
+    const a = S.setup.actions;
+    if (a?.refresh === "round") S.players.forEach(refill); else if (a?.refresh === "turn") refill(current());
+    log(`Round ${S.round} began${S.setup.order === "rotate" ? `; ${current().name} goes first` : ""}`);
+  }
+  function endTurn() {
+    const n = S.order.length, me = current();
+    if (S.setup.actions?.refresh === "turn" && S.setup.actions.carry === 0) me.ap = 0;
+    log(`${me.name} ended their turn`);
+    // Next player who hasn't passed; if we come back round to the first player, the round (or turn cycle) is over.
+    for (let k = 1; k <= n; k++) {
+      const i = (S.turn + k) % n, p = S.players.find((x) => x.id === S.order[i]);
+      if (S.setup.passing ? !p.passed : true) {
+        const wrapped = !S.setup.passing && i === S.first;
+        if (wrapped && !S.setup.rounds.phases.length) return newRound();
+        S.turn = i; if (S.setup.actions?.refresh === "turn") refill(p); return;
+      }
+    }
+    newRound(); // everyone passed
+  }
+
+  /* ---------- Render ---------- */
+  function render() {
+    const y = scrollY, foc = document.activeElement?.dataset?.focus;
+    $("app").innerHTML = S ? sessionHtml() : setupHtml();
+    if (foc) document.querySelector(`[data-focus="${foc}"]`)?.focus({ preventScroll: true });
+    scrollTo(0, y);
+  }
+  const stepper = (key, val, label) => `<span class="stepper"><button type="button" data-st="${key}:-1" data-focus="${key}:-1" aria-label="${esc(label)} down">−</button><output aria-live="polite">${val}</output><button type="button" data-st="${key}:1" data-focus="${key}:1" aria-label="${esc(label)} up">+</button></span>`;
+  function setupHtml() {
+    const d = draft, a = d.actions;
+    return `<section class="card"><h2 class="sec">Set up a game</h2>
+      <p class="sub">Every game counts actions and resources its own way. Start from an example, change the rules to match your game, and save it for next time.</p>
+      <div class="examples" role="group" aria-label="Starting point">${allSetups().map((x) => `<button class="ex" type="button" data-ex="${esc(x.id)}" aria-pressed="${x.id === pickId}"><b>${esc(x.name)}</b><span>${esc(x.blurb || "Your saved setup.")}</span></button>`).join("")}</div>
+      <div class="ed">
+        <h3 class="s3">Action points</h3>
+        <label class="chk"><input type="checkbox" id="aOn"${a ? " checked" : ""}> This game uses action points</label>
+        ${a ? `<div class="row"><label class="field"><span>Points each time</span><input type="number" id="aPer" min="0" max="20" value="${a.per}"></label>
+          <label class="field"><span>They refill</span><select id="aRefresh"><option value="turn"${a.refresh === "turn" ? " selected" : ""}>at the start of your turn</option><option value="round"${a.refresh === "round" ? " selected" : ""}>for everyone each round</option></select></label>
+          <label class="field"><span>Unused points kept <small>(0 = lost)</small></span><input type="number" id="aCarry" min="0" max="20" value="${a.carry}"></label>
+          <label class="chk" style="align-self:end"><input type="checkbox" id="aUp"${a.upgrades ? " checked" : ""}> Upgrades change a player's points</label></div>
+          <div class="field"><span>Actions and what they cost</span>${a.costs.map((c, i) => `<div class="edrow"><input type="text" data-cl="${i}" value="${esc(c.label)}" maxlength="24" aria-label="Action name"><label class="row" style="gap:4px"><span class="note">costs</span><input type="number" data-cc="${i}" value="${c.cost}" min="0" max="20" aria-label="Cost"></label><button class="x" type="button" data-cdel="${i}" aria-label="Remove ${esc(c.label)}">×</button></div>`).join("")}
+            <div><button class="btn sm" type="button" id="cAdd">+ Add an action</button></div></div>` : ""}
+        <h3 class="s3">Resources</h3>
+        ${d.resources.map((r, i) => `<div class="edrow"><label class="field"><span>Name</span><input type="text" data-rl="${i}" value="${esc(r.label)}" maxlength="24"></label>
+          <label class="field"><span>Start</span><input type="number" data-rf="${i}:start" value="${r.start}"></label><label class="field"><span>Min</span><input type="number" data-rf="${i}:min" value="${r.min ?? ""}"></label>
+          <label class="field"><span>Max</span><input type="number" data-rf="${i}:max" value="${r.max ?? ""}" placeholder="none"></label><label class="field"><span>Each round</span><input type="number" data-rf="${i}:income" value="${r.income}"></label>
+          <label class="chk"><input type="checkbox" data-rshared="${i}"${r.shared ? " checked" : ""}> Shared</label><button class="x" type="button" data-rdel="${i}" aria-label="Remove ${esc(r.label)}">×</button></div>`).join("") || `<p class="note">None.</p>`}
+        <div><button class="btn sm" type="button" id="rAdd">+ Add a resource</button></div>
+        <h3 class="s3">Rounds and turns</h3>
+        <div class="row"><label class="field"><span>Rounds <small>(0 = no limit)</small></span><input type="number" id="rMax" min="0" max="99" value="${d.rounds.max}"></label>
+          <label class="field" style="flex:1 1 240px"><span>Phases <small>(in order, comma-separated)</small></span><input type="text" id="rPhases" value="${esc(d.rounds.phases.join(", "))}" placeholder="e.g. Income, Actions, Upkeep"></label>
+          <label class="field"><span>First player</span><select id="oMode"><option value="fixed"${d.order === "fixed" ? " selected" : ""}>stays the same</option><option value="rotate"${d.order === "rotate" ? " selected" : ""}>passes on each round</option></select></label>
+          <label class="chk" style="align-self:end"><input type="checkbox" id="pOn"${d.passing ? " checked" : ""}> Players pass; the round ends when everyone has</label></div>
+        <div class="row"><input type="text" id="saveName" maxlength="40" placeholder="Name this setup, e.g. Spirit Island" aria-label="Setup name"><button class="btn sm" type="button" id="saveSetup">Save setup</button>${DB.setups[pickId] ? `<button class="link danger" type="button" id="delSetup">Delete this saved setup</button>` : ""}<span class="note" role="status">${esc(msg)}</span></div>
+      </div>
+      <label class="field"><span>Players, in turn order <small>(one per line)</small></span><textarea id="names">${esc((DB.names || []).join("\n"))}</textarea></label>
+      <div class="row"><label class="chk"><input type="checkbox" id="shuffle"> Random turn order</label><button class="btn yellow big" type="button" id="start">Start the game</button></div></section>`;
+  }
+  function sessionHtml() {
+    const st = S.setup, a = st.actions, cur = current(), ph = st.rounds.phases;
+    const sharedR = st.resources.filter((r) => r.shared), ownR = st.resources.filter((r) => !r.shared);
+    return `<div class="bar2"><div><div class="rnd">Round ${S.round}${st.rounds.max ? ` <small>of ${st.rounds.max}</small>` : ""}${S.over ? " · <small>game over</small>" : ""}</div>
+        ${ph.length ? `<div class="phases">${ph.map((p, i) => `<span class="${i === S.phase ? "on" : ""}">${esc(p)}</span>`).join("")}</div>` : ""}</div>
+      <div class="row">${ph.length ? `<button class="btn sm" type="button" id="nextPhase">${S.phase < ph.length - 1 ? `Next: ${esc(ph[S.phase + 1])}` : "Next round"}</button>` : `<button class="btn sm" type="button" id="nextRound">Next round</button>`}
+        <button class="btn sm yellow" type="button" id="endTurn"${S.over ? " disabled" : ""}>End ${esc(cur.name)}'s turn</button><button class="btn sm" type="button" id="undo"${undo.length ? "" : " disabled"}>↶ Undo</button></div></div>
+      <section class="card"><div class="row"><span class="note">Turn order:</span><div class="order">${S.order.map((id, i) => { const p = S.players.find((x) => x.id === id);
+        return `<span class="${i === S.turn ? "now" : ""}${p.passed ? " passed" : ""}">${i === S.first ? "① " : ""}${esc(p.name)}<button type="button" data-mv="${i}:-1" aria-label="Move ${esc(p.name)} earlier"${i ? "" : " disabled"}>‹</button><button type="button" data-mv="${i}:1" aria-label="Move ${esc(p.name)} later"${i < S.order.length - 1 ? "" : " disabled"}>›</button></span>`; }).join("")}</div>
+        <button class="link" type="button" data-setturn="1">Make someone else's turn…</button></div>
+        ${pickTurn ? `<div class="row">${S.order.map((id, i) => `<button class="btn sm" type="button" data-turnto="${i}">${esc(S.players.find((x) => x.id === id).name)}</button>`).join("")}</div>` : ""}</section>
+      <div class="players">${S.order.map((id, i) => playerHtml(S.players.find((x) => x.id === id), i)).join("")}</div>
+      ${sharedR.length ? `<section class="card"><h2 class="sec">Shared</h2><div class="res">${sharedR.map((r) => `<div class="rs"><span>${esc(r.label)}${r.income ? ` <small>+${r.income}/round</small>` : ""}</span>${stepper(`sh:${r.id}`, S.shared[r.id] ?? 0, r.label)}</div>`).join("")}</div></section>` : ""}
+      <section class="card"><h2 class="sec">What happened</h2><ul class="log">${S.log.slice(0, 15).map((l) => `<li>${esc(l)}</li>`).join("")}</ul>
+        <div class="row" style="margin-top:8px">${endConfirm ? `<span class="note">End this game?</span><button class="btn sm primary" type="button" id="endYes">End game</button><button class="link" type="button" id="endNo">Keep playing</button>` : `<button class="link danger" type="button" id="endGame">End game</button>`}</div></section>`;
+  }
+  function playerHtml(p, i) {
+    const st = S.setup, a = st.actions, now = i === S.turn, total = allow(p) + (p.banked || 0);
+    const canAct = a && (a.refresh === "round" || now);
+    return `<article class="pl${now ? " now" : ""}${p.passed ? " passed" : ""}" aria-label="${esc(p.name)}"><h3>${esc(p.name)}${now ? '<span class="tag turn">Their turn</span>' : ""}${i === S.first ? '<span class="tag first">First player</span>' : ""}${p.passed ? '<span class="tag">Passed</span>' : ""}</h3>
+      ${a ? `<div class="ap"><span class="apnum" aria-label="${p.ap} action points left">${p.ap}<small> / ${Math.max(total, p.ap)}</small></span>
+          <span class="pips" aria-hidden="true">${Array.from({ length: Math.max(total, p.ap) }, (_, k) => `<i class="${k < p.ap ? (k >= allow(p) ? "on bank" : "on") : ""}"></i>`).join("")}</span>
+          ${stepper(`ap:${p.id}`, p.ap, `${p.name} action points`)}</div>
+        ${p.banked ? `<span class="note">Includes ${p.banked} kept from last time.</span>` : ""}${a.refresh === "turn" && !now ? `<span class="note">Gets ${allow(p)}${a.carry ? ` plus up to ${a.carry} unused` : ""} when their turn starts.</span>` : ""}
+        <div class="acts">${a.costs.map((c, k) => `<button type="button" data-act="${p.id}:${k}" data-focus="act${p.id}${k}"${!canAct || p.ap < c.cost ? " disabled" : ""}>${esc(c.label)}<b>${c.cost}</b></button>`).join("")}</div>
+        ${a.upgrades ? `<div class="rs"><span>Points per ${a.refresh === "round" ? "round" : "turn"} <small>${a.per}${p.bonus ? ` ${p.bonus > 0 ? "+" : "−"} ${Math.abs(p.bonus)} upgrades` : ""}</small></span>${stepper(`bonus:${p.id}`, allow(p), `${p.name} points per turn`)}</div>` : ""}` : ""}
+      ${st.resources.some((r) => !r.shared) ? `<div class="res">${st.resources.filter((r) => !r.shared).map((r) => `<div class="rs"><span>${esc(r.label)}${r.income ? ` <small>+${r.income}</small>` : ""}</span>${stepper(`res:${p.id}:${r.id}`, p.res[r.id] ?? 0, `${p.name} ${r.label}`)}</div>`).join("")}</div>` : ""}
+      ${st.passing ? `<div><button class="btn sm" type="button" data-pass="${p.id}">${p.passed ? "Un-pass" : "Pass"}</button></div>` : ""}
+    </article>`;
+  }
+
+  /* ---------- Actions ---------- */
+  let msg = "", pickTurn = false, endConfirm = false;
+  function readDraft() {
+    const d = draft;
+    if (d.actions) { d.actions.per = Number($("aPer").value) || 0; d.actions.refresh = $("aRefresh").value; d.actions.carry = Math.max(0, Number($("aCarry").value) || 0); d.actions.upgrades = $("aUp").checked;
+      document.querySelectorAll("[data-cl]").forEach((el) => { d.actions.costs[el.dataset.cl].label = el.value.trim() || "Action"; });
+      document.querySelectorAll("[data-cc]").forEach((el) => { d.actions.costs[el.dataset.cc].cost = Math.max(0, Number(el.value) || 0); }); }
+    document.querySelectorAll("[data-rl]").forEach((el) => { d.resources[el.dataset.rl].label = el.value.trim() || "Resource"; });
+    document.querySelectorAll("[data-rf]").forEach((el) => { const [i, k] = el.dataset.rf.split(":"); const v = el.value === "" ? null : Number(el.value); d.resources[i][k] = k === "start" || k === "income" ? v ?? 0 : v; });
+    document.querySelectorAll("[data-rshared]").forEach((el) => { d.resources[el.dataset.rshared].shared = el.checked; });
+    d.rounds.max = Math.max(0, Number($("rMax").value) || 0); d.rounds.phases = $("rPhases").value.split(",").map((x) => x.trim()).filter(Boolean);
+    d.order = $("oMode").value; d.passing = $("pOn").checked;
+    DB.names = $("names").value.split("\n").map((x) => x.trim()).filter(Boolean); persist();
+  }
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return; const d = b.dataset;
+    if (!S) {
+      if (d.ex) { readDraft(); pickSetup(d.ex); msg = ""; render(); return; }
+      readDraft();
+      if (b.id === "cAdd") draft.actions.costs.push({ label: "Action", cost: 1 });
+      else if (d.cdel) draft.actions.costs.splice(Number(d.cdel), 1);
+      else if (b.id === "rAdd") draft.resources.push(R("Resource"));
+      else if (d.rdel) draft.resources.splice(Number(d.rdel), 1);
+      else if (b.id === "saveSetup") { const n = $("saveName").value.trim(); if (!n) { $("saveName").focus(); return; } const s = { ...copy(draft), id: uid("s"), name: n, blurb: "" }; DB.setups[s.id] = s; persist(); pickId = s.id; msg = `Saved “${n}”.`; }
+      else if (b.id === "delSetup") { delete DB.setups[pickId]; persist(); pickSetup("fixed"); }
+      else if (b.id === "start") { let names = DB.names.slice(0, 12); if (!names.length) { msg = "Add the players."; return render(); } if ($("shuffle").checked) names = names.map((n) => [Math.random(), n]).sort((a, c) => a[0] - c[0]).map((x) => x[1]); start(names); return; }
+      render(); return;
+    }
+    const id = d.st ? d.st.split(":")[1] : null;
+    if (d.st) { snap(); const parts = d.st.split(":"), dir = Number(parts.at(-1));
+      if (parts[0] === "ap") { const p = S.players.find((x) => x.id === parts[1]); p.ap = Math.max(0, p.ap + dir); }
+      else if (parts[0] === "bonus") { const p = S.players.find((x) => x.id === parts[1]), nb = (p.bonus || 0) + dir; if (S.setup.actions.per + nb < 0) { undo.pop(); return; }
+        p.bonus = nb; p.ap = Math.max(0, p.ap + dir); log(`${p.name} now gets ${allow(p)} points`); }
+      else if (parts[0] === "res") { const p = S.players.find((x) => x.id === parts[1]), r = S.setup.resources.find((x) => x.id === parts[2]); p.res[r.id] = clampR(r, (p.res[r.id] || 0) + dir); }
+      else if (parts[0] === "sh") { const r = S.setup.resources.find((x) => x.id === parts[1]); S.shared[r.id] = clampR(r, (S.shared[r.id] || 0) + dir); }
+      commit(); }
+    else if (d.act) { const [pid, k] = d.act.split(":"), p = S.players.find((x) => x.id === pid), c = S.setup.actions.costs[Number(k)]; if (p.ap < c.cost) return; snap(); p.ap -= c.cost; log(`${p.name}: ${c.label} (−${c.cost})`); commit(); }
+    else if (b.id === "endTurn") { snap(); endTurn(); commit(); $("endTurn")?.focus(); }
+    else if (b.id === "nextRound") { snap(); newRound(); commit(); }
+    else if (b.id === "nextPhase") { snap(); if (S.phase < S.setup.rounds.phases.length - 1) { S.phase++; log(`${S.setup.rounds.phases[S.phase]} phase`); } else newRound(); commit(); }
+    else if (b.id === "undo") { const prev = undo.pop(); if (prev) { S = JSON.parse(prev); commit(); } }
+    else if (d.pass) { snap(); const p = S.players.find((x) => x.id === d.pass); p.passed = !p.passed; log(`${p.name} ${p.passed ? "passed" : "is back in"}`);
+      if (p.passed && S.players.every((x) => x.passed)) newRound(); else if (p.passed && S.order[S.turn] === p.id) endTurn(); commit(); }
+    else if (d.mv) { snap(); const [i, dir] = d.mv.split(":").map(Number), j = i + dir, cur = S.order[S.turn], first = S.order[S.first]; [S.order[i], S.order[j]] = [S.order[j], S.order[i]]; S.turn = S.order.indexOf(cur); S.first = S.order.indexOf(first); commit(); }
+    else if (d.setturn) { pickTurn = !pickTurn; render(); }
+    else if (d.turnto) { snap(); S.turn = Number(d.turnto); pickTurn = false; if (S.setup.actions?.refresh === "turn") refill(current()); log(`${current().name}'s turn`); commit(); }
+    else if (b.id === "endGame") { endConfirm = true; render(); }
+    else if (b.id === "endNo") { endConfirm = false; render(); }
+    else if (b.id === "endYes") { endConfirm = false; S = null; DB.session = null; persist(); pickSetup(pickId); render(); }
+  });
+  document.addEventListener("change", (e) => { if (S) return; const t = e.target; if (["aOn"].includes(t.id)) { readDraftSafe(); draft.actions = t.checked ? { per: 3, refresh: "turn", carry: 0, costs: [{ label: "Action", cost: 1 }], upgrades: false } : null; render(); $("aOn").focus(); } });
+  function readDraftSafe() { const on = draft.actions; try { readDraft(); } catch (err) {} draft.actions = on; }
+  render();
+})();
+</script>
+<script src="/pwa.js" defer></script>
+</body>
+</html>

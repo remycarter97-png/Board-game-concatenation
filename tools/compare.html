@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Complexity Comparator</title>
+<meta name="description" content="Compare the weight, play time and learning curve of games on our shelf.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#fff3e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1528" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Game Shelf">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
+    --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
+    --yellow: #ffd45c; --yellow-soft: #fff1c2; --mint: #8be0bd; --mint-soft: #ddf6ea;
+    --ok: #24a26b; --danger: #d43c41; --warn: #a35a00; --warn-soft: #ffe8cc;
+    --edge: 2.5px solid var(--outline); --pop: 4px 4px 0 var(--outline); --pop-sm: 3px 3px 0 var(--outline);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+      --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+      --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+    --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+    --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; color: var(--ink); font: 16px/1.5 Nunito, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header (matches the other pages) */
+  header.top { padding: 36px 0 8px; }
+  .titlebar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .brand { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+  .logo { width: 72px; height: 72px; flex: none; transform: rotate(-5deg); filter: drop-shadow(4px 4px 0 var(--outline)); transition: transform .3s; }
+  .logo:hover { transform: rotate(4deg) scale(1.05); }
+  h1 { font: 700 clamp(2rem, 4vw, 2.9rem)/1.05 Fredoka, ui-rounded, system-ui, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  h1 .hl { background: linear-gradient(transparent 62%, var(--hl, var(--yellow)) 62% 92%, transparent 92%); padding: 0 2px; }
+  .tagline { margin: 6px 0 0; color: var(--ink-2); font-size: 1.05rem; font-weight: 600; }
+  .pagenav { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); }
+  .pagenav a { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-decoration: none; }
+  .pagenav a:hover { color: var(--ink); background: var(--surface-2); }
+  .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+
+  /* Shared bits */
+  .card { background: var(--surface); border: var(--edge); border-radius: 22px; box-shadow: var(--pop); padding: 18px 20px; min-width: 0; display: grid; gap: 14px; align-content: start; }
+  h2 { font: 700 1.3rem/1.2 Fredoka, ui-rounded, sans-serif; margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  h2 small { font: 700 .88rem Nunito, sans-serif; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm);
+    background: var(--surface); color: var(--ink); font: 600 1rem Fredoka, ui-rounded, sans-serif; transition: transform .12s, box-shadow .12s; text-decoration: none; }
+  .btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.yellow { background: var(--yellow); color: #3d2a4f; }
+  .btn.big { min-height: 52px; font-size: 1.15rem; padding: 0 22px; }
+  .btn.sm { min-height: 34px; padding: 0 12px; font-size: .9rem; border-radius: 11px; }
+  .link { border: 0; background: none; padding: 4px 2px; color: var(--accent); font-weight: 800; font-size: .92rem; }
+  .link:hover { text-decoration: underline; }
+  .link.danger { color: var(--danger); }
+  input[type=text], input[type=number] { height: 44px; border: var(--edge); border-radius: 13px; background: var(--surface); padding: 0 12px; font-weight: 700; min-width: 0; box-shadow: var(--pop-sm); }
+  input:focus { outline: none; box-shadow: 0 0 0 4px var(--yellow), 3px 3px 0 4px var(--outline); }
+  input[readonly] { opacity: .65; }
+  .note { margin: 0; font-size: .88rem; color: var(--ink-2); font-weight: 600; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 2px solid var(--outline); border-radius: 12px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: none; min-height: 30px; padding: 0 12px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+  .ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ctl > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+
+  .crumbs { margin-top: 18px; } .crumbs a { color: var(--accent); font-weight: 800; text-decoration: none; } .crumbs a:hover { text-decoration: underline; }
+  main { margin-top: 12px; display: grid; gap: 20px; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .sub { margin: -4px 0 0; color: var(--ink-2); font-weight: 600; font-size: .92rem; }
+  .note { margin: 0; color: var(--ink-2); font-weight: 700; font-size: .86rem; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  input[type=text], select { min-height: 40px; border: var(--edge); border-radius: 12px; background: var(--surface); color: var(--ink); font: 700 .95rem Nunito, sans-serif; padding: 0 10px; min-width: 0; }
+  input:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  h2.sec { margin: 0; font: 700 1.3rem Fredoka, ui-rounded, sans-serif; display: flex; gap: 10px; align-items: center; justify-content: flex-start; flex-wrap: wrap; }
+  .empty { text-align: center; color: var(--ink-2); font-weight: 700; padding: 16px 12px; border: 2.5px dashed var(--line); border-radius: 16px; margin: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 4px 3px 12px; border: 2px solid var(--outline); border-radius: 999px; font-weight: 800; background: var(--gc); color: #3d2a4f; }
+  .chip button { width: 24px; height: 24px; border-radius: 50%; border: 0; background: #fffdf8; font-weight: 900; color: #3d2a4f; }
+  .metric { display: grid; gap: 8px; }
+  .metric h3 { margin: 0; font: 700 1.05rem Fredoka, ui-rounded, sans-serif; } .metric h3 small { font: 700 .82rem Nunito, sans-serif; color: var(--ink-2); }
+  .mrow { display: grid; grid-template-columns: minmax(90px, 200px) minmax(0, 1fr) 7.5em; gap: 10px; align-items: center; font-weight: 800; font-size: .92rem; }
+  .mrow .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .track { position: relative; height: 18px; border-radius: 999px; border: 2px solid var(--outline); background: var(--surface-2); overflow: hidden; }
+  .track i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--gc); border-right: 2px solid var(--outline); }
+  .track i.range { opacity: .45; border-right: 0; }
+  .mrow b { text-align: right; font-variant-numeric: tabular-nums; }
+  .grid { overflow-x: auto; }
+  table.cmp { border-collapse: separate; border-spacing: 0; min-width: 100%; font-weight: 800; }
+  .cmp th, .cmp td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .cmp thead th { font: 700 1rem Fredoka, ui-rounded, sans-serif; background: var(--gc); color: #3d2a4f; border: 2px solid var(--outline); border-radius: 12px 12px 0 0; }
+  .cmp tbody th { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-2); white-space: nowrap; position: sticky; left: 0; background: var(--surface); }
+  .cmp td small { display: block; color: var(--ink-2); font-weight: 700; font-size: .8rem; }
+  .rate { display: inline-flex; gap: 3px; } .rate button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--outline); background: var(--surface); font: 700 .8rem Fredoka, ui-rounded, sans-serif; color: var(--ink); padding: 0; }
+  .rate button[aria-pressed="true"] { background: var(--yellow); box-shadow: 2px 2px 0 var(--outline); color: #3d2a4f; }
+  .lvl { display: inline-block; padding: 1px 9px; border-radius: 999px; border: 1.5px solid var(--outline); font-size: .78rem; background: var(--surface-2); }
+  svg.scatter { width: 100%; height: auto; max-height: 420px; }
+  svg.scatter .dot { fill: var(--line); } svg.scatter .pick { stroke: var(--outline); stroke-width: 2; }
+  svg.scatter text { font: 700 11px Nunito, sans-serif; fill: var(--ink-2); } svg.scatter .lab { font: 700 12px Fredoka, sans-serif; fill: var(--ink); }
+  svg.scatter line { stroke: var(--line); }
+  .sim { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .sim button { min-height: 34px; padding: 0 12px; border-radius: 999px; border: 2px solid var(--outline); background: var(--surface); font-weight: 800; color: var(--ink); }
+  footer { margin: 40px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
+  @media (max-width: 760px) { .wrap { padding: 0 16px; } header.top { padding-top: 22px; } .logo { width: 54px; height: 54px; } .brand { gap: 12px; } .card { box-shadow: var(--pop-sm); padding: 16px; border-radius: 18px; } .mrow { grid-template-columns: 90px minmax(0, 1fr) 5.5em; font-size: .85rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <a class="brand" href="/">
+        <svg class="logo" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="3" y="3" width="66" height="66" rx="18" fill="var(--yellow)" stroke="var(--outline)" stroke-width="3"/>
+          <g transform="translate(36 10) rotate(14)"><rect x="0" y="0" width="22" height="22" rx="5" fill="#fff" stroke="var(--outline)" stroke-width="2.5"/>
+            <circle cx="6" cy="6" r="2.2" fill="var(--outline)"/><circle cx="11" cy="11" r="2.2" fill="var(--outline)"/><circle cx="16" cy="16" r="2.2" fill="var(--outline)"/></g>
+          <g transform="translate(9 20) scale(1.75)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.4" stroke-linejoin="round"/></g>
+        </svg>
+        <div>
+          <h1>Complexity <span class="hl">Comparator</span></h1>
+          <p class="tagline">How heavy, how long, how hard to learn.</p>
+        </div>
+      </a>
+      <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats">Charts</a><a href="/tools" aria-current="page">Tools</a></nav>
+    </div>
+  </header>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools">‹ All tools</a></nav>
+  <main id="app"><section class="card"><p>Loading the shelf…</p></section></main>
+  <footer>Weight, play time and player counts come from BoardGameGeek. The learning curve is an estimate from those (weight, how many mechanics, length, campaign set-up, party games) unless you've rated it yourselves; your ratings are saved in this browser.</footer>
+</div>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const KEY = "game-shelf:compare", COLORS = ["#ffd45c", "#8be0bd", "#ff9fb8", "#9cc9ff", "#ffb27a", "#c9b3ff"];
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { return null; } };
+  let S = load() || { picks: [], ours: {} };
+  const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+  let games = [], byId = new Map(), msg = "";
+  const pt = (g) => g.playTime || g.maxTime || g.minTime || 0;
+  const hasM = (g, re) => [...(g.mechanics || []), ...(g.categories || [])].some((x) => re.test(x));
+  // Learning curve estimate, 1 (minutes) to 5 (steep): starts from BGG weight and adjusts for how much is going on.
+  function estimate(g) {
+    let e = (g.weight || 2.5) * 0.9 + 0.3;
+    e += Math.max(-0.25, Math.min(0.3, ((g.mechanics || []).length - 4) * 0.08));
+    e += pt(g) >= 120 ? 0.15 : pt(g) >= 90 ? 0.08 : 0;
+    if (hasM(g, /Campaign|Legacy/)) e += 0.15;
+    if (hasM(g, /^Party Game$/)) e -= 0.3;
+    return Math.round(Math.max(1, Math.min(5, e)) * 10) / 10;
+  }
+  const learn = (g) => S.ours[g.id] ?? estimate(g);
+  const level = (v) => v < 1.8 ? "Learn it in minutes" : v < 2.6 ? "Clicks in one play" : v < 3.4 ? "Takes a couple of plays" : v < 4.2 ? "A few plays to get it" : "Steep: several plays";
+  const teach = (g) => Math.round((5 + 5 * (g.weight || 2.5)) / 5) * 5;
+  const timeTxt = (g) => g.minTime && g.maxTime && g.minTime !== g.maxTime ? `${g.minTime}–${g.maxTime} min` : pt(g) ? `${pt(g)} min` : "—";
+  const players = (g) => !g.minPlayers ? "—" : g.maxPlayers && g.maxPlayers !== g.minPlayers ? `${g.minPlayers}–${g.maxPlayers}` : `${g.minPlayers}`;
+
+  function render() {
+    const y = scrollY, foc = document.activeElement?.dataset?.focus;
+    const picks = S.picks.map((id) => byId.get(id)).filter(Boolean);
+    const col = (i) => COLORS[i % COLORS.length];
+    const maxT = Math.max(60, ...picks.map((g) => g.maxTime || pt(g)));
+    const bars = (title, sub, val, max, fmt, range) => `<div class="metric"><h3>${title} <small>${sub}</small></h3>${picks.map((g, i) => { const v = val(g);
+      return `<div class="mrow" style="--gc:${col(i)}"><span class="nm">${esc(g.name)}</span><span class="track" role="img" aria-label="${esc(g.name)}: ${esc(fmt(g))}">${range && g.minTime && g.maxTime && g.maxTime !== g.minTime ? `<i class="range" style="width:${100 * g.maxTime / max}%"></i><i style="width:${100 * g.minTime / max}%"></i>` : `<i style="width:${v ? 100 * v / max : 0}%"></i>`}</span><b>${esc(fmt(g))}</b></div>`; }).join("")}</div>`;
+    $("app").innerHTML = `<section class="card"><h2 class="sec">Compare games</h2>
+        <p class="sub">Pick up to 6 games from our shelf to see how heavy, how long and how hard to learn they are side by side.</p>
+        <div class="row"><label class="vh" for="add">Add a game</label><input type="text" id="add" list="gameNames" placeholder="Add a game" autocomplete="off" style="flex:1 1 240px"><button class="btn sm yellow" type="button" id="addBtn"${picks.length >= 6 ? " disabled" : ""}>Add</button>
+          ${picks.length ? `<button class="link" type="button" id="clear">Clear</button>` : ""}<span class="note" role="status">${esc(msg)}</span></div>
+        ${picks.length ? `<div class="chips">${picks.map((g, i) => `<span class="chip" style="--gc:${col(i)}">${esc(g.name)}<button type="button" data-rm="${g.id}" aria-label="Remove ${esc(g.name)}">×</button></span>`).join("")}</div>` : `<p class="empty">Add two or more games to compare them.</p>`}
+      </section>
+      ${picks.length ? `<section class="card">
+        ${bars("Weight", "BGG, 1 light – 5 heavy", (g) => g.weight || 0, 5, (g) => (g.weight ? g.weight.toFixed(2) : "—"))}
+        ${bars("Play time", "BGG range", (g) => g.maxTime || pt(g), maxT, timeTxt, true)}
+        ${bars("Learning curve", "1 easy – 5 steep · our rating if we've given one", learn, 5, (g) => `${learn(g).toFixed(1)}${S.ours[g.id] != null ? " ours" : ""}`)}
+        ${bars("Time to teach", "about, from weight", teach, Math.max(...picks.map(teach), 30), (g) => `~${teach(g)} min`)}
+      </section>
+      <section class="card"><h2 class="sec">Side by side</h2><div class="grid"><table class="cmp"><thead><tr><th scope="col"><span class="vh">Measure</span></th>${picks.map((g, i) => `<th scope="col" style="--gc:${col(i)}">${esc(g.name)}</th>`).join("")}</tr></thead><tbody>
+        <tr><th scope="row">Weight</th>${picks.map((g) => `<td>${g.weight ? g.weight.toFixed(2) : "—"}<small>${g.weight ? (g.weight < 2 ? "Light" : g.weight < 3 ? "Medium" : g.weight < 3.8 ? "Medium-heavy" : "Heavy") : ""}</small></td>`).join("")}</tr>
+        <tr><th scope="row">Play time</th>${picks.map((g) => `<td>${timeTxt(g)}</td>`).join("")}</tr>
+        <tr><th scope="row">Players</th>${picks.map((g) => `<td>${players(g)}${g.bestWith ? `<small>${esc(g.bestWith)}</small>` : ""}</td>`).join("")}</tr>
+        <tr><th scope="row">Learning curve</th>${picks.map((g) => `<td>${learn(g).toFixed(1)} <span class="lvl">${esc(level(learn(g)))}</span><small>Estimate ${estimate(g).toFixed(1)}${S.ours[g.id] != null ? ` · ours ${S.ours[g.id]}` : ""}</small></td>`).join("")}</tr>
+        <tr><th scope="row">Our rating</th>${picks.map((g) => `<td><span class="rate" role="radiogroup" aria-label="How hard ${esc(g.name)} is to learn">${[1, 2, 3, 4, 5].map((n) => `<button type="button" data-rate="${g.id}:${n}" data-focus="r${g.id}${n}" role="radio" aria-checked="${S.ours[g.id] === n}" aria-pressed="${S.ours[g.id] === n}" aria-label="${n}: ${level(n)}" title="${level(n)}">${n}</button>`).join("")}</span><small>${S.ours[g.id] != null ? "Tap again to clear" : "How hard was it for us?"}</small></td>`).join("")}</tr>
+        <tr><th scope="row">Teach</th>${picks.map((g) => `<td>~${teach(g)} min</td>`).join("")}</tr>
+        <tr><th scope="row">Mechanics</th>${picks.map((g) => `<td>${(g.mechanics || []).length}<small>${esc((g.mechanics || []).slice(0, 5).join(", "))}${(g.mechanics || []).length > 5 ? "…" : ""}</small></td>`).join("")}</tr>
+        <tr><th scope="row">BGG rating</th>${picks.map((g) => `<td>${g.rating ? `★ ${g.rating.toFixed(1)}` : "—"}</td>`).join("")}</tr>
+      </tbody></table></div></section>
+      <section class="card"><h2 class="sec">On the shelf</h2><p class="sub">Every base game by weight and play time; your picks are the coloured dots.</p>${scatter(picks)}</section>
+      ${similarHtml(picks)}` : ""}`;
+    if (foc) document.querySelector(`[data-focus="${foc}"]`)?.focus({ preventScroll: true });
+    scrollTo(0, y);
+  }
+  // Weight (x) against play time (y, log scale) for the whole shelf.
+  function scatter(picks) {
+    const W = 720, H = 360, L = 50, B = 36, T = 12, Rr = 16, ys = [15, 30, 60, 120, 240, 480];
+    const x = (w) => L + (w - 1) / 4 * (W - L - Rr), y = (t) => H - B - (Math.log(Math.max(10, Math.min(600, t))) - Math.log(10)) / (Math.log(600) - Math.log(10)) * (H - B - T);
+    const pickSet = new Map(picks.map((g, i) => [g.id, COLORS[i % COLORS.length]]));
+    return `<svg class="scatter" viewBox="0 0 ${W} ${H}" role="img" aria-label="Scatter of weight against play time for the shelf, with the picked games highlighted">
+      ${[1, 2, 3, 4, 5].map((w) => `<line x1="${x(w)}" x2="${x(w)}" y1="${T}" y2="${H - B}"/><text x="${x(w)}" y="${H - B + 16}" text-anchor="middle">${w}</text>`).join("")}
+      ${ys.map((t) => `<line x1="${L}" x2="${W - Rr}" y1="${y(t)}" y2="${y(t)}"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${t >= 60 ? t / 60 + "h" : t + "m"}</text>`).join("")}
+      <text x="${(W + L) / 2}" y="${H - 4}" text-anchor="middle">Weight</text>
+      ${games.filter((g) => g.weight && pt(g) && !pickSet.has(g.id)).map((g) => `<circle class="dot" cx="${x(g.weight).toFixed(1)}" cy="${y(pt(g)).toFixed(1)}" r="3.2"><title>${esc(g.name)}</title></circle>`).join("")}
+      ${picks.filter((g) => g.weight && pt(g)).map((g) => `<circle class="pick" cx="${x(g.weight)}" cy="${y(pt(g))}" r="8" fill="${pickSet.get(g.id)}"><title>${esc(g.name)}</title></circle><text class="lab" x="${x(g.weight) + 11}" y="${y(pt(g)) + 4}">${esc(g.name.length > 22 ? g.name.slice(0, 21) + "…" : g.name)}</text>`).join("")}
+    </svg>`;
+  }
+  function similarHtml(picks) {
+    const g0 = picks[0]; if (!g0 || !g0.weight) return "";
+    const L = learn(g0), on = new Set(S.picks);
+    const sim = games.filter((g) => !on.has(g.id) && g.weight && Math.abs(learn(g) - L) <= 0.35 && pt(g) && Math.abs(Math.log(pt(g) / (pt(g0) || 60))) < 0.45)
+      .sort((a, b) => Math.abs(learn(a) - L) - Math.abs(learn(b) - L) || (b.rating || 0) - (a.rating || 0)).slice(0, 10);
+    return sim.length ? `<section class="card"><h2 class="sec">About as hard as ${esc(g0.name)}</h2><p class="sub">Similar learning curve and length. Tap one to add it.</p>
+      <ul class="sim">${sim.map((g) => `<li><button type="button" data-addid="${g.id}"${S.picks.length >= 6 ? " disabled" : ""}>${esc(g.name)} · ${learn(g).toFixed(1)}</button></li>`).join("")}</ul></section>` : "";
+  }
+  function add(g) { msg = ""; if (!g) { msg = "Pick a game from the list."; return render(); } if (S.picks.includes(g.id)) { msg = "Already added."; return render(); } if (S.picks.length >= 6) return; S.picks.push(g.id); persist(); render(); $("add")?.focus(); }
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return; const d = b.dataset;
+    if (b.id === "addBtn") { const v = $("add").value.trim().toLowerCase(); add(games.find((g) => g.name.toLowerCase() === v) || (v && games.find((g) => g.name.toLowerCase().startsWith(v)))); }
+    else if (d.addid) add(byId.get(d.addid));
+    else if (d.rm) { S.picks = S.picks.filter((x) => x !== d.rm); persist(); render(); }
+    else if (b.id === "clear") { S.picks = []; persist(); render(); }
+    else if (d.rate) { const [id, n] = d.rate.split(":"); if (S.ours[id] === Number(n)) delete S.ours[id]; else S.ours[id] = Number(n); persist(); render(); }
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.id === "add") { e.preventDefault(); $("addBtn").click(); } });
+  fetch("/api/collection").then((r) => r.json()).then((d) => {
+    games = (d.games || []).filter((g) => g.type === "Base game").sort((a, b) => a.name.localeCompare(b.name)); byId = new Map(games.map((g) => [g.id, g]));
+    const dl = document.createElement("datalist"); dl.id = "gameNames"; dl.innerHTML = games.map((g) => `<option value="${esc(g.name)}">`).join(""); document.body.appendChild(dl);
+    const q = new URLSearchParams(location.search).get("ids"); if (q) { S.picks = q.split(",").filter((id) => byId.has(id)).slice(0, 6); persist(); }
+    render();
+  }).catch(() => { $("app").innerHTML = `<section class="card"><p class="empty">Couldn't load the shelf right now.</p></section>`; });
+})();
+</script>
+<script src="/pwa.js" defer></script>
+</body>
+</html>

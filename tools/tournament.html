@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tournament</title>
+<meta name="description" content="Run a game night tournament: single or double elimination, round robin or Swiss, head-to-head or tables of players.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#fff3e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1528" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Game Shelf">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
+    --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
+    --yellow: #ffd45c; --yellow-soft: #fff1c2; --mint: #8be0bd; --mint-soft: #ddf6ea;
+    --ok: #24a26b; --danger: #d43c41; --warn: #a35a00; --warn-soft: #ffe8cc;
+    --edge: 2.5px solid var(--outline); --pop: 4px 4px 0 var(--outline); --pop-sm: 3px 3px 0 var(--outline);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+      --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+      --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+    --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+    --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; color: var(--ink); font: 16px/1.5 Nunito, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header (matches the other pages) */
+  header.top { padding: 36px 0 8px; }
+  .titlebar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .brand { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+  .logo { width: 72px; height: 72px; flex: none; transform: rotate(-5deg); filter: drop-shadow(4px 4px 0 var(--outline)); transition: transform .3s; }
+  .logo:hover { transform: rotate(4deg) scale(1.05); }
+  h1 { font: 700 clamp(2rem, 4vw, 2.9rem)/1.05 Fredoka, ui-rounded, system-ui, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  h1 .hl { background: linear-gradient(transparent 62%, var(--hl, var(--yellow)) 62% 92%, transparent 92%); padding: 0 2px; }
+  .tagline { margin: 6px 0 0; color: var(--ink-2); font-size: 1.05rem; font-weight: 600; }
+  .pagenav { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); }
+  .pagenav a { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-decoration: none; }
+  .pagenav a:hover { color: var(--ink); background: var(--surface-2); }
+  .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+
+  /* Shared bits */
+  .card { background: var(--surface); border: var(--edge); border-radius: 22px; box-shadow: var(--pop); padding: 18px 20px; min-width: 0; display: grid; gap: 14px; align-content: start; }
+  h2 { font: 700 1.3rem/1.2 Fredoka, ui-rounded, sans-serif; margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  h2 small { font: 700 .88rem Nunito, sans-serif; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm);
+    background: var(--surface); color: var(--ink); font: 600 1rem Fredoka, ui-rounded, sans-serif; transition: transform .12s, box-shadow .12s; text-decoration: none; }
+  .btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.yellow { background: var(--yellow); color: #3d2a4f; }
+  .btn.big { min-height: 52px; font-size: 1.15rem; padding: 0 22px; }
+  .btn.sm { min-height: 34px; padding: 0 12px; font-size: .9rem; border-radius: 11px; }
+  .link { border: 0; background: none; padding: 4px 2px; color: var(--accent); font-weight: 800; font-size: .92rem; }
+  .link:hover { text-decoration: underline; }
+  .link.danger { color: var(--danger); }
+  input[type=text], input[type=number] { height: 44px; border: var(--edge); border-radius: 13px; background: var(--surface); padding: 0 12px; font-weight: 700; min-width: 0; box-shadow: var(--pop-sm); }
+  input:focus { outline: none; box-shadow: 0 0 0 4px var(--yellow), 3px 3px 0 4px var(--outline); }
+  input[readonly] { opacity: .65; }
+  .note { margin: 0; font-size: .88rem; color: var(--ink-2); font-weight: 600; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 2px solid var(--outline); border-radius: 12px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: none; min-height: 30px; padding: 0 12px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+  .ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ctl > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+
+  .crumbs { margin-top: 18px; } .crumbs a { color: var(--accent); font-weight: 800; text-decoration: none; } .crumbs a:hover { text-decoration: underline; }
+  main { margin-top: 12px; display: grid; gap: 20px; }
+  a.btn { text-decoration: none; color: var(--ink); }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .sub { margin: -4px 0 0; color: var(--ink-2); font-weight: 600; font-size: .92rem; }
+  .note { margin: 0; color: var(--ink-2); font-weight: 700; font-size: .86rem; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .field { display: grid; gap: 5px; min-width: 0; }
+  .field > span { font: 600 .74rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+  .field small { text-transform: none; letter-spacing: 0; font: 600 .78rem Nunito, sans-serif; color: var(--muted); }
+  input[type=text], input[type=number], select, textarea { min-height: 40px; border: var(--edge); border-radius: 12px; background: var(--surface); color: var(--ink); font: 700 .95rem Nunito, sans-serif; padding: 0 10px; min-width: 0; }
+  textarea { padding: 8px 10px; min-height: 150px; width: 100%; box-sizing: border-box; resize: vertical; }
+  input:focus-visible, select:focus-visible, button:focus-visible, textarea:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  h2.sec { margin: 0; font: 700 1.3rem Fredoka, ui-rounded, sans-serif; display: flex; gap: 10px; align-items: center; justify-content: flex-start; flex-wrap: wrap; }
+  .empty { text-align: center; color: var(--ink-2); font-weight: 700; padding: 16px 12px; border: 2.5px dashed var(--line); border-radius: 16px; margin: 0; }
+  .chk { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; cursor: pointer; } .chk input { width: 18px; height: 18px; accent-color: var(--accent); }
+  .tlist { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .tlist a { display: grid; gap: 4px; padding: 14px 16px; border: var(--edge); border-radius: 18px; background: var(--surface); box-shadow: var(--pop-sm); color: var(--ink); text-decoration: none; }
+  .tlist b { font: 700 1.15rem Fredoka, ui-rounded, sans-serif; } .tlist small { color: var(--ink-2); font-weight: 700; }
+  .head h2 { margin: 0; font: 700 clamp(1.5rem, 4vw, 2.1rem)/1.1 Fredoka, ui-rounded, sans-serif; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--ink-2); font-weight: 800; font-size: .92rem; }
+  .bar { height: 10px; border-radius: 999px; border: 2px solid var(--outline); background: var(--surface); overflow: hidden; } .bar i { display: block; height: 100%; background: var(--ok); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tabs button { min-height: 38px; padding: 0 14px; border: 2px solid var(--outline); border-radius: 12px; background: var(--surface); font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink); }
+  .tabs button[aria-selected="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: 2px 2px 0 var(--outline); }
+  .podium { display: flex; flex-wrap: wrap; gap: 10px; }
+  .podium span { padding: 8px 14px; border: var(--edge); border-radius: 14px; background: var(--yellow-soft); font: 700 1.1rem Fredoka, ui-rounded, sans-serif; }
+  .podium span:first-child { background: var(--yellow); font-size: 1.3rem; box-shadow: var(--pop-sm); }
+  .rgroup { display: grid; gap: 10px; }
+  .rgroup h3 { margin: 4px 0 0; font: 700 1.05rem Fredoka, ui-rounded, sans-serif; }
+  .matches { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .match { display: grid; gap: 8px; padding: 12px; border: var(--edge); border-radius: 16px; background: var(--surface); box-shadow: var(--pop-sm); }
+  .match.done { background: var(--mint-soft); box-shadow: none; } .match.wait { opacity: .6; box-shadow: none; border-style: dashed; }
+  .match .lbl { font: 700 .82rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-transform: uppercase; letter-spacing: .05em; }
+  .who { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; font-weight: 800; }
+  .who input { width: 5em; } .who .win { color: var(--ok); }
+  .who.out { color: var(--ink-2); font-weight: 700; }
+  .bracket { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 8px; }
+  .bcol { display: flex; flex-direction: column; justify-content: space-around; gap: 10px; min-width: 190px; }
+  .bcol h4 { margin: 0; font: 700 .85rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-align: center; }
+  .bm { border: 2px solid var(--outline); border-radius: 12px; background: var(--surface); overflow: hidden; font-weight: 800; font-size: .88rem; }
+  .bm div { display: flex; justify-content: space-between; gap: 8px; padding: 5px 9px; } .bm div + div { border-top: 1.5px solid var(--line); }
+  .bm .w { background: var(--mint-soft); } .bm .tbd { color: var(--muted); font-weight: 700; } .bm.skip { opacity: .45; border-style: dashed; }
+  table.st { border-collapse: collapse; width: 100%; font-weight: 800; }
+  .st th, .st td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--line); } .st th:nth-child(2), .st td:nth-child(2) { text-align: left; }
+  .st thead th { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; color: var(--ink-2); }
+  .st tbody tr:first-child td { background: var(--yellow-soft); }
+  .tie { display: grid; gap: 6px; padding: 8px; border-radius: 12px; border: 2px dashed var(--outline); background: var(--yellow-soft); font-weight: 800; }
+  footer { margin: 40px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
+  @media (max-width: 760px) { .wrap { padding: 0 16px; } header.top { padding-top: 22px; } .logo { width: 54px; height: 54px; } .brand { gap: 12px; } .card { box-shadow: var(--pop-sm); padding: 16px; border-radius: 18px; } .st th:nth-child(n+5), .st td:nth-child(n+5) { display: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <a class="brand" href="/">
+        <svg class="logo" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="3" y="3" width="66" height="66" rx="18" fill="var(--yellow)" stroke="var(--outline)" stroke-width="3"/>
+          <g transform="translate(36 10) rotate(14)"><rect x="0" y="0" width="22" height="22" rx="5" fill="#fff" stroke="var(--outline)" stroke-width="2.5"/>
+            <circle cx="6" cy="6" r="2.2" fill="var(--outline)"/><circle cx="11" cy="11" r="2.2" fill="var(--outline)"/><circle cx="16" cy="16" r="2.2" fill="var(--outline)"/></g>
+          <g transform="translate(9 20) scale(1.75)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.4" stroke-linejoin="round"/></g>
+        </svg>
+        <div>
+          <h1>Game Night <span class="hl">Tournament</span></h1>
+          <p class="tagline">Brackets, schedules and standings.</p>
+        </div>
+      </a>
+      <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats">Charts</a><a href="/tools" aria-current="page">Tools</a></nav>
+    </div>
+  </header>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools" id="crumb">‹ All tools</a></nav>
+  <main id="app"></main>
+  <footer>Tournaments are saved in this browser.</footer>
+</div>
+<script src="/tools/tournament-core.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id), TC = window.TourneyCore;
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const KEY = "game-shelf:tournaments";
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "null") || {}; } catch (e) { return {}; } };
+  let DB = load(); const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} };
+  const FORMATS = { single: "Single elimination", double: "Double elimination", rr: "Round robin", swiss: "Swiss" };
+  const params = new URLSearchParams(location.search);
+  let T = params.get("t") ? DB[params.get("t")] : null, tab = "matches", msg = "", draft = { format: "single", size: 2, advance: 1, rounds: "", lowWins: false, shuffle: true, teams: false, text: "", name: "", game: "" }, editing = new Set(), tiePick = {};
+  const nm = (id) => id === TC.BYE ? "Bye" : T.entrants.find((e) => e.id === id)?.name ?? "?";
+  const save = () => { persist(); render(); };
+
+  function render() {
+    const y = scrollY, foc = document.activeElement?.dataset?.focus;
+    $("app").innerHTML = T ? viewHtml() : listHtml();
+    $("crumb").href = T ? "/tools/tournament" : "/tools"; $("crumb").textContent = T ? "‹ All tournaments" : "‹ All tools";
+    if (foc) document.querySelector(`[data-focus="${foc}"]`)?.focus({ preventScroll: true });
+    scrollTo(0, y);
+  }
+
+  /* ---------- New + list ---------- */
+  function listHtml() {
+    const list = Object.values(DB).sort((a, b) => b.created - a.created), d = draft;
+    const elim = d.format === "single" || d.format === "double";
+    return `<section class="card" aria-labelledby="newH"><h2 class="sec" id="newH">New tournament</h2>
+      <div class="grid2">
+        <label class="field"><span>Name</span><input type="text" id="dName" maxlength="60" value="${esc(d.name)}" placeholder="Game night cup"></label>
+        <label class="field"><span>Game <small>(optional)</small></span><input type="text" id="dGame" maxlength="80" value="${esc(d.game)}" list="gameNames"></label>
+        <label class="field"><span>Format</span><select id="dFormat">${Object.entries(FORMATS).map(([k, l]) => `<option value="${k}"${k === d.format ? " selected" : ""}>${l}</option>`).join("")}</select></label>
+        <label class="field"><span>Players per match</span><select id="dSize"${d.format === "double" ? " disabled" : ""}>${[2, 3, 4, 5, 6].map((n) => `<option value="${n}"${n === d.size ? " selected" : ""}>${n === 2 ? "2 (head-to-head)" : `${n} at a table`}</option>`).join("")}</select></label>
+        ${d.format === "single" && d.size > 2 ? `<label class="field"><span>Go through from each table</span><select id="dAdvance">${Array.from({ length: d.size - 1 }, (_, i) => i + 1).map((n) => `<option value="${n}"${n === d.advance ? " selected" : ""}>Top ${n}</option>`).join("")}</select></label>` : ""}
+        ${d.format === "swiss" || (d.format === "rr" && d.size > 2) ? `<label class="field"><span>Rounds <small>(blank = suggested)</small></span><input type="number" id="dRounds" min="1" max="20" value="${esc(d.rounds)}"></label>` : ""}
+      </div>
+      <p class="note">${{ single: "Lose and you're out. Top seeds get byes when the numbers don't fill the bracket.", double: "You're out after two losses: a winners' and a losers' bracket, then a grand final (with a decider if the losers' bracket player wins it). Head-to-head only.", rr: "Everyone plays everyone. With tables of 3+, players are grouped so they meet as many different people as possible.", swiss: "A set number of rounds; each round pairs people with similar records, without rematches. An odd player out gets a bye (counts as a win)." }[d.format]}</p>
+      <div class="row"><label class="chk"><input type="checkbox" id="dLow"${d.lowWins ? " checked" : ""}> Lowest score wins</label><label class="chk"><input type="checkbox" id="dShuffle"${d.shuffle ? " checked" : ""}> Random seeding</label><label class="chk"><input type="checkbox" id="dTeams"${d.teams ? " checked" : ""}> Teams</label></div>
+      <label class="field"><span>${d.teams ? "Teams, one per line: Team name: member, member" : "Players, one per line"} ${elim && !d.shuffle ? "<small>(in seed order, best first)</small>" : ""}</span>
+        <textarea id="dText" placeholder="${d.teams ? "Meeple Squad: Remy, Jonathan\nDice Hards: Sam, Alex" : "Remy\nJonathan\nSam\nAlex"}">${esc(d.text)}</textarea></label>
+      <div class="row"><button class="btn yellow big" type="button" id="create">Make the ${d.format === "rr" ? "schedule" : d.format === "swiss" ? "first round" : "bracket"}</button><span class="note" role="status">${esc(msg)}</span></div></section>
+      ${list.length ? `<section class="card" aria-labelledby="listH"><h2 class="sec" id="listH">Your tournaments</h2><ul class="tlist">${list.map((t) => { const pod = TC.podium(t), pr = TC.progress(t);
+        return `<li><a href="/tools/tournament?t=${encodeURIComponent(t.id)}"><b>${esc(t.name)}</b><small>${FORMATS[t.format]} · ${t.entrants.length} ${t.entrants.some((e) => e.members.length) ? "teams" : "players"}${t.game ? ` · ${esc(t.game)}` : ""}</small><small>${pod ? `🏆 ${esc(t.entrants.find((e) => e.id === pod[0])?.name)}` : `${pr.done} of ${pr.total} matches played`}</small></a></li>`; }).join("")}</ul></section>` : ""}`;
+  }
+  function readDraft() { const d = draft; d.name = $("dName").value; d.game = $("dGame").value; d.text = $("dText").value; d.rounds = $("dRounds")?.value ?? d.rounds; }
+  function create() {
+    readDraft(); const d = draft, lines = d.text.split("\n").map((l) => l.trim()).filter(Boolean);
+    const entrants = lines.map((l) => { if (!d.teams) return { name: l.slice(0, 40) }; const [n, ms] = l.split(":"); return { name: n.trim().slice(0, 40), members: (ms || "").split(",").map((x) => x.trim()).filter(Boolean) }; });
+    const names = new Set(); if (entrants.some((e) => names.has(e.name.toLowerCase()) || !names.add(e.name.toLowerCase()))) { msg = "Each name needs to be different."; return render(); }
+    const min = d.format === "rr" || d.format === "swiss" ? Math.max(2, d.size) : 2;
+    if (entrants.length < min) { msg = `Add at least ${min} ${d.teams ? "teams" : "players"}.`; return render(); }
+    if (entrants.length > 128) { msg = "That's more than 128; split it into groups."; return render(); }
+    const t = TC.create({ name: d.name.trim() || "Tournament", game: d.game.trim(), format: d.format, size: d.size, advance: d.advance, rounds: Number(d.rounds) || 0, lowWins: d.lowWins, shuffle: d.shuffle, entrants });
+    DB[t.id] = t; persist(); location.href = `/tools/tournament?t=${encodeURIComponent(t.id)}`;
+  }
+
+  /* ---------- A tournament ---------- */
+  function viewHtml() {
+    const pod = TC.podium(T), pr = TC.progress(T), elim = T.format === "single" || T.format === "double";
+    const tabs = [["matches", "Matches"], [elim ? "bracket" : "standings", elim ? "Bracket" : "Standings"], ["entrants", T.entrants.some((e) => e.members.length) ? "Teams" : "Players"]];
+    if (!tabs.some(([k]) => k === tab)) tab = "matches";
+    return `<section class="card head"><h2>${esc(T.name)}</h2>
+        <div class="meta"><span>${FORMATS[T.format]}${T.size > 2 ? ` · ${T.size} at a table${T.format === "single" ? `, top ${T.advance} go through` : ""}` : ""}</span>${T.game ? `<span>${esc(T.game)}</span>` : ""}<span>${T.entrants.length} entrants</span>${T.lowWins ? "<span>Lowest score wins</span>" : ""}${T.format === "swiss" ? `<span>Round ${TC.currentRound(T)} of ${T.rounds}</span>` : ""}</div>
+        <div class="bar" role="progressbar" aria-label="Matches played" aria-valuenow="${pr.done}" aria-valuemax="${pr.total}"><i style="width:${pr.total ? 100 * pr.done / pr.total : 0}%"></i></div><span class="note">${pr.done} of ${pr.total} matches played</span>
+        ${pod ? `<div class="podium" aria-label="Final placings">${pod.slice(0, 3).map((id, i) => `<span>${["🥇", "🥈", "🥉"][i]} ${esc(nm(id))}</span>`).join("")}</div>` : ""}
+      </section>
+      <div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" role="tab" data-tab="${k}" aria-selected="${tab === k}">${l}</button>`).join("")}</div>
+      ${{ matches: matchesHtml, bracket: bracketHtml, standings: standingsHtml, entrants: entrantsHtml }[tab]()}
+      <section class="card"><div class="row"><button class="link danger" type="button" id="delT">Delete this tournament</button></div></section>`;
+  }
+  function matchesHtml() {
+    const groups = new Map();
+    for (const m of T.matches) { if (!TC.needed(T, m) && !m.result) continue; const ps = TC.players(T, m); if (TC.isAuto(T, m)) continue; if (ps.every((p) => p !== undefined) && ps.filter((p) => p !== TC.BYE).length < 2 && !m.result) continue;
+      const g = m.bracket === "GF" ? "Grand final" : m.bracket === "L" ? `Losers' bracket · ${m.label}` : m.bracket === "RR" || m.bracket === "S" ? `Round ${m.round}` : m.label; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(m); }
+    const byes = T.byes.length ? `<p class="note">Byes: ${T.byes.map((b) => `round ${b.round}: ${esc(nm(b.e))}${b.points ? " (counts as a win)" : " (sits out)"}`).join(" · ")}</p>` : "";
+    const next = T.format === "swiss" && TC.currentRound(T) < T.rounds ? `<p class="note">Round ${TC.currentRound(T) + 1} is paired as soon as every match in round ${TC.currentRound(T)} has a result.</p>` : "";
+    return `<section class="card"><h2 class="sec">Matches</h2><p class="sub">Enter scores and save; ${T.lowWins ? "lowest" : "highest"} score wins. ${T.size === 2 ? "Or tap who won." : ""}</p>
+      ${[...groups].map(([g, ms]) => `<div class="rgroup"><h3>${esc(g)}</h3><div class="matches">${ms.map(matchHtml).join("")}</div></div>`).join("") || `<p class="empty">No matches yet.</p>`}${byes}${next}</section>`;
+  }
+  function matchHtml(m) {
+    const ps = TC.players(T, m), real = ps.filter((p) => p && p !== TC.BYE), ready = TC.isReady(T, m), done = !!m.result, edit = editing.has(m.id);
+    const lbl = m.bracket === "RR" || m.bracket === "S" ? (T.size > 2 ? m.label.replace(/^Round \d+, /, "") : "") : m.label;
+    if (!done && !ready) return `<div class="match wait"><span class="lbl">${esc(lbl)}</span>${ps.map((p) => `<div class="who out"><span>${p === undefined ? "Waiting…" : esc(nm(p))}</span></div>`).join("")}</div>`;
+    if (done && !edit) { const o = m.result.order, sc = m.result.scores || {}, go = m.bracket === "RR" || m.bracket === "S" ? 1 : T.size === 2 ? 1 : T.advance;
+      return `<div class="match done"><span class="lbl">${esc(lbl)}</span>${o.map((id, i) => `<div class="who${i >= go ? " out" : ""}"><span>${i < go ? "✓ " : ""}${esc(nm(id))}</span><span>${sc[id] ?? ""}</span><span></span></div>`).join("")}
+        <div class="row"><button class="link" type="button" data-edit="${m.id}">Change result</button></div></div>`; }
+    const pick = tiePick[m.id];
+    return `<div class="match"><span class="lbl">${esc(lbl)}</span>
+      ${real.map((p) => `<div class="who"><label for="sc-${m.id}-${p}">${esc(nm(p))}</label><input type="number" id="sc-${m.id}-${p}" data-sc="${m.id}" data-p="${p}" value="${esc(tiePick[m.id]?.scores[p] ?? m.result?.scores?.[p] ?? "")}" inputmode="numeric" data-focus="sc-${m.id}-${p}">
+        ${T.size === 2 ? `<button class="btn sm" type="button" data-won="${m.id}:${p}" aria-label="${esc(nm(p))} won">Won</button>` : "<span></span>"}</div>`).join("")}
+      ${pick ? `<div class="tie"><span>Tied. Who finishes ahead?</span><div class="row">${pick.group.map((p) => `<button class="btn sm yellow" type="button" data-tiewin="${m.id}:${p}">${esc(nm(p))}</button>`).join("")}</div></div>` : ""}
+      <div class="row"><button class="btn sm yellow" type="button" data-save="${m.id}">Save result</button>${edit ? `<button class="link" type="button" data-canceledit="${m.id}">Cancel</button>` : ""}<span class="note" id="msg-${m.id}" role="status"></span></div></div>`;
+  }
+  function bracketHtml() {
+    const cols = (b) => { const ms = T.matches.filter((m) => m.bracket === b), rs = [...new Set(ms.map((m) => m.round))].sort((a, c) => a - c);
+      return rs.map((r) => { const rm = ms.filter((m) => m.round === r); return `<div class="bcol"><h4>${esc(rm[0].label.replace(/, table \d+$/, ""))}</h4>${rm.map(bmHtml).join("")}</div>`; }).join(""); };
+    const parts = [["W", T.format === "double" ? "Winners' bracket" : "Bracket"], ["L", "Losers' bracket"], ["GF", "Grand final"]].filter(([b]) => T.matches.some((m) => m.bracket === b));
+    return parts.map(([b, l]) => `<section class="card"><h2 class="sec">${l}</h2><div class="bracket">${cols(b)}</div></section>`).join("");
+  }
+  function bmHtml(m) {
+    const ps = TC.players(T, m), o = TC.finishOrder(T, m), sc = m.result?.scores || {}, go = T.size === 2 ? 1 : T.advance, skip = !TC.needed(T, m);
+    return `<div class="bm${skip ? " skip" : ""}"${skip ? ' title="Not needed"' : ""}>${ps.map((p) => { const pl = o ? o.indexOf(p) : -1;
+      return `<div class="${pl >= 0 && pl < go && p !== TC.BYE ? "w" : ""}${p === undefined ? " tbd" : ""}"><span>${p === undefined ? "TBD" : esc(nm(p))}</span><span>${p && sc[p] != null ? esc(sc[p]) : ""}</span></div>`; }).join("")}</div>`;
+  }
+  function standingsHtml() {
+    const st = TC.standings(T);
+    return `<section class="card"><h2 class="sec">Standings</h2><p class="sub">Points: 1 for each opponent you finish ahead of in a match (½ for a tie)${T.format === "swiss" ? "; a bye is worth a win" : ""}. Ties are broken by wins, then average score, then average finishing place.</p>
+      <div style="overflow-x:auto"><table class="st"><thead><tr><th>#</th><th>${T.entrants.some((e) => e.members.length) ? "Team" : "Player"}</th><th>Points</th><th>Played</th><th>Wins</th><th>Avg score</th><th>Avg place</th></tr></thead>
+      <tbody>${st.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.name)}</td><td>${r.points}</td><td>${r.played}</td><td>${r.wins}</td><td>${r.avg == null ? "—" : Math.round(r.avg * 10) / 10}</td><td>${r.avgPlace == null ? "—" : Math.round(r.avgPlace * 10) / 10}</td></tr>`).join("")}</tbody></table></div></section>`;
+  }
+  function entrantsHtml() {
+    return `<section class="card"><h2 class="sec">${T.entrants.some((e) => e.members.length) ? "Teams" : "Players"}</h2><ol>${T.entrants.map((e) => `<li><b>${esc(e.name)}</b>${e.members.length ? ` <span class="note">${esc(e.members.join(", "))}</span>` : ""}</li>`).join("")}</ol></section>`;
+  }
+
+  /* ---------- Actions ---------- */
+  function saveMatch(id, forcedTop) {
+    const m = T.matches.find((x) => x.id === id), real = TC.players(T, m).filter((p) => p && p !== TC.BYE), scores = {};
+    for (const p of real) { const v = forcedTop ? tiePick[id]?.scores[p] : $(`sc-${id}-${p}`)?.value; scores[p] = v === "" || v == null ? null : Number(v); }
+    if (real.some((p) => scores[p] == null)) { $(`msg-${id}`).textContent = "Enter a score for everyone."; return; }
+    let { order, ties } = TC.orderFromScores(T, scores);
+    if (forcedTop) { const g = tiePick[id].group, i0 = Math.min(...g.map((x) => order.indexOf(x))); order = order.filter((x) => x !== forcedTop); order.splice(i0, 0, forcedTop); }
+    else if (TC.tieMatters(T, m, order, ties)) { tiePick[id] = { group: ties.find((g) => g.length > 1), scores }; render(); return; }
+    delete tiePick[id];
+    if (m.result && T.matches.some((x) => x.result && x.slots.some((s) => s.m === id))) { if (!confirm("Changing this clears the results that came after it. Go ahead?")) return; }
+    editing.delete(id); TC.setResult(T, id, scores, order); save();
+  }
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return; const d = b.dataset;
+    if (b.id === "create") return create();
+    if (!T) return;
+    if (d.tab) { tab = d.tab; render(); }
+    else if (d.save) saveMatch(d.save);
+    else if (d.won) { const [id, p] = d.won.split(":"), m = T.matches.find((x) => x.id === id), other = TC.players(T, m).find((x) => x && x !== TC.BYE && x !== p);
+      if (m.result && T.matches.some((x) => x.result && x.slots.some((s) => s.m === id)) && !confirm("Changing this clears the results that came after it. Go ahead?")) return;
+      editing.delete(id); TC.setResult(T, id, { [p]: T.lowWins ? 0 : 1, [other]: T.lowWins ? 1 : 0 }, [p, other]); save(); }
+    else if (d.tiewin) { const [id, p] = d.tiewin.split(":"); saveMatch(id, p); }
+    else if (d.edit) { editing.add(d.edit); render(); }
+    else if (d.canceledit) { editing.delete(d.canceledit); delete tiePick[d.canceledit]; render(); }
+    else if (b.id === "delT") { if (confirm(`Delete “${T.name}”?`)) { delete DB[T.id]; persist(); location.href = "/tools/tournament"; } }
+  });
+  document.addEventListener("change", (e) => {
+    const t = e.target; if (T) return;
+    if (["dFormat", "dSize", "dAdvance", "dLow", "dShuffle", "dTeams"].includes(t.id)) { readDraft();
+      if (t.id === "dFormat") { draft.format = t.value; if (t.value === "double") draft.size = 2; }
+      if (t.id === "dSize") { draft.size = Number(t.value); draft.advance = Math.min(draft.advance, draft.size - 1) || 1; }
+      if (t.id === "dAdvance") draft.advance = Number(t.value);
+      if (t.id === "dLow") draft.lowWins = t.checked; if (t.id === "dShuffle") draft.shuffle = t.checked; if (t.id === "dTeams") draft.teams = t.checked;
+      render(); $(t.id)?.focus(); }
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.dataset?.sc) { e.preventDefault(); saveMatch(e.target.dataset.sc); } });
+
+  if (params.get("t") && !T) $("app").innerHTML = `<section class="card"><p class="empty">That tournament isn't on this device. <a href="/tools/tournament">See your tournaments</a></p></section>`;
+  else render();
+  fetch("/api/collection").then((r) => r.json()).then((d) => { const dl = document.createElement("datalist"); dl.id = "gameNames"; dl.innerHTML = (d.games || []).filter((g) => g.type === "Base game").map((g) => `<option value="${esc(g.name)}">`).join(""); document.body.appendChild(dl); }).catch(() => {});
+})();
+</script>
+<script src="/pwa.js" defer></script>
+</body>
+</html>
