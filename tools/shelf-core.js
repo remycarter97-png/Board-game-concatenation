@@ -1,7 +1,7 @@
 // The shelf map: where each game physically lives. Used by /tools/shelves and the Games page.
 // Map shape: { units: [{ id, name, rows, cols }], cubes: { "<unitId>:<row>:<col>": { stack: bool, items: [{ g: gameId } | { name }] } }, rule }
 // Rows count from the top, columns from the left (both from 1). Upright games count from the left; stacked games from the bottom.
-// Reading and saving go through the site's Supabase project (shelf_get / shelf_put, PIN-protected).
+// Reading and saving go through the site's Supabase project (shelf_open / shelf_put); both need the shelf code.
 (function (root) {
   const URL_ = "https://jrtddquxtkixthbihdsz.supabase.co/rest/v1/rpc/";
   const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpydGRkcXV4dGtpeHRoYmloZHN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDEyNDcsImV4cCI6MjEwOTExNzI0N30.3Ss5T2WI0mpSwNbj5NUPSOCjEMjLoYskXtFvs1x42V8";
@@ -54,6 +54,8 @@
     return null;
   }
   const api = { rpc, empty, key, ord, cube, cubesInOrder, find, placeText, cubeName, RULES, suggest,
-    get: () => rpc("shelf_get"), checkPin: (pin) => rpc("shelf_check_pin", { p_pin: pin }), put: (pin, data, base) => rpc("shelf_put", { p_pin: pin, p_data: data, p_base: base || null }) };
+    // The map is private: exists() only says whether there is one; open(code) returns {exists, data, updatedAt} or {exists, error: "wrong_pin"}.
+    exists: () => rpc("shelf_get").then((r) => !!r?.exists), open: (pin) => rpc("shelf_open", { p_pin: pin }),
+    put: (pin, data, base) => rpc("shelf_put", { p_pin: pin, p_data: data, p_base: base || null }), CODE_KEY: "game-shelf:shelf-pin" };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.ShelfMap = api;
 })(typeof window !== "undefined" ? window : globalThis);

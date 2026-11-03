@@ -65,7 +65,7 @@
 
 
   /* The hub: three stops on a game night, each a section of tool cards. To add a tool: put its page in
-     /tools and add it to the right section in SECTIONS below (or swap it in for one of that section's ideas). */
+     /tools and add it to the right section in SECTIONS below . */
   .hubintro { margin-top: 26px; display: grid; gap: 14px; }
   .hubintro p { margin: 0; color: var(--ink-2); font-weight: 600; font-size: 1.05rem; max-width: 64ch; }
   .jump { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; margin: 0; padding: 0; }
@@ -95,11 +95,6 @@
   .tool p { margin: 0; color: var(--ink-2); font-weight: 600; flex: 1; }
   .tool .go { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 14px; border: var(--edge); border-radius: 12px; background: var(--yellow); color: #3d2a4f;
     box-shadow: var(--pop-sm); font: 600 .98rem Fredoka, ui-rounded, sans-serif; }
-  .ideas { display: flex; flex-direction: column; gap: 14px; }
-  .tool.idea { border-style: dashed; box-shadow: none; background: transparent; padding: 16px; gap: 6px; }
-  .tool.idea .icon { width: 44px; height: 44px; font-size: 1.3rem; border-radius: 14px; box-shadow: none; border-style: dashed; background: transparent; transform: none; }
-  .tool.idea h3 { font-size: 1.1rem; } .tool.idea p { font-size: .92rem; }
-  .tool.idea .where { border-style: dashed; }
   footer { margin: 48px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
   @media (max-width: 760px) {
     .wrap { padding: 0 16px; } header.top { padding-top: 24px; } .logo { width: 54px; height: 54px; } .brand { gap: 12px; }
@@ -135,11 +130,11 @@
     </section>
     <div id="stops"></div>
   </main>
-  <footer>Dashed cards are ideas for tools we might add next.</footer>
+  <footer>Little helpers for game night, all in one place.</footer>
 </div>
 <script>
 // The Tools hub: three stops on a game night. Add a tool to the section where it's used (and its page under
-// /tools); ideas are dashed placeholders, so swap one out when its tool is built.
+// /tools).
 const SECTIONS = [
   { id: "before", icon: "🗓️", color: "var(--mint)", name: "Before you play", note: "Decide what to play, and who it's for.",
     tools: [
@@ -150,8 +145,7 @@ const SECTIONS = [
       { href: "/tools/shelves", icon: "📍", color: "var(--accent-soft)", name: "Shelf finder",
         text: "Search for a game and see exactly where it lives: which unit, which cube, how far along. Edit the map as games move, and see where a new game should go." },
       { href: "/tools/compare", icon: "⚖️", color: "#9cc9ff", name: "Complexity comparator",
-        text: "Put games side by side: weight, play time, how long to teach and how hard to learn, with your own ratings and similar games from the shelf." }],
-    ideas: [{ icon: "📋", name: "Teach notes", text: "Short rules teach scripts for the games we bring out most." }] },
+        text: "Put games side by side: weight, play time, how long to teach and how hard to learn, with your own ratings and similar games from the shelf." }] },
   { id: "table", icon: "🎲", color: "var(--yellow)", name: "At the table", note: "Keep the game moving once the box is open.",
     tools: [
       { href: "/tools/first-player", icon: "👆", color: "var(--yellow-soft)", name: "First player picker",
@@ -163,15 +157,13 @@ const SECTIONS = [
       { href: "/tools/tournament", icon: "🏆", color: "#ffbf8f", name: "Tournament",
         text: "Single or double elimination, round robin or Swiss. Head-to-head or tables of players, teams, scores, brackets and standings." },
       { href: "/tools/goals", icon: "🎯", color: "var(--mint-soft)", name: "Personal goals",
-        text: "Track personal quests step by step (checkboxes and counts). Link one to a campaign character and it flags them ready to retire when it's done." }],
-    ideas: [{ icon: "⏳", name: "Turn timer", text: "A gentle chess clock for the slow thinkers at the table." }] },
+        text: "Track personal quests step by step (checkboxes and counts). Link one to a campaign character and it flags them ready to retire when it's done." }] },
   { id: "after", icon: "🏆", color: "#ffbf8f", name: "After the game", note: "Add up the score and remember the night.",
     tools: [
       { href: "/tools/campaigns", icon: "📜", color: "#d6c4ff", name: "Campaign tracker",
         text: "Scenarios and what they unlock, characters and retirement, achievements, unlocks and history. Ready-made setups for Frosthaven, Gloomhaven 2e, Jaws of the Lion, Bomb Busters and ISS Vanguard, or build your own." },
       { href: "/stats#recap", icon: "📆", color: "var(--yellow-soft)", name: "Our year recap", where: "On Charts",
-        text: "Our year and each quarter at the table from Remy's logged plays: favorites, new-to-us games and fun facts." }],
-    ideas: [{ icon: "🧮", name: "Score pad", text: "Add up end-game points by category for any game, with a running total per player." }] },
+        text: "Our year and each quarter at the table from Remy's logged plays: favorites, new-to-us games and fun facts." }] },
 ];
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
@@ -181,8 +173,7 @@ document.getElementById("stops").innerHTML = SECTIONS.map((s, i) => `<section cl
     <div class="tools">${s.tools.map((t) => `<a class="tool" href="${t.href}">
       <span class="top"><span class="icon" style="background:${t.color}" aria-hidden="true">${t.icon}</span>${t.where ? `<span class="where">${esc(t.where)}</span>` : ""}</span>
       <h3>${esc(t.name)}</h3><p>${esc(t.text)}</p><span class="go">Open ›</span></a>`).join("")}
-    <div class="ideas">${s.ideas.map((t) => `<div class="tool idea"><span class="top"><span class="icon" aria-hidden="true">${t.icon}</span><span class="where">Idea</span></span>
-      <h3>${esc(t.name)}</h3><p>${esc(t.text)}</p></div>`).join("")}</div></div></section>`).join("");
+</div></section>`).join("");
 </script>
 <script src="/pwa.js" defer></script>
 </body>

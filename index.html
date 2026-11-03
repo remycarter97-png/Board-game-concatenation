@@ -1594,7 +1594,10 @@ let lastFocus = null;
 let shelfMap = null, shelfLoading = false;
 function shelfHtml(g) {
   if (!window.ShelfMap) return "";
-  if (!shelfMap) { if (!shelfLoading) { shelfLoading = true; ShelfMap.get().then((r) => { shelfMap = r ? r.data : ShelfMap.empty(); const el = document.getElementById("d-shelf"); if (el && detailId) el.innerHTML = shelfHtml(byId.get(detailId)); }).catch(() => { shelfMap = ShelfMap.empty(); }); } return ""; }
+  // The shelf map is private: only shown on devices that have entered the shelf code in the Shelf finder.
+  let code = null; try { code = localStorage.getItem(ShelfMap.CODE_KEY); } catch (e) {}
+  if (!code) return "";
+  if (!shelfMap) { if (!shelfLoading) { shelfLoading = true; ShelfMap.open(code).then((r) => { shelfMap = r?.data || ShelfMap.empty(); const el = document.getElementById("d-shelf"); if (el && detailId) el.innerHTML = shelfHtml(byId.get(detailId)); }).catch(() => { shelfMap = ShelfMap.empty(); }); } return ""; }
   if (!shelfMap.units?.length || !g) return "";
   const p = ShelfMap.find(shelfMap, g.id);
   return `<a class="shelfline" href="/tools/shelves?game=${encodeURIComponent(g.id)}">📍 ${p ? `<b>${esc(p.unit.name)}</b> · row ${p.r}, column ${p.c} · ${esc(ShelfMap.placeText(shelfMap, p).pos)}` : "Not on the shelf map yet"}</a>`;

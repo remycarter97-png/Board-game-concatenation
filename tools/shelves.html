@@ -161,7 +161,7 @@
   </header>
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools">‹ All tools</a></nav>
   <main id="app"><section class="card"><p>Loading the shelves…</p></section></main>
-  <footer>The shelf map is shared: anyone can look things up, and changes need the edit PIN. Rows count from the top and columns from the left; games standing up count from the left, stacked games from the bottom.</footer>
+  <footer>The shelf map is private: seeing it and changing it both need the shelf code. Rows count from the top and columns from the left; games standing up count from the left, stacked games from the bottom.</footer>
 </div>
 <script src="/tools/shelf-core.js"></script>
 <script>
@@ -169,23 +169,33 @@
   const $ = (id) => document.getElementById(id), SM = window.ShelfMap;
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const PINKEY = "game-shelf:shelf-pin", uid = (p) => p + Math.random().toString(36).slice(2, 7);
-  let MAP = SM.empty(), base = null, exists = false, games = [], byId = new Map(), pin = null, editing = false, sel = null, query = "", msg = "", saving = "", showUnplaced = false, pastes = false;
+  let MAP = SM.empty(), base = null, exists = false, unlocked = false, games = [], byId = new Map(), pin = null, editing = false, sel = null, query = "", msg = "", saving = "", showUnplaced = false, pastes = false;
   try { pin = localStorage.getItem(PINKEY); } catch (e) {}
   const hue = (g) => (Number(String(g.id).replace(/\D/g, "")) * 47) % 360;
   const nameOf = (it) => (it.g ? byId.get(it.g)?.name || it.name || "?" : it.name || "?");
 
+  const forget = () => { pin = null; unlocked = false; editing = false; MAP = SM.empty(); try { localStorage.removeItem(PINKEY); } catch (e) {} };
+  // Open the map with the code. Without a valid code nothing about the shelves is shown.
   async function loadMap(keepMsg) {
-    try { const r = await SM.get(); if (r) { MAP = { ...SM.empty(), ...r.data }; base = r.updatedAt; exists = true; } else { MAP = SM.empty(); exists = false; } if (!keepMsg) saving = ""; }
-    catch (e) { saving = "Couldn't reach the shelf map. Check your connection."; }
+    try {
+      if (!pin) { exists = await SM.exists(); unlocked = false; return render(); }
+      const r = await SM.open(pin);
+      exists = !!r.exists;
+      if (r.error) { forget(); msg = "That code doesn't match."; }
+      else if (r.exists) { MAP = { ...SM.empty(), ...r.data }; base = r.updatedAt; unlocked = true; }
+      else { MAP = SM.empty(); unlocked = false; }
+      if (!keepMsg) saving = "";
+    } catch (e) { msg = /too_many/.test(e.message) ? "Too many wrong codes. Wait 15 minutes and try again." : "Couldn't reach the shelf map. Check your connection."; }
     render();
   }
   let saveT = null;
   function changed() { render(); clearTimeout(saveT); saving = "Saving…"; saveT = setTimeout(save, 500); }
   async function save() {
-    try { const r = await SM.put(pin, MAP, base); base = r.updatedAt; exists = true; saving = "Saved"; }
+    try { const r = await SM.put(pin, MAP, base); if (r.error) throw new Error(r.error); base = r.updatedAt; exists = true; unlocked = true; saving = "Saved"; }
     catch (e) {
       if (/conflict/.test(e.message)) { saving = "Someone else changed the shelves just now, so this page reloaded their version. Make your change again."; await loadMap(true); return; }
-      if (/wrong_pin/.test(e.message)) { saving = "That PIN doesn't match. Unlock again."; editing = false; pin = null; try { localStorage.removeItem(PINKEY); } catch (err) {} }
+      if (/wrong_pin/.test(e.message)) { forget(); msg = "The code was changed or doesn't match. Enter it again."; }
+      else if (/too_many/.test(e.message)) saving = "Too many wrong codes recently. Wait 15 minutes and try again.";
       else saving = "Couldn't save. Check your connection; your change is on this page only.";
     }
     render();
@@ -195,7 +205,7 @@
   function render() {
     const y = scrollY, foc = document.activeElement?.dataset?.focus || (document.activeElement?.id && document.activeElement.tagName === "INPUT" ? `#${document.activeElement.id}` : null);
     const caret = document.activeElement?.selectionStart;
-    $("app").innerHTML = searchHtml() + unitsHtml() + (editing ? editHtml() : "") + lockHtml();
+    $("app").innerHTML = unlocked ? searchHtml() + unitsHtml() + (editing ? editHtml() : "") + lockHtml() : lockHtml();
     if (foc) { const el = foc.startsWith("#") ? document.querySelector(foc) : document.querySelector(`[data-focus="${foc}"]`); el?.focus({ preventScroll: true }); if (caret != null && el?.setSelectionRange) try { el.setSelectionRange(caret, caret); } catch (e) {} }
     scrollTo(0, y);
   }
@@ -229,7 +239,7 @@
   const cellRange = (u) => { const out = []; for (let r = 1; r <= u.rows; r++) for (let c = 1; c <= u.cols; c++) out.push([r, c]); return out; };
   function unitsHtml() {
     const hitId = matchGame(query)?.id;
-    if (!MAP.units.length) return `<section class="card"><h2 class="sec">Our shelves</h2><p class="empty">No shelves mapped yet.${editing ? " Add your first unit below." : " Unlock editing below to add them."}</p></section>`;
+    if (!MAP.units.length) return `<section class="card"><h2 class="sec">Our shelves</h2><p class="empty">No shelves mapped yet.${editing ? " Add your first unit below." : " Tap “Edit the shelves” below to add them."}</p></section>`;
     return `<section class="card"><h2 class="sec">Our shelves</h2><p class="sub">Tap a cube to see what's in it${editing ? " and change it" : ""}.</p><div class="units">${MAP.units.map((u) => `<div class="unit">
         <h3>${esc(u.name)} <span class="note">${u.rows} × ${u.cols}</span></h3>
         <div class="grid" style="grid-template-columns:repeat(${u.cols},minmax(0,1fr))">${cellRange(u).map(([r, c]) => { const k = SM.key(u.id, r, c), cb = MAP.cubes[k], items = cb?.items || [];
@@ -267,9 +277,12 @@
     </section>`;
   }
   function lockHtml() {
-    return `<section class="card"><div class="lock">${editing ? `<span class="pill on">Editing</span><span class="note" role="status">${esc(saving)}</span><button class="btn sm" type="button" id="lockBtn">Done editing</button>`
-      : `<span class="note">${exists ? "Enter the PIN to change the shelves." : "Choose a PIN (4+ characters) to start mapping the shelves. You'll both use it to make changes."}</span>
-         <label class="vh" for="pinIn">PIN</label><input type="password" id="pinIn" inputmode="numeric" autocomplete="off" style="width:8em" placeholder="PIN"><button class="btn sm yellow" type="button" id="unlockBtn">${exists ? "Unlock" : "Set PIN and start"}</button><span class="note" role="status">${esc(msg || saving)}</span>`}</div></section>`;
+    if (!unlocked) return `<section class="card" aria-labelledby="lockH"><h2 class="sec" id="lockH">🔒 ${exists ? "Enter the shelf code" : "Set up the shelf finder"}</h2>
+      <p class="sub">${exists ? "Our shelves are private. Enter the code to look things up and make changes. This device remembers it until you lock it again." : "Choose a code of 6 or more characters. You'll both need it to see the shelves and to change them, so share it with Jonathan."}</p>
+      <div class="lock"><label class="vh" for="pinIn">Code</label><input type="password" id="pinIn" autocomplete="off" style="width:12em" placeholder="Code"><button class="btn sm yellow" type="button" id="unlockBtn">${exists ? "Open" : "Set code and start"}</button><span class="note" role="status">${esc(msg || saving)}</span></div></section>`;
+    return `<section class="card"><div class="lock">${editing ? `<span class="pill on">Editing</span><span class="note" role="status">${esc(saving)}</span><button class="btn sm" type="button" id="doneBtn">Done editing</button>`
+      : `<button class="btn sm yellow" type="button" id="editBtn">Edit the shelves</button><span class="note" role="status">${esc(saving)}</span>`}
+      <button class="link" type="button" id="lockBtn">Lock this device</button></div></section>`;
   }
 
   /* ---------- Actions ---------- */
@@ -279,10 +292,13 @@
   document.addEventListener("click", async (e) => {
     const b = e.target.closest("button"); if (!b) return; const d = b.dataset;
     if (d.cube) { sel = sel === d.cube ? null : d.cube; pastes = false; render(); return; }
-    if (b.id === "unlockBtn") { const p = $("pinIn").value.trim(); if (p.length < 4) { msg = "PINs are at least 4 characters."; return render(); }
-      if (exists) { try { if (!(await SM.checkPin(p))) { msg = "That PIN doesn't match."; return render(); } } catch (err) { msg = "Couldn't check the PIN. Check your connection."; return render(); } }
-      pin = p; editing = true; msg = ""; saving = ""; try { localStorage.setItem(PINKEY, p); } catch (err) {} if (!exists) await save(); render(); return; }
-    if (b.id === "lockBtn") { editing = false; try { localStorage.removeItem(PINKEY); } catch (err) {} pin = null; render(); return; }
+    if (b.id === "unlockBtn") { const p = $("pinIn").value.trim(); msg = "";
+      if (!exists) { if (p.length < 6) { msg = "Codes need at least 6 characters."; return render(); } pin = p; MAP = SM.empty(); unlocked = true; editing = true; try { localStorage.setItem(PINKEY, p); } catch (err) {} await save(); return; }
+      if (!p) { msg = "Enter the code."; return render(); }
+      pin = p; await loadMap(); if (unlocked) try { localStorage.setItem(PINKEY, p); } catch (err) {} return; }
+    if (b.id === "editBtn") { editing = true; render(); return; }
+    if (b.id === "doneBtn") { editing = false; render(); return; }
+    if (b.id === "lockBtn") { forget(); query = ""; sel = null; render(); return; }
     if (d.find) { query = byId.get(d.find).name; render(); scrollTo({ top: 0, behavior: "smooth" }); return; }
     if (!editing) return;
     if (d.place) { const [k1, k2, k3, idx] = d.at.split(":"); place(d.place, `${k1}:${k2}:${k3}`, idx); }
@@ -315,15 +331,14 @@
 
   /* ---------- Start ---------- */
   const q0 = new URLSearchParams(location.search).get("game");
-  Promise.all([fetch("/api/collection").then((r) => r.json()).catch(() => ({})), loadMap()]).then(async ([d]) => {
+  Promise.all([fetch("/api/collection").then((r) => r.json()).catch(() => ({})), loadMap()]).then(([d]) => {
     games = (d.games || []).slice().sort((a, b) => a.name.localeCompare(b.name)); byId = new Map(games.map((g) => [g.id, g]));
     const dl = document.createElement("datalist"); dl.id = "gameNames"; dl.innerHTML = games.map((g) => `<option value="${esc(g.name)}">`).join(""); document.body.appendChild(dl);
     if (q0) query = byId.get(q0)?.name || q0;
-    if (pin && exists) { try { editing = await SM.checkPin(pin); } catch (e) {} if (!editing) { pin = null; try { localStorage.removeItem(PINKEY); } catch (e) {} } }
     render();
   });
   // Pick up changes made on the other phone when coming back to this page (not mid-save).
-  addEventListener("focus", () => { if (!/Saving/.test(saving)) loadMap(true); });
+  addEventListener("focus", () => { if (unlocked && !/Saving/.test(saving)) loadMap(true); });
 })();
 </script>
 <script src="/pwa.js" defer></script>
