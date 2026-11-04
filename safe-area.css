@@ -1,0 +1,31 @@
+/* Keep content clear of whatever the phone puts at the screen edges, on every page.
+   Pages use viewport-fit=cover so their background runs edge to edge (behind Safari's controls on the
+   iPhone Duo's outer screen, where they sit in a column down one side; the notch and home bar on other
+   iPhones). The page colour shows under those areas, so they blend in, while text, buttons and cards are
+   padded clear of them using the safe-area insets Safari reports. Loaded last, so it adds to each page's
+   own padding rather than replacing it. Outside iPhones every inset is 0 and nothing changes. */
+:root {
+  --sa-t: env(safe-area-inset-top, 0px);
+  --sa-r: env(safe-area-inset-right, 0px);
+  --sa-b: env(safe-area-inset-bottom, 0px);
+  --sa-l: env(safe-area-inset-left, 0px);
+}
+html, body { background-color: var(--bg); }
+
+/* Page content */
+.wrap { padding-left: calc(24px + var(--sa-l)); padding-right: calc(24px + var(--sa-r)); }
+@media (max-width: 760px) { .wrap { padding-left: calc(16px + var(--sa-l)); padding-right: calc(16px + var(--sa-r)); } }
+footer { padding-bottom: calc(40px + var(--sa-b)); }
+
+/* Pop-ups that cover the screen keep their box inside the safe area */
+.modal, .drill { padding: calc(24px + var(--sa-t)) calc(24px + var(--sa-r)) calc(24px + var(--sa-b)) calc(24px + var(--sa-l)); }
+@media (max-width: 760px) { .modal, .drill { padding: calc(12px + var(--sa-t)) calc(12px + var(--sa-r)) calc(12px + var(--sa-b)) calc(12px + var(--sa-l)); } }
+
+/* Games page: prev/next arrows on the game detail, the filters drawer, and the side-scrolling rows */
+.dnav.prev { margin-left: var(--sa-l); } .dnav.next { margin-right: var(--sa-r); }
+@media (max-width: 1000px) { .filters { padding-right: calc(20px + var(--sa-r)); padding-bottom: calc(20px + var(--sa-b)); } }
+/* Rows still run to the window edge (tiles slide under the side column like the page background), but
+   they start and stop at the safe area, so the first and last tiles can always be seen in full. */
+.rrail { margin-left: calc(-1 * (var(--gut) + var(--sa-l))); margin-right: calc(-1 * (var(--gut) + var(--sa-r))); }
+.rtrack { padding-left: calc(var(--gut) + var(--sa-l)); padding-right: calc(var(--gut) + var(--sa-r)); scroll-padding: 0 calc(var(--gut) + var(--sa-r)) 0 calc(var(--gut) + var(--sa-l)); }
+.rarrow.l { margin-left: var(--sa-l); } .rarrow.r { margin-right: var(--sa-r); }

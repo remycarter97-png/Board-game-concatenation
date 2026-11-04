@@ -39,6 +39,7 @@ Combines the owned BoardGameGeek collections of **Asianofchaos** (Remy) and **ce
 ## How it works
 
 - `index.html`: the games page.
+- `safe-area.css`: loaded last on every page. Pages fill the screen edge to edge (`viewport-fit=cover`), so this pads content clear of the safe-area insets: Safari's side column of controls on the iPhone Duo's outer screen, and the notch and home bar on other iPhones. The page colour still runs under those areas so they blend in; side-scrolling rows still slide under the column but start and stop at the safe edge.
 - `tools/index.html`: the Tools page.
 - `tools/game-night.html`: the game night planner.
 - `tools/quiz.html`: the gamer personality quiz.
