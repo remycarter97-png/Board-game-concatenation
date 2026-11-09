@@ -2,9 +2,9 @@
 // Pages and the collection come from the network when it's there (so they stay current) and
 // from the last saved copy when it isn't. Fonts and libraries are cached once. Game night events
 // (Supabase) always go to the network.
-const VERSION = "v11";
+const VERSION = "v12";
 const SHELL = `shell-${VERSION}`, DATA = `data-${VERSION}`, LIBS = `libs-${VERSION}`;
-const PAGES = ["/", "/stats", "/tools", "/tools/initiative", "/tools/game-night", "/tools/quiz", "/tools/first-player", "/tools/event", "/tools/campaigns", "/tools/goals", "/tools/table", "/tools/tournament", "/tools/compare", "/tools/shelves"];
+const PAGES = ["/", "/stats", "/tools", "/tools/initiative", "/tools/game-night", "/tools/quiz", "/tools/first-player", "/tools/event", "/tools/campaigns", "/tools/goals", "/tools/table", "/tools/tournament", "/tools/compare", "/tools/shelves", "/tools/etiquette"];
 const ASSETS = ["/manifest.webmanifest", "/pwa.js", "/safe-area.css", "/tools/gn-core.js", "/tools/campaign-templates.js", "/tools/shelf-sync.js", "/tools/tournament-core.js", "/tools/shelf-core.js", "/powered-by-bgg.png", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/icons/favicon-32.png"];
 
 self.addEventListener("install", (e) => {

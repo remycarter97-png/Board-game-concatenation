@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Table Manners</title>
+<meta name="description" content="A few friendly table manners that keep our game nights cozy.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#fff3e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1528" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Game Shelf">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
+    --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
+    --yellow: #ffd45c; --yellow-soft: #fff1c2; --mint: #8be0bd; --mint-soft: #ddf6ea;
+    --ok: #24a26b; --danger: #d43c41; --warn: #a35a00; --warn-soft: #ffe8cc;
+    --edge: 2.5px solid var(--outline); --pop: 4px 4px 0 var(--outline); --pop-sm: 3px 3px 0 var(--outline);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+      --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+      --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+    --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+    --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; color: var(--ink); font: 16px/1.5 Nunito, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header (matches the other pages) */
+  header.top { padding: 36px 0 8px; }
+  .titlebar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .brand { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+  .logo { width: 72px; height: 72px; flex: none; transform: rotate(-5deg); filter: drop-shadow(4px 4px 0 var(--outline)); transition: transform .3s; }
+  .logo:hover { transform: rotate(4deg) scale(1.05); }
+  h1 { font: 700 clamp(2rem, 4vw, 2.9rem)/1.05 Fredoka, ui-rounded, system-ui, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  h1 .hl { background: linear-gradient(transparent 62%, var(--hl, var(--yellow)) 62% 92%, transparent 92%); padding: 0 2px; }
+  .tagline { margin: 6px 0 0; color: var(--ink-2); font-size: 1.05rem; font-weight: 600; }
+  .pagenav { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); }
+  .pagenav a { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-decoration: none; }
+  .pagenav a:hover { color: var(--ink); background: var(--surface-2); }
+  .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+
+  /* Shared bits */
+  .card { background: var(--surface); border: var(--edge); border-radius: 22px; box-shadow: var(--pop); padding: 18px 20px; min-width: 0; display: grid; gap: 14px; align-content: start; }
+  h2 { font: 700 1.3rem/1.2 Fredoka, ui-rounded, sans-serif; margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  h2 small { font: 700 .88rem Nunito, sans-serif; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm);
+    background: var(--surface); color: var(--ink); font: 600 1rem Fredoka, ui-rounded, sans-serif; transition: transform .12s, box-shadow .12s; text-decoration: none; }
+  .btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.yellow { background: var(--yellow); color: #3d2a4f; }
+  .btn.big { min-height: 52px; font-size: 1.15rem; padding: 0 22px; }
+  .btn.sm { min-height: 34px; padding: 0 12px; font-size: .9rem; border-radius: 11px; }
+  .link { border: 0; background: none; padding: 4px 2px; color: var(--accent); font-weight: 800; font-size: .92rem; }
+  .link:hover { text-decoration: underline; }
+  .link.danger { color: var(--danger); }
+  input[type=text], input[type=number] { height: 44px; border: var(--edge); border-radius: 13px; background: var(--surface); padding: 0 12px; font-weight: 700; min-width: 0; box-shadow: var(--pop-sm); }
+  input:focus { outline: none; box-shadow: 0 0 0 4px var(--yellow), 3px 3px 0 4px var(--outline); }
+  input[readonly] { opacity: .65; }
+  .note { margin: 0; font-size: .88rem; color: var(--ink-2); font-weight: 600; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 2px solid var(--outline); border-radius: 12px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: none; min-height: 30px; padding: 0 12px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+  .ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ctl > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+
+  .crumbs { margin-top: 18px; } .crumbs a { color: var(--accent); font-weight: 800; text-decoration: none; } .crumbs a:hover { text-decoration: underline; }
+  main { margin-top: 14px; display: grid; gap: 26px; }
+  .hello { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: center; }
+  .hello .buddy { font-size: 4rem; line-height: 1; animation: wiggle 3s ease-in-out infinite; transform-origin: 50% 90%; }
+  .hello p { margin: 0; font-weight: 700; font-size: 1.08rem; color: var(--ink-2); max-width: 60ch; }
+  .hello b { color: var(--ink); }
+  @keyframes wiggle { 0%, 80%, 100% { transform: rotate(0); } 85% { transform: rotate(-8deg); } 90% { transform: rotate(7deg); } 95% { transform: rotate(-4deg); } }
+  .manners { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+  .manner { position: relative; display: grid; gap: 8px; align-content: start; padding: 20px 20px 18px; border: var(--edge); border-radius: 22px; background: var(--mc); color: #3d2a4f; box-shadow: var(--pop); transition: transform .15s; }
+  .manner:nth-child(3n+1) { transform: rotate(-1deg); } .manner:nth-child(3n+2) { transform: rotate(.8deg); } .manner:nth-child(3n) { transform: rotate(-.4deg); }
+  .manner:hover { transform: rotate(0) translateY(-3px); }
+  .manner .em { width: 62px; height: 62px; display: grid; place-items: center; font-size: 2rem; border: 2.5px solid #3d2a4f; border-radius: 50%; background: #fffdf8; box-shadow: 3px 3px 0 #3d2a4f; }
+  .manner h2 { margin: 4px 0 0; font: 700 1.25rem/1.2 Fredoka, ui-rounded, sans-serif; }
+  .manner p { margin: 0; font-weight: 700; font-size: .95rem; line-height: 1.45; }
+  .manner .tape { position: absolute; top: -11px; left: 50%; width: 70px; height: 22px; margin-left: -35px; background: rgb(255 255 255 / .6); border: 1.5px dashed rgb(61 42 79 / .35); border-radius: 4px; transform: rotate(-3deg); }
+  .promise { display: grid; justify-items: center; gap: 12px; text-align: center; padding: 26px 20px; }
+  .promise h2 { margin: 0; font: 700 1.5rem Fredoka, ui-rounded, sans-serif; }
+  .promise p { margin: 0; font-weight: 700; color: var(--ink-2); max-width: 46ch; }
+  .promise .btn { font-size: 1.1rem; }
+  .promise .yay { font: 700 1.2rem Fredoka, ui-rounded, sans-serif; min-height: 1.5em; margin: 0; }
+  .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 60; }
+  .confetti i { position: absolute; top: -20px; font-style: normal; font-size: 1.5rem; animation: fall var(--d) linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(var(--r)); } }
+  footer { margin: 48px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
+  @media (max-width: 760px) { .wrap { padding: 0 16px; } header.top { padding-top: 22px; } .logo { width: 54px; height: 54px; } .brand { gap: 12px; } .card { box-shadow: var(--pop-sm); padding: 16px; border-radius: 18px; }
+    .manner { box-shadow: var(--pop-sm); } .hello { grid-template-columns: 1fr; justify-items: start; } .hello .buddy { font-size: 3rem; } }
+  @media (prefers-reduced-motion: reduce) { .hello .buddy, .confetti i { animation: none; } .manner { transform: none !important; } }
+</style>
+<link rel="stylesheet" href="/safe-area.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <a class="brand" href="/">
+        <svg class="logo" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="3" y="3" width="66" height="66" rx="18" fill="var(--yellow)" stroke="var(--outline)" stroke-width="3"/>
+          <g transform="translate(36 10) rotate(14)"><rect x="0" y="0" width="22" height="22" rx="5" fill="#fff" stroke="var(--outline)" stroke-width="2.5"/>
+            <circle cx="6" cy="6" r="2.2" fill="var(--outline)"/><circle cx="11" cy="11" r="2.2" fill="var(--outline)"/><circle cx="16" cy="16" r="2.2" fill="var(--outline)"/></g>
+          <g transform="translate(9 20) scale(1.75)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.4" stroke-linejoin="round"/></g>
+        </svg>
+        <div>
+          <h1>Table <span class="hl">Manners</span></h1>
+          <p class="tagline">A few little things that make game night cozy.</p>
+        </div>
+      </a>
+      <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats">Charts</a><a href="/tools" aria-current="page">Tools</a></nav>
+    </div>
+  </header>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools">‹ All tools</a></nav>
+  <main>
+    <section class="card hello"><span class="buddy" aria-hidden="true">🧸</span>
+      <p><b>Welcome to the table!</b> We're so glad you're here. These aren't rules so much as little things that keep game night cozy, keep our games in good shape, and make sure everyone has a great time. Nobody's keeping score on this part. 💛</p></section>
+    <ul class="manners" id="manners"></ul>
+    <section class="card promise" aria-labelledby="pinky"><span style="font-size:2.6rem" aria-hidden="true">🤙</span>
+      <h2 id="pinky">Pinky promise?</h2>
+      <p>That's everything! Grab a seat, pick a snack, and let's play something fun.</p>
+      <button class="btn yellow big" type="button" id="ready">I'm ready to play!</button>
+      <p class="yay" role="status" id="yay"></p></section>
+  </main>
+  <footer>Made with love for our game nights. Thanks for being such a great player!</footer>
+</div>
+<script>
+(function () {
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const MANNERS = [
+    { em: "🧼", c: "#b7e4ff", t: "Clean hands, happy cards", p: "Snack fingers and game pieces aren't best friends. A quick wash or a napkin before you touch the cards keeps them looking their best." },
+    { em: "🥤", c: "#c9f0dc", t: "Drinks get their own seat", p: "Cups and cans live on the side table or a coaster, away from the board. One little spill can soak a whole box of cards." },
+    { em: "🎲", c: "#ffe6a3", t: "Handle with love", p: "Some of these games are very special to us. Shuffle gently, keep pieces off the floor, and if something bends or breaks, just tell us. No worries!" },
+    { em: "📖", c: "#ffd1dc", t: "Everyone's learning", p: "New games are new for everyone. Ask any question, any time; there are no silly ones. First plays are for figuring it out, not for winning." },
+    { em: "⏳", c: "#e3d4ff", t: "Think ahead a little", p: "Take the time you need! Peeking at your options while others take their turns helps the game keep its happy rhythm." },
+    { em: "🤝", c: "#ffd8b8", t: "Let everyone play their turn", p: "In team games it's tempting to tell others what to do. Share ideas when asked, and let each player make their own moves." },
+    { em: "💬", c: "#c9f0dc", t: "Keep the banter kind", p: "Friendly teasing, dramatic groans and big celebrations are all welcome. Just keep it light so everyone's still smiling." },
+    { em: "🏆", c: "#ffe6a3", t: "Good game, every game", p: "Win or lose, a high five and a \"good game!\" go a long way. The best part is playing together." },
+    { em: "📱", c: "#b7e4ff", t: "Phones can take a nap", p: "We love being present together. Quick checks are fine; just try to be back by your turn. 😉" },
+    { em: "🙋", c: "#ffd1dc", t: "Speak up, anytime", p: "Need a break, not loving a game, or want to sit one out? Totally okay! Just let us know. We want everyone to have fun." },
+    { em: "🧹", c: "#e3d4ff", t: "Many hands, quick clean-up", p: "Helping sort pieces into their bags and back into the box means we can get to the next game faster. Every box has a home on our shelves." },
+    { em: "💛", c: "#ffd8b8", t: "Have fun!", p: "That's really the whole point. Thanks for spending your game night with us!" },
+  ];
+  document.getElementById("manners").innerHTML = MANNERS.map((m) => `<li class="manner" style="--mc:${m.c}"><span class="tape" aria-hidden="true"></span><span class="em" aria-hidden="true">${m.em}</span><h2>${esc(m.t)}</h2><p>${esc(m.p)}</p></li>`).join("");
+  document.getElementById("ready").addEventListener("click", () => {
+    document.getElementById("yay").textContent = "Yay! Let the games begin! 🎉";
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const box = document.createElement("div"); box.className = "confetti"; box.setAttribute("aria-hidden", "true");
+    box.innerHTML = Array.from({ length: 36 }, () => `<i style="left:${Math.random() * 100}%;--d:${(1.8 + Math.random() * 1.6).toFixed(2)}s;--r:${Math.round(Math.random() * 720 - 360)}deg;animation-delay:${(Math.random() * .5).toFixed(2)}s">${["🎲", "🃏", "🎉", "💛", "⭐", "🧩"][Math.floor(Math.random() * 6)]}</i>`).join("");
+    document.body.appendChild(box); setTimeout(() => box.remove(), 4200);
+  });
+})();
+</script>
+<script src="/pwa.js" defer></script>
+</body>
+</html>
