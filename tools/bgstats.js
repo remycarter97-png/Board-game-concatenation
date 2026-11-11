@@ -17,7 +17,7 @@
   }
   function getLocation() { try { const v = localStorage.getItem(LOC_KEY); return v === null ? "Home" : v; } catch (e) { return "Home"; } }
   function setLocation(v) { try { localStorage.setItem(LOC_KEY, String(v || "").trim()); } catch (e) {} }
-  // opts: { id, game: { name, bggId, lowWins, noPoints }, players: [{ name, score, winner, rank, startPlayer, team }], start, end, comments, board }
+  // opts: { id, game: { name, bggId, lowWins, noPoints }, players: [{ name, score, winner, rank, startPlayer, team, role }], start, end, comments, board }
   function play(opts) {
     const end = opts.end || Date.now(), g = opts.game || {}, loc = (opts.location ?? getLocation()).trim();
     const p = {
@@ -32,6 +32,7 @@
         if (x.winner !== undefined) o.winner = !!x.winner;
         if (x.startPlayer) o.startPlayer = true;
         if (x.team) o.team = x.team;
+        if (x.role) o.role = x.role;
         return o;
       }),
     };

@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tacta Scorer</title>
+<meta name="description" content="Score Tacta from a photo of the table: the page finds every visible dot and counts it for its deck, and you tap to fix any it missed.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#fff3e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1528" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Game Shelf">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
+    --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
+    --yellow: #ffd45c; --yellow-soft: #fff1c2; --mint: #8be0bd; --mint-soft: #ddf6ea;
+    --ok: #24a26b; --danger: #d43c41; --warn: #a35a00; --warn-soft: #ffe8cc;
+    --edge: 2.5px solid var(--outline); --pop: 4px 4px 0 var(--outline); --pop-sm: 3px 3px 0 var(--outline);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+      --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+      --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+    --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+    --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; color: var(--ink); font: 16px/1.5 Nunito, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header (matches the other pages) */
+  header.top { padding: 36px 0 8px; }
+  .titlebar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .brand { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+  .logo { width: 72px; height: 72px; flex: none; transform: rotate(-5deg); filter: drop-shadow(4px 4px 0 var(--outline)); transition: transform .3s; }
+  .logo:hover { transform: rotate(4deg) scale(1.05); }
+  h1 { font: 700 clamp(2rem, 4vw, 2.9rem)/1.05 Fredoka, ui-rounded, system-ui, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  h1 .hl { background: linear-gradient(transparent 62%, var(--hl, var(--yellow)) 62% 92%, transparent 92%); padding: 0 2px; }
+  .tagline { margin: 6px 0 0; color: var(--ink-2); font-size: 1.05rem; font-weight: 600; }
+  .pagenav { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); }
+  .pagenav a { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-decoration: none; }
+  .pagenav a:hover { color: var(--ink); background: var(--surface-2); }
+  .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+
+  /* Shared bits */
+  .card { background: var(--surface); border: var(--edge); border-radius: 22px; box-shadow: var(--pop); padding: 18px 20px; min-width: 0; display: grid; gap: 14px; align-content: start; }
+  h2 { font: 700 1.3rem/1.2 Fredoka, ui-rounded, sans-serif; margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  h2 small { font: 700 .88rem Nunito, sans-serif; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm);
+    background: var(--surface); color: var(--ink); font: 600 1rem Fredoka, ui-rounded, sans-serif; transition: transform .12s, box-shadow .12s; text-decoration: none; }
+  .btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.yellow { background: var(--yellow); color: #3d2a4f; }
+  .btn.big { min-height: 52px; font-size: 1.15rem; padding: 0 22px; }
+  .btn.sm { min-height: 34px; padding: 0 12px; font-size: .9rem; border-radius: 11px; }
+  .link { border: 0; background: none; padding: 4px 2px; color: var(--accent); font-weight: 800; font-size: .92rem; }
+  .link:hover { text-decoration: underline; }
+  .link.danger { color: var(--danger); }
+  input[type=text], input[type=number] { height: 44px; border: var(--edge); border-radius: 13px; background: var(--surface); padding: 0 12px; font-weight: 700; min-width: 0; box-shadow: var(--pop-sm); }
+  input:focus { outline: none; box-shadow: 0 0 0 4px var(--yellow), 3px 3px 0 4px var(--outline); }
+  input[readonly] { opacity: .65; }
+  .note { margin: 0; font-size: .88rem; color: var(--ink-2); font-weight: 600; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 2px solid var(--outline); border-radius: 12px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: none; min-height: 30px; padding: 0 12px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+  .ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ctl > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+
+  .crumbs { margin-top: 18px; } .crumbs a { color: var(--accent); font-weight: 800; text-decoration: none; } .crumbs a:hover { text-decoration: underline; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .note { margin: 0; color: var(--ink-2); font-weight: 700; font-size: .86rem; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  main { display: grid; gap: 18px; margin-top: 14px; }
+  h2.sec { margin: 0 0 10px; font: 700 1.2rem Fredoka, ui-rounded, sans-serif; }
+  .decks { display: flex; flex-wrap: wrap; gap: 8px; }
+  .deck { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 12px 0 8px; border-radius: 999px; border: 2px solid var(--outline); background: var(--surface); font-weight: 800; color: var(--ink); }
+  .deck i, .sw { display: inline-block; width: 20px; height: 20px; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 2px rgba(0,0,0,.25); flex: none; }
+  .deck[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: 2px 2px 0 var(--outline); }
+  .deck[aria-pressed="false"] { opacity: .7; }
+  .pick { display: grid; gap: 10px; justify-items: start; }
+  .pick input[type=file] { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .tips { margin: 0; padding-left: 18px; color: var(--ink-2); font-weight: 600; font-size: .9rem; display: grid; gap: 2px; }
+  .tools { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+  .brush { display: flex; flex-wrap: wrap; gap: 6px; }
+  .brush button { display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 0 10px 0 6px; border-radius: 999px; border: 2px solid var(--line); background: var(--surface); font-weight: 800; font-size: .85rem; color: var(--ink); }
+  .brush button[aria-pressed="true"] { border-color: var(--outline); box-shadow: 2px 2px 0 var(--outline); }
+  .brush .sw { width: 16px; height: 16px; }
+  .photo { position: relative; overflow: auto; max-height: 75vh; border: 3px solid var(--outline); border-radius: 16px; background: #111; touch-action: pan-x pan-y pinch-zoom; }
+  .stage { position: relative; width: calc(var(--z, 1) * 100%); }
+  .stage img { display: block; width: 100%; height: auto; user-select: none; -webkit-user-drag: none; }
+  .stage svg { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; }
+  .stage svg circle { fill: none; stroke-width: var(--sw, 3); }
+  .stage svg circle.halo { stroke: #000; stroke-width: calc(var(--sw, 3) * 2); opacity: .55; }
+  .stage.hide svg { display: none; }
+  .zoom { display: inline-flex; gap: 6px; align-items: center; }
+  .scores { width: 100%; border-collapse: collapse; font-weight: 800; }
+  .scores th, .scores td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
+  .scores th { font: 600 .74rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; color: var(--ink-2); }
+  .scores td.n { text-align: right; font: 700 1.5rem Fredoka, ui-rounded, sans-serif; font-variant-numeric: tabular-nums; }
+  .scores th.n { text-align: right; }
+  .scores tr.win td { background: var(--yellow-soft); }
+  .scores input { width: 100%; max-width: 12em; height: 38px; }
+  .scores td:first-child { white-space: nowrap; } .scores .sws { display: inline-flex; gap: 3px; align-items: center; }
+  .scores .sws .sw.photo-c { width: 14px; height: 14px; border-radius: 4px; }
+  .rounds { width: 100%; border-collapse: collapse; font-weight: 800; }
+  .rounds th, .rounds td { padding: 6px; border-bottom: 1px solid var(--line); text-align: right; } .rounds th:first-child, .rounds td:first-child { text-align: left; }
+  .rounds th { font: 600 .74rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; color: var(--ink-2); }
+  .rounds tfoot td { border-top: 2px solid var(--outline); }
+  .tw { overflow-x: auto; }
+  .busy { display: flex; align-items: center; gap: 10px; font-weight: 800; }
+  .busy::before { content: ""; width: 20px; height: 20px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--accent); animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 50; padding: 8px 16px; border-radius: 999px; border: 2px solid var(--outline); background: var(--yellow); color: #3d2a4f; font: 700 1rem Fredoka, ui-rounded, sans-serif; box-shadow: var(--pop-sm); pointer-events: none; opacity: 0; transition: opacity .2s; max-width: 90vw; text-align: center; }
+  .toast.on { opacity: 1; }
+  details.how summary { cursor: pointer; font-weight: 800; }
+  details.how ul { margin: 8px 0 0; padding-left: 18px; color: var(--ink-2); font-weight: 600; display: grid; gap: 4px; }
+  @media (max-width: 560px) { .scores td.n { font-size: 1.25rem; } .photo { margin-left: -12px; margin-right: -12px; border-radius: 12px; } }
+</style>
+<link rel="stylesheet" href="/safe-area.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <a class="brand" href="/">
+        <svg class="logo" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="3" y="3" width="66" height="66" rx="18" fill="var(--yellow)" stroke="var(--outline)" stroke-width="3"/>
+          <g transform="translate(36 10) rotate(14)"><rect x="0" y="0" width="22" height="22" rx="5" fill="#fff" stroke="var(--outline)" stroke-width="2.5"/>
+            <circle cx="6" cy="6" r="2.2" fill="var(--outline)"/><circle cx="11" cy="11" r="2.2" fill="var(--outline)"/><circle cx="16" cy="16" r="2.2" fill="var(--outline)"/></g>
+          <g transform="translate(9 20) scale(1.75)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.4" stroke-linejoin="round"/></g>
+        </svg>
+        <div>
+          <h1>Tacta <span class="hl">Scorer</span></h1>
+          <p class="tagline">Snap the table, we'll count the dots.</p>
+        </div>
+      </a>
+      <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats">Charts</a><a href="/tools" aria-current="page">Tools</a></nav>
+    </div>
+  </header>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools">‹ All tools</a></nav>
+  <main id="app"></main>
+  <footer>Your photo never leaves this phone: the dots are found right here in the browser. Scoring follows the Tacta rulebook.</footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/tools/tacta-core.js"></script>
+<script src="/tools/bgstats.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id), TC = window.TactaCore;
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const KEY = "game-shelf:tacta", TACTA_BGG = 417451, TARGET = 2300;
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { return null; } };
+  let DB = load() || {}; DB.decks = DB.decks || ["red", "orange", "green", "blue"]; DB.names = DB.names || {}; DB.rounds = DB.rounds || [];
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} };
+  const css = (rgb) => `rgb(${rgb.map((v) => Math.round(v)).join(",")})`;
+  const deckName = (id) => DB.names[id]?.trim() || TC.byId[id].name;
+
+  // The photo being scored: its size (as analysed), object URL, and the dots (auto = found by the page, manual = added by hand).
+  let P = null, busy = false, tool = "erase", brush = null, zoom = 1, hideMarks = false, undo = [], toastT = null;
+  const snap = () => { undo.push(JSON.stringify(P.dots)); if (undo.length > 60) undo.shift(); };
+
+  function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("on"), 1600); }
+
+  function render() {
+    const y = scrollY;
+    const deckChips = TC.DECKS.map((d) => `<button type="button" class="deck" data-deck="${d.id}" aria-pressed="${DB.decks.includes(d.id)}" style="--c:${css(d.rgb)}"><i></i>${d.name}</button>`).join("");
+    $("app").innerHTML = `
+      <section class="card"><h2 class="sec">1. Which decks are in this game?</h2>
+        <div class="decks" role="group" aria-label="Decks in play">${deckChips}</div>
+        <p class="note" style="margin-top:8px">Each dot is counted for the deck color it sits on. Pick only the colors on the table so dots aren't counted for a deck nobody played.</p></section>
+      <section class="card pick"><h2 class="sec">2. Snap the table</h2>
+        <label class="btn yellow big" for="file">📸 ${P ? "Use a different photo" : "Take or choose a photo"}</label><input type="file" id="file" accept="image/*">
+        ${P ? "" : `<ul class="tips"><li>Stand over the table and get every card in the shot.</li><li>Good light, no flash (glare hides dots).</li><li>Closer is better: if the spread is huge, it's fine to zoom in on the photo while fixing.</li></ul>`}
+        ${busy ? `<div class="busy">Counting dots…</div>` : ""}</section>
+      ${P ? photoHtml() + scoresHtml() : ""}
+      ${DB.rounds.length ? roundsHtml() : ""}
+      <details class="card how"><summary>How scoring works</summary><ul>
+        <li>The rulebook: “The player with the most visible dots when the final card is played wins.” Every visible dot is a point for the deck it's printed on.</li>
+        <li>The page looks for small white dots ringed by card color, so covered dots aren't counted. Dots on a pale color (like yellow) or blurry photos can be missed: check the circles and fix any it got wrong.</li>
+        <li>Ties: “If players tie at the end of a round, shake hands and share the victory.”</li>
+        <li>Playing several rounds (like Limited Space, or first to 100)? Save each round and the totals add up.</li></ul></details>`;
+    scrollTo(0, y);
+  }
+
+  function photoHtml() {
+    const inPlay = DB.decks;
+    if (!brush || !inPlay.includes(brush)) brush = inPlay[0] || null;
+    const sw = Math.max(2, P.w / 700), marks = P.dots.map((d, i) => { const r = Math.max(d.r * 2.3, P.w / 260); const c = d.deck ? css(TC.byId[d.deck].rgb) : "#fff";
+      return `<circle class="halo" cx="${d.x.toFixed(1)}" cy="${d.y.toFixed(1)}" r="${r.toFixed(1)}"/><circle data-i="${i}" cx="${d.x.toFixed(1)}" cy="${d.y.toFixed(1)}" r="${r.toFixed(1)}" stroke="${c}"/>`; }).join("");
+    return `<section class="card"><h2 class="sec">3. Check the circles</h2>
+      <div class="tools">
+        <div class="seg" role="group" aria-label="Fix mode"><button type="button" data-tool="erase" aria-pressed="${tool === "erase"}">✕ Remove</button><button type="button" data-tool="paint" aria-pressed="${tool === "paint"}">＋ Add / recolor</button></div>
+        <div class="zoom"><button class="btn sm" type="button" id="zOut" aria-label="Zoom out"${zoom <= 1 ? " disabled" : ""}>−</button><span class="note">${zoom}×</span><button class="btn sm" type="button" id="zIn" aria-label="Zoom in"${zoom >= 4 ? " disabled" : ""}>+</button></div>
+        <button class="btn sm" type="button" id="undo"${undo.length ? "" : " disabled"}>↶ Undo</button>
+        <button class="link" type="button" id="hide">${hideMarks ? "Show circles" : "Hide circles"}</button>
+      </div>
+      ${tool === "paint" ? `<div class="brush" role="group" aria-label="Color to add" style="margin-top:10px">${inPlay.map((id) => `<button type="button" data-brush="${id}" aria-pressed="${id === brush}"><span class="sw" style="--c:${css(TC.byId[id].rgb)}"></span>${esc(deckName(id))}</button>`).join("")}</div>
+        <p class="note" style="margin-top:6px">Tap a dot it missed to add it, or tap a circle to change it to this color.</p>` : `<p class="note" style="margin-top:8px">Tap a circle that isn't a real dot (a number, a glint) to remove it.</p>`}
+      <div class="photo" id="photo" style="margin-top:10px"><div class="stage${hideMarks ? " hide" : ""}" style="--z:${zoom}"><img src="${P.url}" alt="Your Tacta table" draggable="false">
+        <svg viewBox="0 0 ${P.w} ${P.h}" id="marks" style="--sw:${sw.toFixed(1)}" role="img" aria-label="${P.dots.length} dots marked">${marks}</svg></div></div></section>`;
+  }
+
+  function currentScores() { return TC.score(P.dots, DB.decks); }
+  function scoresHtml() {
+    const sc = currentScores(), avg = photoColors(), tie = sc.filter((s) => s.winner).length > 1, rows = [...sc].sort((a, b) => b.dots - a.dots);
+    return `<section class="card"><h2 class="sec">${sc.some((s) => s.winner) ? (tie ? `🤝 Shared victory: ${esc(sc.filter((s) => s.winner).map((s) => deckName(s.id)).join(" & "))}` : `🏆 ${esc(deckName(rows[0].id))} wins this round`) : "Scores"}</h2>
+      <div class="tw"><table class="scores"><thead><tr><th>Deck</th><th>Player</th><th class="n">Dots</th></tr></thead><tbody>
+      ${rows.map((s) => `<tr class="${s.winner ? "win" : ""}"><td><span class="sws"><span class="sw" style="--c:${css(TC.byId[s.id].rgb)}"></span>${avg[s.id] ? `<span class="sw photo-c" style="--c:${css(avg[s.id])}" title="How this color looks in your photo"></span>` : ""}</span> ${TC.byId[s.id].name}</td>
+        <td><label class="vh" for="nm-${s.id}">Player for ${TC.byId[s.id].name}</label><input type="text" id="nm-${s.id}" data-nm="${s.id}" maxlength="20" value="${esc(DB.names[s.id] || "")}" placeholder="Name"></td><td class="n">${s.dots}</td></tr>`).join("")}</tbody></table></div>
+      ${tie ? `<p class="note">Rulebook: “If a winner must be declared, either play again or declare the player who went out first the winner.”</p>` : ""}
+      <div class="row" style="margin-top:12px"><button class="btn yellow" type="button" id="saveRound">Save round ${DB.rounds.length + 1}</button>${DB.rounds.length ? "" : `<span class="note">Playing one round? Send it straight to BG Stats:</span>`}</div>
+      ${DB.rounds.length ? "" : `<div style="margin-top:10px">${BGStats.block("now")}</div>`}</section>`;
+  }
+  // The average photo color of each deck's dots, so you can see which cards a deck was matched to.
+  function photoColors() { const out = {}; for (const id of DB.decks) { const mine = P.dots.filter((d) => d.deck === id && d.rgb); if (mine.length) out[id] = [0, 1, 2].map((q) => mine.reduce((s, d) => s + d.rgb[q], 0) / mine.length); } return out; }
+
+  function totals() { const t = {}; for (const r of DB.rounds) for (const [id, n] of Object.entries(r.scores)) t[id] = (t[id] || 0) + n; return t; }
+  function roundsHtml() {
+    const ids = [...new Set(DB.rounds.flatMap((r) => Object.keys(r.scores)))], t = totals(), best = Math.max(...ids.map((id) => t[id] || 0));
+    return `<section class="card"><h2 class="sec">Game so far · ${DB.rounds.length} round${DB.rounds.length > 1 ? "s" : ""}</h2>
+      <div class="tw"><table class="rounds"><thead><tr><th>Player</th>${DB.rounds.map((_, i) => `<th>R${i + 1}</th>`).join("")}<th>Total</th></tr></thead><tbody>
+      ${ids.sort((a, b) => (t[b] || 0) - (t[a] || 0)).map((id) => `<tr><td><span class="sw" style="--c:${css(TC.byId[id].rgb)};width:14px;height:14px;vertical-align:-2px"></span> ${esc(deckName(id))}${(t[id] || 0) === best ? " 🏆" : ""}</td>${DB.rounds.map((r) => `<td>${r.scores[id] ?? "–"}</td>`).join("")}<td><b>${t[id] || 0}</b></td></tr>`).join("")}</tbody></table></div>
+      <div class="row" style="margin-top:10px"><button class="link" type="button" id="dropRound">Remove last round</button><button class="link danger" type="button" id="newGame">New game</button></div>
+      <div style="margin-top:10px">${BGStats.block("game", "Sends the totals as one play.")}</div></section>`;
+  }
+
+  /* ---------- Reading a photo ---------- */
+  async function readPhoto(file) {
+    if (!file) return; busy = true; render();
+    try {
+      const url = URL.createObjectURL(file), img = new Image(); img.src = url; await img.decode();
+      const s = Math.min(2.5, TARGET / Math.max(img.naturalWidth, img.naturalHeight)), w = Math.round(img.naturalWidth * s), h = Math.round(img.naturalHeight * s);
+      const cv = document.createElement("canvas"); cv.width = w; cv.height = h; const ctx = cv.getContext("2d", { willReadFrequently: true });
+      ctx.imageSmoothingQuality = "high"; ctx.drawImage(img, 0, 0, w, h);
+      await new Promise((r) => setTimeout(r, 30));
+      const found = TC.detect(ctx.getImageData(0, 0, w, h).data, w, h);
+      if (P?.url) URL.revokeObjectURL(P.url);
+      P = { url, w, h, dots: found.map((d) => ({ ...d, auto: true })) }; undo = []; zoom = innerWidth < 700 ? 2 : 1; tool = "erase"; // phones start zoomed in so the circles are big enough to tap
+      recolor(); busy = false; render(); $("photo")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      toast(`Found ${P.dots.length} dots`);
+    } catch (e) { busy = false; render(); toast("Couldn't read that photo. Try another one."); }
+  }
+  // Decks for the dots the page found (dots added or recolored by hand keep their color).
+  function recolor() { if (!P) return; const auto = P.dots.filter((d) => d.rgb && !d.fixed), cls = TC.classify(auto, DB.decks); auto.forEach((d, i) => { d.deck = cls[i]; }); }
+
+  /* ---------- Fixing ---------- */
+  function tapPhoto(e) {
+    const svg = $("marks"); if (!svg || hideMarks) return;
+    const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+    const unit = P.w / svg.getBoundingClientRect().width; // photo pixels per screen pixel
+    let hit = -1, best = Infinity;
+    P.dots.forEach((d, i) => { const dd = Math.hypot(d.x - p.x, d.y - p.y), reach = Math.max(d.r * 2.6, 16 * unit); if (dd < reach && dd < best) { best = dd; hit = i; } });
+    if (tool === "erase") { if (hit < 0) return toast("Tap a circle to remove it"); snap(); P.dots.splice(hit, 1); }
+    else { if (!brush) return toast("Pick a deck first"); snap();
+      if (hit >= 0) { if (P.dots[hit].deck === brush) { undo.pop(); return toast(`Already ${deckName(brush)}`); } P.dots[hit].deck = brush; P.dots[hit].fixed = true; }
+      else P.dots.push({ x: p.x, y: p.y, r: Math.max(2, median(P.dots.map((d) => d.r))), deck: brush, fixed: true }); }
+    render();
+  }
+  const median = (a) => { const s = [...a].sort((x, y) => x - y); return s.length ? s[s.length >> 1] : 3; };
+
+  /* ---------- BG Stats ---------- */
+  function playFor(scores, id, start) {
+    const ids = Object.keys(scores), best = Math.max(...ids.map((k) => scores[k]));
+    const rk = BGStats.ranks(ids.map((k) => scores[k]));
+    return BGStats.play({ id, start, end: Date.now(), game: { name: "Tacta", bggId: TACTA_BGG },
+      players: ids.map((k, i) => ({ name: deckName(k), score: scores[k], rank: rk[i], winner: scores[k] === best, role: TC.byId[k].name })),
+      comments: DB.rounds.length > 1 ? `${DB.rounds.length} rounds` : "" });
+  }
+
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("#marks")) return tapPhoto(e);
+    const b = e.target.closest("button"); if (!b) return; const d = b.dataset;
+    if (d.deck) { const on = DB.decks.includes(d.deck); DB.decks = on ? DB.decks.filter((x) => x !== d.deck) : TC.DECKS.map((x) => x.id).filter((x) => x === d.deck || DB.decks.includes(x)); save();
+      // Turning a deck off: its found dots go to the nearest remaining deck; dots added by hand for it are dropped.
+      if (P) { if (on) P.dots = P.dots.filter((x) => !(x.deck === d.deck && !x.rgb)); P.dots.forEach((x) => { if (on && x.deck === d.deck) x.fixed = false; }); recolor(); } render(); return; }
+    if (d.tool) { tool = d.tool; render(); return; }
+    if (d.brush) { brush = d.brush; render(); return; }
+    if (b.id === "zIn" || b.id === "zOut") { const box = $("photo"), cx = (box.scrollLeft + box.clientWidth / 2) / box.scrollWidth, cy = (box.scrollTop + box.clientHeight / 2) / box.scrollHeight;
+      zoom = Math.max(1, Math.min(4, zoom + (b.id === "zIn" ? 1 : -1))); render(); const nb = $("photo"); nb.scrollLeft = cx * nb.scrollWidth - nb.clientWidth / 2; nb.scrollTop = cy * nb.scrollHeight - nb.clientHeight / 2; return; }
+    if (b.id === "undo") { const prev = undo.pop(); if (prev) { P.dots = JSON.parse(prev); render(); } return; }
+    if (b.id === "hide") { hideMarks = !hideMarks; render(); return; }
+    if (b.id === "saveRound") { const scores = Object.fromEntries(currentScores().map((s) => [s.id, s.dots]));
+      DB.rounds.push({ at: Date.now(), scores }); DB.started = DB.started || Date.now(); DB.gameId = DB.gameId || `tacta-${Date.now()}`; save();
+      toast(`Round ${DB.rounds.length} saved`); render(); return; }
+    if (b.id === "dropRound") { DB.rounds.pop(); save(); render(); return; }
+    if (b.id === "newGame") { if (!confirm("Clear the saved rounds and start a new game?")) return; DB.rounds = []; DB.started = null; DB.gameId = null; save(); render(); return; }
+    if (d.bgs === "now") return BGStats.sendFrom(b, playFor(Object.fromEntries(currentScores().map((s) => [s.id, s.dots])), P.id || (P.id = `tacta-${Date.now()}`)));
+    if (d.bgs === "game") return BGStats.sendFrom(b, playFor(totals(), DB.gameId || `tacta-${DB.rounds[0].at}`, DB.started));
+  });
+  document.addEventListener("change", (e) => { const t = e.target;
+    if (t.id === "file") { readPhoto(t.files[0]); t.value = ""; }
+    else if (t.dataset.nm) { DB.names[t.dataset.nm] = t.value.trim(); save(); render(); } });
+  render();
+})();
+</script>
+<script src="/pwa.js" defer></script>
+</body>
+</html>
