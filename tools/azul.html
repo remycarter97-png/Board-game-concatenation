@@ -115,10 +115,11 @@
   .floor button { min-height: 50px; border-radius: 12px; border: 2px solid var(--outline); background: var(--surface); font: 700 1.1rem Fredoka, ui-rounded, sans-serif; color: var(--ink); box-shadow: 2px 2px 0 var(--outline); padding: 0; }
   .floor button[aria-pressed="true"] { background: var(--danger); color: #fff; box-shadow: none; transform: translate(2px, 2px); }
   .wall { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; padding: 12px; border: 3px solid var(--outline); border-radius: 18px; background: #fffdf8; box-shadow: var(--pop); }
-  .tile { position: relative; aspect-ratio: 1; border-radius: 10px; border: 0; padding: 0; overflow: hidden; background: var(--tc); opacity: .32; transition: opacity .15s, transform .15s; cursor: pointer; }
+  .tile { position: relative; aspect-ratio: 1; border-radius: 10px; border: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); padding: 0; overflow: hidden; background: var(--tc); opacity: .28; transition: opacity .15s, transform .15s; cursor: pointer; }
   .tile svg { position: absolute; inset: 0; width: 100%; height: 100%; }
   .tile[aria-pressed="true"] { opacity: 1; box-shadow: 0 0 0 2.5px #3d2a4f, 3px 3px 0 2.5px #3d2a4f; transform: translate(-1px, -1px); }
   .tile.old { cursor: default; }
+  .tile.blocked { opacity: .12; cursor: not-allowed; }
   .tile .pts { position: absolute; right: 3px; bottom: 2px; font: 700 .78rem Fredoka, ui-rounded, sans-serif; color: #3d2a4f; background: #fffdf8; border-radius: 999px; padding: 0 5px; border: 1.5px solid #3d2a4f; }
   .tile.old .pts { display: none; }
   .tile.pop { animation: pop .3s ease; } @keyframes pop { 50% { transform: scale(1.12); } }
@@ -171,11 +172,11 @@
   const KEY = "game-shelf:azul";
   // The colored side of the wall: each row is the row above shifted one space to the right.
   const COLORS = [
-    { id: "blue", name: "Blue", c: "#a9d3f2", svg: "" },
-    { id: "yellow", name: "Yellow", c: "#ffe2a6", svg: `<g fill="#f08a8a"><path d="M50 18c8 10 8 20 0 30-8-10-8-20 0-30zM50 82c8-10 8-20 0-30-8 10-8 20 0 30zM18 50c10-8 20-8 30 0-10 8-20 8-30 0zM82 50c-10-8-20-8-30 0 10 8 20 8 30 0z"/><circle cx="50" cy="50" r="6"/><circle cx="22" cy="22" r="6"/><circle cx="78" cy="22" r="6"/><circle cx="22" cy="78" r="6"/><circle cx="78" cy="78" r="6"/></g>` },
-    { id: "red", name: "Red", c: "#f5b3b3", svg: "" },
-    { id: "black", name: "Black", c: "#9ea3aa", svg: `<g fill="none" stroke="#a7d9ef" stroke-width="5"><circle cx="50" cy="50" r="14"/><circle cx="22" cy="22" r="9"/><circle cx="78" cy="22" r="9"/><circle cx="22" cy="78" r="9"/><circle cx="78" cy="78" r="9"/><path d="M50 8v20M50 72v20M8 50h20M72 50h20"/></g>` },
-    { id: "white", name: "White", c: "#eef8fd", svg: `<g fill="#9fd6f0"><path d="M50 10l9 22h-18zM50 90l-9-22h18zM10 50l22-9v18zM90 50l-22 9V41zM22 22l22 9-13 13zM78 78l-22-9 13-13zM78 22l-9 22-13-13zM22 78l9-22 13 13z"/><circle cx="50" cy="50" r="8"/></g>` },
+    { id: "blue", name: "Blue", c: "#1c5fbf", svg: `<rect x="14" y="14" width="72" height="72" rx="6" fill="none" stroke="#3f86e0" stroke-width="3"/>` },
+    { id: "yellow", name: "Yellow", c: "#f7c21b", svg: `<g fill="#d9362f"><path d="M50 18c8 10 8 20 0 30-8-10-8-20 0-30zM50 82c8-10 8-20 0-30-8 10-8 20 0 30zM18 50c10-8 20-8 30 0-10 8-20 8-30 0zM82 50c-10-8-20-8-30 0 10 8 20 8 30 0z"/><circle cx="50" cy="50" r="6"/><circle cx="22" cy="22" r="6"/><circle cx="78" cy="22" r="6"/><circle cx="22" cy="78" r="6"/><circle cx="78" cy="78" r="6"/></g>` },
+    { id: "red", name: "Red", c: "#e2452a", svg: `<rect x="14" y="14" width="72" height="72" rx="6" fill="none" stroke="#f0714f" stroke-width="3"/>` },
+    { id: "black", name: "Black", c: "#23262c", svg: `<g fill="none" stroke="#4fc3e8" stroke-width="5"><circle cx="50" cy="50" r="14"/><circle cx="22" cy="22" r="9"/><circle cx="78" cy="22" r="9"/><circle cx="22" cy="78" r="9"/><circle cx="78" cy="78" r="9"/><path d="M50 8v20M50 72v20M8 50h20M72 50h20"/></g>` },
+    { id: "white", name: "White", c: "#e6f5fb", svg: `<g fill="#2a86cc"><path d="M50 10l9 22h-18zM50 90l-9-22h18zM10 50l22-9v18zM90 50l-22 9V41zM22 22l22 9-13 13zM78 78l-22-9 13-13zM78 22l-9 22-13-13zM22 78l9-22 13 13z"/><circle cx="50" cy="50" r="8"/></g>` },
   ];
   const colorAt = (r, c) => COLORS[(c - r + 5) % 5];
   const FLOOR = [1, 1, 2, 2, 2, 3, 3]; // points lost for each floor-line space, left to right
@@ -237,13 +238,13 @@
       <h2 class="lbl" id="floorH">Minus Points</h2>
       <div class="floor" role="group" aria-labelledby="floorH">${FLOOR.map((v, i) => `<button type="button" data-floor="${i}" data-focus="f${i}" aria-pressed="${i < p.floor}" aria-label="Floor space ${i + 1}, minus ${v}">−${v}</button>`).join("")}</div>
       <h2 class="lbl" id="wallH">Wall <span class="note">· tap a tile when you move it to your wall</span></h2>
-      <div class="wall" role="group" aria-labelledby="wallH">${[0, 1, 2, 3, 4].map((r) => [0, 1, 2, 3, 4].map((c) => { const col = colorAt(r, c), old = p.wall[r][c], now = placedNow.has(`${r},${c}`);
-        return `<button type="button" class="tile${old ? " old" : ""}${popAt === `${r},${c}` ? " pop" : ""}" style="--tc:${col.c}" data-t="${r},${c}" data-focus="t${r}${c}" aria-pressed="${!!(old || now)}" aria-label="Row ${r + 1}, ${col.name}${old ? ", placed in an earlier round" : now ? `, placed this round for ${placedNow.get(`${r},${c}`)} points` : ""}"${old ? " disabled" : ""}>${tileSvg(col)}${now ? `<span class="pts">+${placedNow.get(`${r},${c}`)}</span>` : ""}</button>`; }).join("")).join("")}</div>
+      <div class="wall" role="group" aria-labelledby="wallH">${[0, 1, 2, 3, 4].map((r) => [0, 1, 2, 3, 4].map((c) => { const col = colorAt(r, c), old = p.wall[r][c], now = placedNow.has(`${r},${c}`), blocked = !old && !now && p.round.some(([a]) => a === r);
+        return `<button type="button" class="tile${old ? " old" : ""}${blocked ? " blocked" : ""}${popAt === `${r},${c}` ? " pop" : ""}" style="--tc:${col.c}" data-t="${r},${c}" data-focus="t${r}${c}" aria-pressed="${!!(old || now)}" aria-label="Row ${r + 1}, ${col.name}${old ? ", placed in an earlier round" : now ? `, placed this round for ${placedNow.get(`${r},${c}`)} points` : blocked ? ", this row already has a tile this round" : ""}"${old ? " disabled" : ""}${blocked ? ` aria-disabled="true"` : ""}>${tileSvg(col)}${now ? `<span class="pts">+${placedNow.get(`${r},${c}`)}</span>` : ""}</button>`; }).join("")).join("")}</div>
       <details class="how"><summary>How scoring works</summary><ul>
         <li>Place tiles in the order you move them, top row first. Each one scores right away.</li>
         <li>No neighbors: 1 point. Otherwise count the tiles linked in its row (if any), plus the tiles linked in its column (if any), including the new tile.</li>
         <li>Floor tiles cost −1, −1, −2, −2, −2, −3, −3. The starting player marker counts as a floor tile. Your score can't go below 0.</li>
-        <li>Tap a tile placed this round again to take it back. Tiles from earlier rounds are locked.</li>
+        <li>Each row takes one tile per round (one per complete pattern line), so up to 5 a round. Tap a tile placed this round again to take it back, or to pick a different one in that row. Tiles from earlier rounds are locked.</li>
         <li>End of the game: +2 per complete row, +7 per complete column, +10 per color with all 5 tiles. Ties go to whoever has more complete rows.</li></ul></details>`}`;
     if (foc) document.querySelector(`[data-focus="${foc}"]`)?.focus({ preventScroll: true });
     scrollTo(0, y);
@@ -275,6 +276,7 @@
     if (S.done) return;
     if (d.t) { const [r, c] = d.t.split(",").map(Number); if (p.wall[r][c]) return; const i = p.round.findIndex(([a, z]) => a === r && z === c);
       if (i >= 0) { p.round.splice(i, 1); save(); render(); toast("Taken back"); }
+      else if (p.round.some(([a]) => a === r)) toast(`Row ${r + 1} already has a tile this round`);
       else { const col = colorAt(r, c); p.round.push([r, c]); save(); const pts = roundScores(p).each.at(-1); render(`${r},${c}`); toast(`${col.name} +${pts}`); } return; }
     if (d.floor) { const i = Number(d.floor); p.floor = p.floor === i + 1 ? i : i + 1; save(); render(); return; }
     if (b.id === "next") { const lastRound = someoneFinishedRow(); commitRound(); S.roundNo++; confirmReset = false; save(); render(); toast(lastRound ? "A row is complete: tap Finish game" : `Round ${S.roundNo}`); scrollTo({ top: 0 }); return; }
