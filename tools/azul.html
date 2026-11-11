@@ -238,13 +238,14 @@
       <h2 class="lbl" id="floorH">Minus Points</h2>
       <div class="floor" role="group" aria-labelledby="floorH">${FLOOR.map((v, i) => `<button type="button" data-floor="${i}" data-focus="f${i}" aria-pressed="${i < p.floor}" aria-label="Floor space ${i + 1}, minus ${v}">−${v}</button>`).join("")}</div>
       <h2 class="lbl" id="wallH">Wall <span class="note">· tap a tile when you move it to your wall</span></h2>
-      <div class="wall" role="group" aria-labelledby="wallH">${[0, 1, 2, 3, 4].map((r) => [0, 1, 2, 3, 4].map((c) => { const col = colorAt(r, c), old = p.wall[r][c], now = placedNow.has(`${r},${c}`), blocked = !old && !now && p.round.some(([a]) => a === r);
-        return `<button type="button" class="tile${old ? " old" : ""}${blocked ? " blocked" : ""}${popAt === `${r},${c}` ? " pop" : ""}" style="--tc:${col.c}" data-t="${r},${c}" data-focus="t${r}${c}" aria-pressed="${!!(old || now)}" aria-label="Row ${r + 1}, ${col.name}${old ? ", placed in an earlier round" : now ? `, placed this round for ${placedNow.get(`${r},${c}`)} points` : blocked ? ", this row already has a tile this round" : ""}"${old ? " disabled" : ""}${blocked ? ` aria-disabled="true"` : ""}>${tileSvg(col)}${now ? `<span class="pts">+${placedNow.get(`${r},${c}`)}</span>` : ""}</button>`; }).join("")).join("")}</div>
+      <div class="wall" role="group" aria-labelledby="wallH">${[0, 1, 2, 3, 4].map((r) => [0, 1, 2, 3, 4].map((c) => { const col = colorAt(r, c), old = p.wall[r][c], now = placedNow.has(`${r},${c}`), lowest = p.round.length ? p.round.at(-1)[0] : -1, blocked = !old && !now && r <= lowest, sealed = now && `${r},${c}` !== p.round.at(-1).join(",");
+        return `<button type="button" class="tile${old ? " old" : ""}${blocked ? " blocked" : ""}${sealed ? " sealed" : ""}${popAt === `${r},${c}` ? " pop" : ""}" style="--tc:${col.c}" data-t="${r},${c}" data-focus="t${r}${c}" aria-pressed="${!!(old || now)}" aria-label="Row ${r + 1}, ${col.name}${old ? ", placed in an earlier round" : now ? `, placed this round for ${placedNow.get(`${r},${c}`)} points` : blocked ? (p.round.some(([a]) => a === r) ? ", this row already has a tile this round" : ", rows above the last scored tile are done for this round") : ""}"${old ? " disabled" : ""}${blocked ? ` aria-disabled="true"` : ""}>${tileSvg(col)}${now ? `<span class="pts">+${placedNow.get(`${r},${c}`)}</span>` : ""}</button>`; }).join("")).join("")}</div>
       <details class="how"><summary>How scoring works</summary><ul>
-        <li>Place tiles in the order you move them, top row first. Each one scores right away.</li>
+        <li>Tap tiles in the order you move them, top row first. Each one scores right away.</li>
         <li>No neighbors: 1 point. Otherwise count the tiles linked in its row (if any), plus the tiles linked in its column (if any), including the new tile.</li>
         <li>Floor tiles cost −1, −1, −2, −2, −2, −3, −3. The starting player marker counts as a floor tile. Your score can't go below 0.</li>
-        <li>Each row takes one tile per round (one per complete pattern line), so up to 5 a round. Tap a tile placed this round again to take it back, or to pick a different one in that row. Tiles from earlier rounds are locked.</li>
+        <li>Each row takes one tile per round (one per complete pattern line), so up to 5 a round, and tiles score top to bottom: once a row has scored, the rows above it are done for the round.</li>
+        <li>Made a mistake? Tap the last tile you placed to take it back, then work back up if you need to. Tiles from earlier rounds are locked.</li>
         <li>End of the game: +2 per complete row, +7 per complete column, +10 per color with all 5 tiles. Ties go to whoever has more complete rows.</li></ul></details>`}`;
     if (foc) document.querySelector(`[data-focus="${foc}"]`)?.focus({ preventScroll: true });
     scrollTo(0, y);
@@ -275,8 +276,11 @@
     if (b.id === "undoFinish") { const h = S.history.pop(); if (h) { S.players = h.players; S.roundNo = h.roundNo; } S.done = null; save(); render(); return; }
     if (S.done) return;
     if (d.t) { const [r, c] = d.t.split(",").map(Number); if (p.wall[r][c]) return; const i = p.round.findIndex(([a, z]) => a === r && z === c);
-      if (i >= 0) { p.round.splice(i, 1); save(); render(); toast("Taken back"); }
+      const lowest = p.round.length ? p.round.at(-1)[0] : -1;
+      if (i >= 0 && i < p.round.length - 1) toast("Take back the lower tiles first");
+      else if (i >= 0) { p.round.pop(); save(); render(); toast("Taken back"); }
       else if (p.round.some(([a]) => a === r)) toast(`Row ${r + 1} already has a tile this round`);
+      else if (r < lowest) toast(`Scoring goes top to bottom: row ${r + 1} is above row ${lowest + 1}`);
       else { const col = colorAt(r, c); p.round.push([r, c]); save(); const pts = roundScores(p).each.at(-1); render(`${r},${c}`); toast(`${col.name} +${pts}`); } return; }
     if (d.floor) { const i = Number(d.floor); p.floor = p.floor === i + 1 ? i : i + 1; save(); render(); return; }
     if (b.id === "next") { const lastRound = someoneFinishedRow(); commitRound(); S.roundNo++; confirmReset = false; save(); render(); toast(lastRound ? "A row is complete: tap Finish game" : `Round ${S.roundNo}`); scrollTo({ top: 0 }); return; }
