@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Azul Score Tracker</title>
+<meta name="description" content="Score Azul as you play: tap tiles onto your wall, mark floor tiles, and get end-of-game bonuses added up for you.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#fff3e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1528" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Game Shelf">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
+    --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
+    --yellow: #ffd45c; --yellow-soft: #fff1c2; --mint: #8be0bd; --mint-soft: #ddf6ea;
+    --ok: #24a26b; --danger: #d43c41; --warn: #a35a00; --warn-soft: #ffe8cc;
+    --edge: 2.5px solid var(--outline); --pop: 4px 4px 0 var(--outline); --pop-sm: 3px 3px 0 var(--outline);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+      --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+      --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+    --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+    --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; color: var(--ink); font: 16px/1.5 Nunito, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header (matches the other pages) */
+  header.top { padding: 36px 0 8px; }
+  .titlebar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .brand { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+  .logo { width: 72px; height: 72px; flex: none; transform: rotate(-5deg); filter: drop-shadow(4px 4px 0 var(--outline)); transition: transform .3s; }
+  .logo:hover { transform: rotate(4deg) scale(1.05); }
+  h1 { font: 700 clamp(2rem, 4vw, 2.9rem)/1.05 Fredoka, ui-rounded, system-ui, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  h1 .hl { background: linear-gradient(transparent 62%, var(--hl, var(--yellow)) 62% 92%, transparent 92%); padding: 0 2px; }
+  .tagline { margin: 6px 0 0; color: var(--ink-2); font-size: 1.05rem; font-weight: 600; }
+  .pagenav { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); }
+  .pagenav a { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-decoration: none; }
+  .pagenav a:hover { color: var(--ink); background: var(--surface-2); }
+  .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+
+  /* Shared bits */
+  .card { background: var(--surface); border: var(--edge); border-radius: 22px; box-shadow: var(--pop); padding: 18px 20px; min-width: 0; display: grid; gap: 14px; align-content: start; }
+  h2 { font: 700 1.3rem/1.2 Fredoka, ui-rounded, sans-serif; margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  h2 small { font: 700 .88rem Nunito, sans-serif; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm);
+    background: var(--surface); color: var(--ink); font: 600 1rem Fredoka, ui-rounded, sans-serif; transition: transform .12s, box-shadow .12s; text-decoration: none; }
+  .btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.yellow { background: var(--yellow); color: #3d2a4f; }
+  .btn.big { min-height: 52px; font-size: 1.15rem; padding: 0 22px; }
+  .btn.sm { min-height: 34px; padding: 0 12px; font-size: .9rem; border-radius: 11px; }
+  .link { border: 0; background: none; padding: 4px 2px; color: var(--accent); font-weight: 800; font-size: .92rem; }
+  .link:hover { text-decoration: underline; }
+  .link.danger { color: var(--danger); }
+  input[type=text], input[type=number] { height: 44px; border: var(--edge); border-radius: 13px; background: var(--surface); padding: 0 12px; font-weight: 700; min-width: 0; box-shadow: var(--pop-sm); }
+  input:focus { outline: none; box-shadow: 0 0 0 4px var(--yellow), 3px 3px 0 4px var(--outline); }
+  input[readonly] { opacity: .65; }
+  .note { margin: 0; font-size: .88rem; color: var(--ink-2); font-weight: 600; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 2px solid var(--outline); border-radius: 12px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: none; min-height: 30px; padding: 0 12px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+  .ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ctl > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+
+  .crumbs { margin-top: 18px; } .crumbs a { color: var(--accent); font-weight: 800; text-decoration: none; } .crumbs a:hover { text-decoration: underline; }
+  main { margin-top: 12px; display: grid; gap: 16px; max-width: 560px; margin-left: auto; margin-right: auto; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .note { margin: 0; color: var(--ink-2); font-weight: 700; font-size: .86rem; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .players { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .players button.p { min-height: 40px; padding: 0 12px; border-radius: 12px; border: 2px solid var(--outline); background: var(--surface); font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink); }
+  .players button.p[aria-selected="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: 2px 2px 0 var(--outline); }
+  .players button.p small { font: 700 .8rem Nunito, sans-serif; margin-left: 4px; }
+  .players input { width: 9em; }
+  input[type=text] { min-height: 40px; border: var(--edge); border-radius: 12px; background: var(--surface); color: var(--ink); font: 700 .95rem Nunito, sans-serif; padding: 0 10px; min-width: 0; }
+  input:focus-visible, button:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat { border: 3px solid var(--outline); border-radius: 18px; background: var(--surface); text-align: center; padding: 10px 8px; box-shadow: var(--pop-sm); }
+  .stat.wide { grid-column: 1 / -1; }
+  .stat span { display: block; font: 600 1.05rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); }
+  .stat b { display: block; font: 700 2.4rem/1.1 Fredoka, ui-rounded, sans-serif; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .stat small { display: block; font-weight: 700; color: var(--ink-2); font-size: .8rem; min-height: 1.2em; }
+  .stat.neg b { color: var(--danger); }
+  .actions { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; }
+  .actions .btn { justify-content: center; min-height: 52px; font-size: 1.05rem; }
+  h2.lbl { margin: 4px 0 0; font: 700 1.15rem Fredoka, ui-rounded, sans-serif; }
+  .floor { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+  .floor button { min-height: 50px; border-radius: 12px; border: 2px solid var(--outline); background: var(--surface); font: 700 1.1rem Fredoka, ui-rounded, sans-serif; color: var(--ink); box-shadow: 2px 2px 0 var(--outline); padding: 0; }
+  .floor button[aria-pressed="true"] { background: var(--danger); color: #fff; box-shadow: none; transform: translate(2px, 2px); }
+  .wall { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; padding: 12px; border: 3px solid var(--outline); border-radius: 18px; background: #fffdf8; box-shadow: var(--pop); }
+  .tile { position: relative; aspect-ratio: 1; border-radius: 10px; border: 0; padding: 0; overflow: hidden; background: var(--tc); opacity: .32; transition: opacity .15s, transform .15s; cursor: pointer; }
+  .tile svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .tile[aria-pressed="true"] { opacity: 1; box-shadow: 0 0 0 2.5px #3d2a4f, 3px 3px 0 2.5px #3d2a4f; transform: translate(-1px, -1px); }
+  .tile.old { cursor: default; }
+  .tile .pts { position: absolute; right: 3px; bottom: 2px; font: 700 .78rem Fredoka, ui-rounded, sans-serif; color: #3d2a4f; background: #fffdf8; border-radius: 999px; padding: 0 5px; border: 1.5px solid #3d2a4f; }
+  .tile.old .pts { display: none; }
+  .tile.pop { animation: pop .3s ease; } @keyframes pop { 50% { transform: scale(1.12); } }
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 50; padding: 8px 16px; border-radius: 999px; border: 2px solid var(--outline); background: var(--yellow); color: #3d2a4f; font: 700 1.05rem Fredoka, ui-rounded, sans-serif; box-shadow: var(--pop-sm); pointer-events: none; opacity: 0; transition: opacity .2s; }
+  .toast.on { opacity: 1; }
+  .banner { padding: 12px 14px; border: 2px dashed var(--outline); border-radius: 14px; background: var(--yellow-soft); font-weight: 800; }
+  .final { display: grid; gap: 10px; }
+  .final table { width: 100%; border-collapse: collapse; font-weight: 800; }
+  .final th, .final td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: right; } .final th:first-child, .final td:first-child { text-align: left; }
+  .final thead th { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; color: var(--ink-2); }
+  .final tr.win td { background: var(--yellow-soft); }
+  .final .tw { overflow-x: auto; margin: 0 -4px; }
+  @media (max-width: 480px) { .final th, .final td { padding: 7px 4px; font-size: .9rem; } .final thead th { font-size: .66rem; } .final td small { display: block; } }
+  .confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 12px; border: 2px dashed var(--danger); border-radius: 14px; font-weight: 800; }
+  details.how summary { cursor: pointer; font-weight: 800; color: var(--ink-2); }
+  details.how ul { margin: 8px 0 0; padding-left: 20px; font-weight: 600; color: var(--ink-2); display: grid; gap: 4px; }
+  footer { margin: 40px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
+  @media (max-width: 760px) { .wrap { padding: 0 16px; } header.top { padding-top: 22px; } .logo { width: 54px; height: 54px; } .brand { gap: 12px; } .stat b { font-size: 2rem; } .wall { gap: 6px; padding: 8px; } .floor { gap: 4px; } .actions .btn { font-size: .95rem; padding: 0 10px; } }
+</style>
+<link rel="stylesheet" href="/safe-area.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <a class="brand" href="/">
+        <svg class="logo" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="3" y="3" width="66" height="66" rx="18" fill="var(--yellow)" stroke="var(--outline)" stroke-width="3"/>
+          <g transform="translate(36 10) rotate(14)"><rect x="0" y="0" width="22" height="22" rx="5" fill="#fff" stroke="var(--outline)" stroke-width="2.5"/>
+            <circle cx="6" cy="6" r="2.2" fill="var(--outline)"/><circle cx="11" cy="11" r="2.2" fill="var(--outline)"/><circle cx="16" cy="16" r="2.2" fill="var(--outline)"/></g>
+          <g transform="translate(9 20) scale(1.75)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.4" stroke-linejoin="round"/></g>
+        </svg>
+        <div>
+          <h1>Azul <span class="hl">Score Tracker</span></h1>
+          <p class="tagline">Tap your tiles, we'll do the math.</p>
+        </div>
+      </a>
+      <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats">Charts</a><a href="/tools" aria-current="page">Tools</a></nav>
+    </div>
+  </header>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools">‹ All tools</a></nav>
+  <main id="app"></main>
+  <footer>Scoring follows the Azul rulebook. Your game is saved in this browser, so you can close the page mid-game.</footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const KEY = "game-shelf:azul";
+  // The colored side of the wall: each row is the row above shifted one space to the right.
+  const COLORS = [
+    { id: "blue", name: "Blue", c: "#a9d3f2", svg: "" },
+    { id: "yellow", name: "Yellow", c: "#ffe2a6", svg: `<g fill="#f08a8a"><path d="M50 18c8 10 8 20 0 30-8-10-8-20 0-30zM50 82c8-10 8-20 0-30-8 10-8 20 0 30zM18 50c10-8 20-8 30 0-10 8-20 8-30 0zM82 50c-10-8-20-8-30 0 10 8 20 8 30 0z"/><circle cx="50" cy="50" r="6"/><circle cx="22" cy="22" r="6"/><circle cx="78" cy="22" r="6"/><circle cx="22" cy="78" r="6"/><circle cx="78" cy="78" r="6"/></g>` },
+    { id: "red", name: "Red", c: "#f5b3b3", svg: "" },
+    { id: "black", name: "Black", c: "#9ea3aa", svg: `<g fill="none" stroke="#a7d9ef" stroke-width="5"><circle cx="50" cy="50" r="14"/><circle cx="22" cy="22" r="9"/><circle cx="78" cy="22" r="9"/><circle cx="22" cy="78" r="9"/><circle cx="78" cy="78" r="9"/><path d="M50 8v20M50 72v20M8 50h20M72 50h20"/></g>` },
+    { id: "white", name: "White", c: "#eef8fd", svg: `<g fill="#9fd6f0"><path d="M50 10l9 22h-18zM50 90l-9-22h18zM10 50l22-9v18zM90 50l-22 9V41zM22 22l22 9-13 13zM78 78l-22-9 13-13zM78 22l-9 22-13-13zM22 78l9-22 13 13z"/><circle cx="50" cy="50" r="8"/></g>` },
+  ];
+  const colorAt = (r, c) => COLORS[(c - r + 5) % 5];
+  const FLOOR = [1, 1, 2, 2, 2, 3, 3]; // points lost for each floor-line space, left to right
+
+  let S; try { S = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { S = null; }
+  const newPlayer = (name) => ({ name, total: 0, round: [], floor: 0, wall: Array.from({ length: 5 }, () => Array(5).fill(0)) });
+  // wall cell: 0 empty, 1 placed in an earlier round. round: [[r, c], ...] placed this round, in order.
+  if (!S || !Array.isArray(S.players)) S = { players: [newPlayer("Me")], cur: 0, roundNo: 1, history: [], done: null };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+  let confirmReset = false, editingNames = false, toastT = null;
+
+  /* ---------- Scoring (rulebook "Scoring" and "End of the game") ---------- */
+  const filled = (w, r, c) => r >= 0 && r < 5 && c >= 0 && c < 5 && !!w[r][c];
+  // Points for placing a tile at r,c on wall w (the tile is already on w).
+  function placePoints(w, r, c) {
+    let h = 1, v = 1;
+    for (let k = c - 1; filled(w, r, k); k--) h++; for (let k = c + 1; filled(w, r, k); k++) h++;
+    for (let k = r - 1; filled(w, k, c); k--) v++; for (let k = r + 1; filled(w, k, c); k++) v++;
+    if (h === 1 && v === 1) return 1;
+    return (h > 1 ? h : 0) + (v > 1 ? v : 0);
+  }
+  // Score this round's placements in the order they were made, on top of the earlier rounds' wall.
+  function roundScores(p) {
+    const w = p.wall.map((row) => row.slice()), each = [];
+    for (const [r, c] of p.round) { w[r][c] = 2; each.push(placePoints(w, r, c)); }
+    return { each, w };
+  }
+  const floorLoss = (p) => FLOOR.slice(0, p.floor).reduce((a, b) => a + b, 0);
+  function roundNet(p) { const gain = roundScores(p).each.reduce((a, b) => a + b, 0), loss = floorLoss(p); return { gain, loss, net: gain - loss, after: Math.max(0, p.total + gain - loss) }; }
+  function bonuses(w) {
+    let rows = 0, cols = 0, colors = 0;
+    for (let r = 0; r < 5; r++) if (w[r].every(Boolean)) rows++;
+    for (let c = 0; c < 5; c++) if ([0, 1, 2, 3, 4].every((r) => w[r][c])) cols++;
+    for (let k = 0; k < 5; k++) if ([0, 1, 2, 3, 4].every((r) => w[r][(k + r) % 5])) colors++; // color k sits at column (k + row) % 5
+    return { rows, cols, colors, points: rows * 2 + cols * 7 + colors * 10 };
+  }
+  const fullWall = (p) => roundScores(p).w;
+  const someoneFinishedRow = () => S.players.some((p) => fullWall(p).some((row) => row.every(Boolean)));
+
+  /* ---------- Render ---------- */
+  function tileSvg(col) { return col.svg ? `<svg viewBox="0 0 100 100" aria-hidden="true">${col.svg}</svg>` : ""; }
+  function render(popAt) {
+    const y = scrollY, foc = document.activeElement?.dataset?.focus;
+    const p = S.players[S.cur], rs = roundScores(p), net = roundNet(p);
+    const placedNow = new Map(p.round.map(([r, c], i) => [`${r},${c}`, rs.each[i]]));
+    $("app").innerHTML = `
+      <div class="players" role="tablist" aria-label="Players">${S.players.map((q, i) => `<button class="p" type="button" role="tab" data-p="${i}" aria-selected="${i === S.cur}">${esc(q.name)}<small>${S.done ? S.done.find((x) => x.i === i)?.final : q.total}</small></button>`).join("")}
+        ${S.players.length < 4 && !S.done ? `<button class="btn sm" type="button" id="addP">+ Player</button>` : ""}<button class="link" type="button" id="names">${editingNames ? "Done" : "Names"}</button></div>
+      ${editingNames ? `<div class="row">${S.players.map((q, i) => `<label class="vh" for="nm${i}">Player ${i + 1} name</label><input type="text" id="nm${i}" data-nm="${i}" value="${esc(q.name)}" maxlength="16">${S.players.length > 1 ? `<button class="x link danger" type="button" data-rmp="${i}" aria-label="Remove ${esc(q.name)}">Remove</button>` : ""}`).join("")}</div>` : ""}
+      ${S.done ? finalHtml() : `
+      <div class="stats">
+        <div class="stat${net.net < 0 ? " neg" : ""}"><span>Round Points</span><b>${net.net > 0 ? "+" : ""}${net.net}</b><small>${net.gain ? `+${net.gain} tiles` : ""}${net.loss ? ` −${net.loss} floor` : ""}</small></div>
+        <div class="stat"><span>Current Round</span><b>${S.roundNo}</b><small></small></div>
+        <div class="stat wide"><span>Total Points</span><b>${net.after}</b><small>${p.total} before this round${net.after === 0 && p.total + net.net < 0 ? " · can't go below 0" : ""}</small></div>
+      </div>
+      ${someoneFinishedRow() ? `<p class="banner">🎉 A horizontal line is complete, so this is the last round. Tap <b>Finish game</b> when everyone's tiles are on the wall.</p>` : ""}
+      <div class="actions"><button class="btn" type="button" id="next">Next round</button><button class="btn yellow" type="button" id="finish">Finish game</button><button class="btn" type="button" id="reset">Reset</button></div>
+      ${confirmReset ? `<div class="confirm">Start a new game? Everyone's scores are cleared.<button class="btn sm primary" type="button" id="resetYes">Reset</button><button class="link" type="button" id="resetNo">Keep playing</button></div>` : ""}
+      <h2 class="lbl" id="floorH">Minus Points</h2>
+      <div class="floor" role="group" aria-labelledby="floorH">${FLOOR.map((v, i) => `<button type="button" data-floor="${i}" data-focus="f${i}" aria-pressed="${i < p.floor}" aria-label="Floor space ${i + 1}, minus ${v}">−${v}</button>`).join("")}</div>
+      <h2 class="lbl" id="wallH">Wall <span class="note">· tap a tile when you move it to your wall</span></h2>
+      <div class="wall" role="group" aria-labelledby="wallH">${[0, 1, 2, 3, 4].map((r) => [0, 1, 2, 3, 4].map((c) => { const col = colorAt(r, c), old = p.wall[r][c], now = placedNow.has(`${r},${c}`);
+        return `<button type="button" class="tile${old ? " old" : ""}${popAt === `${r},${c}` ? " pop" : ""}" style="--tc:${col.c}" data-t="${r},${c}" data-focus="t${r}${c}" aria-pressed="${!!(old || now)}" aria-label="Row ${r + 1}, ${col.name}${old ? ", placed in an earlier round" : now ? `, placed this round for ${placedNow.get(`${r},${c}`)} points` : ""}"${old ? " disabled" : ""}>${tileSvg(col)}${now ? `<span class="pts">+${placedNow.get(`${r},${c}`)}</span>` : ""}</button>`; }).join("")).join("")}</div>
+      <details class="how"><summary>How scoring works</summary><ul>
+        <li>Place tiles in the order you move them, top row first. Each one scores right away.</li>
+        <li>No neighbors: 1 point. Otherwise count the tiles linked in its row (if any), plus the tiles linked in its column (if any), including the new tile.</li>
+        <li>Floor tiles cost −1, −1, −2, −2, −2, −3, −3. The starting player marker counts as a floor tile. Your score can't go below 0.</li>
+        <li>Tap a tile placed this round again to take it back. Tiles from earlier rounds are locked.</li>
+        <li>End of the game: +2 per complete row, +7 per complete column, +10 per color with all 5 tiles. Ties go to whoever has more complete rows.</li></ul></details>`}`;
+    if (foc) document.querySelector(`[data-focus="${foc}"]`)?.focus({ preventScroll: true });
+    scrollTo(0, y);
+  }
+  function finalHtml() {
+    const rows = [...S.done].sort((a, b) => b.final - a.final || b.rows - a.rows), top = rows[0];
+    const winners = rows.filter((x) => x.final === top.final && x.rows === top.rows);
+    return `<section class="card final"><h2 class="lbl" style="font-size:1.4rem">${winners.length > 1 ? `🤝 Shared win: ${esc(winners.map((x) => S.players[x.i].name).join(" & "))}` : `🏆 ${esc(S.players[top.i].name)} wins!`}</h2>
+      <div class="tw"><table><thead><tr><th>Player</th><th>Board</th><th>Rows</th><th>Columns</th><th>Colors</th><th>Final</th></tr></thead><tbody>
+      ${rows.map((x) => `<tr class="${winners.includes(x) ? "win" : ""}"><td>${esc(S.players[x.i].name)}</td><td>${x.board}</td><td>${x.rows} <small>+${x.rows * 2}</small></td><td>${x.cols} <small>+${x.cols * 7}</small></td><td>${x.colors} <small>+${x.colors * 10}</small></td><td><b>${x.final}</b></td></tr>`).join("")}</tbody></table></div>
+      ${winners.length === 1 && rows[1] && rows[1].final === top.final ? `<p class="note">Tied on points; ${esc(S.players[top.i].name)} wins with more complete rows.</p>` : ""}
+      <div class="row"><button class="btn yellow" type="button" id="again">New game, same players</button><button class="link" type="button" id="undoFinish">Oops, keep playing</button></div></section>`;
+  }
+  function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("on"), 1300); }
+
+  /* ---------- Actions ---------- */
+  function commitRound() {
+    S.history.push(JSON.parse(JSON.stringify({ players: S.players, roundNo: S.roundNo })));
+    for (const p of S.players) { const n = roundNet(p); p.wall = fullWall(p).map((row) => row.map((v) => (v ? 1 : 0))); p.total = n.after; p.round = []; p.floor = 0; }
+  }
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return; const d = b.dataset, p = S.players[S.cur];
+    if (d.p) { S.cur = Number(d.p); confirmReset = false; save(); render(); return; }
+    if (b.id === "addP") { S.players.push(newPlayer(`Player ${S.players.length + 1}`)); S.cur = S.players.length - 1; editingNames = true; save(); render(); $(`nm${S.cur}`)?.select(); return; }
+    if (b.id === "names") { editingNames = !editingNames; render(); return; }
+    if (d.rmp) { S.players.splice(Number(d.rmp), 1); S.cur = Math.min(S.cur, S.players.length - 1); save(); render(); return; }
+    if (b.id === "again") { S = { players: S.players.map((q) => newPlayer(q.name)), cur: 0, roundNo: 1, history: [], done: null }; save(); render(); return; }
+    if (b.id === "undoFinish") { const h = S.history.pop(); if (h) { S.players = h.players; S.roundNo = h.roundNo; } S.done = null; save(); render(); return; }
+    if (S.done) return;
+    if (d.t) { const [r, c] = d.t.split(",").map(Number); if (p.wall[r][c]) return; const i = p.round.findIndex(([a, z]) => a === r && z === c);
+      if (i >= 0) { p.round.splice(i, 1); save(); render(); toast("Taken back"); }
+      else { const col = colorAt(r, c); p.round.push([r, c]); save(); const pts = roundScores(p).each.at(-1); render(`${r},${c}`); toast(`${col.name} +${pts}`); } return; }
+    if (d.floor) { const i = Number(d.floor); p.floor = p.floor === i + 1 ? i : i + 1; save(); render(); return; }
+    if (b.id === "next") { const lastRound = someoneFinishedRow(); commitRound(); S.roundNo++; confirmReset = false; save(); render(); toast(lastRound ? "A row is complete: tap Finish game" : `Round ${S.roundNo}`); scrollTo({ top: 0 }); return; }
+    if (b.id === "finish") { commitRound(); S.done = S.players.map((q, i) => { const bo = bonuses(q.wall); return { i, board: q.total, ...bo, final: q.total + bo.points }; }); save(); clearTimeout(toastT); $("toast").classList.remove("on"); render(); scrollTo({ top: 0 }); return; }
+    if (b.id === "reset") { confirmReset = true; render(); $("resetNo")?.focus(); return; }
+    if (b.id === "resetNo") { confirmReset = false; render(); return; }
+    if (b.id === "resetYes") { S = { players: S.players.map((q) => newPlayer(q.name)), cur: 0, roundNo: 1, history: [], done: null }; confirmReset = false; save(); render(); return; }
+  });
+  document.addEventListener("change", (e) => { const d = e.target.dataset; if (d.nm) { S.players[Number(d.nm)].name = e.target.value.trim().slice(0, 16) || `Player ${Number(d.nm) + 1}`; save(); render(); } });
+  document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.dataset?.nm) e.target.blur(); });
+  render();
+})();
+</script>
+<script src="/pwa.js" defer></script>
+</body>
+</html>
