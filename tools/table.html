@@ -103,6 +103,7 @@
   input:focus-visible, select:focus-visible, button:focus-visible, textarea:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
   h2.sec { margin: 0; font: 700 1.3rem Fredoka, ui-rounded, sans-serif; display: flex; gap: 10px; align-items: center; justify-content: flex-start; flex-wrap: wrap; }
   h3.s3 { margin: 4px 0 0; font: 700 1.05rem Fredoka, ui-rounded, sans-serif; }
+  .endp { display: grid; gap: 12px; } .escores { display: grid; gap: 8px; } .escores input { width: 6em; padding: 6px 8px; border: 2px solid var(--line); border-radius: 10px; font: inherit; text-align: right; }
   .chk { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; cursor: pointer; } .chk input { width: 18px; height: 18px; accent-color: var(--accent); }
   .x { width: 30px; height: 30px; flex: none; border-radius: 50%; border: 2px solid var(--outline); background: var(--surface); font-weight: 900; color: var(--ink-2); }
   .ed { display: grid; gap: 12px; padding: 14px; border: 2px dashed var(--outline); border-radius: 16px; background: var(--yellow-soft); }
@@ -170,6 +171,7 @@
   <main id="app"></main>
   <footer>The game in progress and your setups are saved in this browser, so you can close the page and pick up where you left off.</footer>
 </div>
+<script src="/tools/bgstats.js"></script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
@@ -218,7 +220,7 @@
   function start(names) {
     const setup = copy(draft);
     const players = names.map((n) => ({ id: uid("p"), name: n, ap: 0, banked: 0, bonus: 0, passed: false, res: Object.fromEntries(setup.resources.filter((r) => !r.shared).map((r) => [r.id, r.start])) }));
-    S = { setup, players, order: players.map((p) => p.id), first: 0, turn: 0, round: 1, phase: 0, shared: Object.fromEntries(setup.resources.filter((r) => r.shared).map((r) => [r.id, r.start])), log: [] };
+    S = { id: uid("play"), started: Date.now(), setup, players, order: players.map((p) => p.id), first: 0, turn: 0, round: 1, phase: 0, shared: Object.fromEntries(setup.resources.filter((r) => r.shared).map((r) => [r.id, r.start])), log: [] };
     // Points that refill on your turn arrive when your turn starts; per-round points go to everyone now.
     if (setup.actions) players.forEach((p, i) => { p.ap = setup.actions.refresh === "turn" && i > 0 ? 0 : allow(p); });
     log(`Game started: ${players.map((p) => p.name).join(", ")}`); undo = []; commit();
@@ -303,7 +305,28 @@
       <div class="players">${S.order.map((id, i) => playerHtml(S.players.find((x) => x.id === id), i)).join("")}</div>
       ${sharedR.length ? `<section class="card"><h2 class="sec">Shared</h2><div class="res">${sharedR.map((r) => `<div class="rs"><span>${esc(r.label)}${r.income ? ` <small>+${r.income}/round</small>` : ""}</span>${stepper(`sh:${r.id}`, S.shared[r.id] ?? 0, r.label)}</div>`).join("")}</div></section>` : ""}
       <section class="card"><h2 class="sec">What happened</h2><ul class="log">${S.log.slice(0, 15).map((l) => `<li>${esc(l)}</li>`).join("")}</ul>
-        <div class="row" style="margin-top:8px">${endConfirm ? `<span class="note">End this game?</span><button class="btn sm primary" type="button" id="endYes">End game</button><button class="link" type="button" id="endNo">Keep playing</button>` : `<button class="link danger" type="button" id="endGame">End game</button>`}</div></section>`;
+        ${endConfirm ? "" : `<div class="row" style="margin-top:8px"><button class="link danger" type="button" id="endGame">End game</button></div>`}</section>
+      ${endConfirm ? endHtml() : ""}`;
+  }
+  // End of the game: final scores, optionally sent to BG Stats, then the game is closed.
+  function scoreRes() { return S.setup.resources.filter((r) => !r.shared); }
+  function fillScores(rid) { E.from = rid; if (rid) S.players.forEach((p) => { E.scores[p.id] = p.res[rid] ?? 0; }); }
+  function endHtml() {
+    const own = scoreRes();
+    return `<section class="card endp" aria-labelledby="endH"><h2 class="sec" id="endH">Final scores</h2>
+      <label class="field"><span>Game</span><input type="text" id="eGame" maxlength="80" list="gameNames" value="${esc(E.game)}" placeholder="Which game was this?"></label>
+      ${own.length ? `<label class="field"><span>Fill scores from</span><select id="eFrom"><option value="">Type them in</option>${own.map((r) => `<option value="${r.id}"${r.id === E.from ? " selected" : ""}>${esc(r.label)}</option>`).join("")}</select></label>` : ""}
+      <div class="escores">${S.order.map((id) => { const p = S.players.find((x) => x.id === id); return `<label class="rs"><span>${esc(p.name)}</span><input type="number" inputmode="numeric" data-esc="${p.id}" value="${esc(E.scores[p.id] ?? "")}" aria-label="${esc(p.name)} score"></label>`; }).join("")}</div>
+      <label class="chk"><input type="checkbox" id="eLow"${E.low ? " checked" : ""}> Lowest score wins</label>
+      ${BGStats.block("table", "Send it first if you want it in BG Stats, then end the game.")}
+      <div class="row"><button class="btn sm primary" type="button" id="endYes">End game</button><button class="link" type="button" id="endNo">Keep playing</button></div></section>`;
+  }
+  async function tablePlay() {
+    const ps = S.order.map((id) => S.players.find((x) => x.id === id)), sc = ps.map((p) => E.scores[p.id]), has = sc.some((v) => v !== undefined && v !== "");
+    const rk = BGStats.ranks(sc, E.low);
+    return BGStats.play({ id: S.id || `table-${S.started || Date.now()}`, start: S.started, end: Date.now(),
+      game: { name: E.game.trim() || "Board game", bggId: await BGStats.bggIdFor(E.game), lowWins: E.low, noPoints: !has },
+      players: ps.map((p, i) => ({ name: p.name, score: sc[i], rank: rk[i] || undefined, winner: has ? rk[i] === 1 : undefined })) });
   }
   function playerHtml(p, i) {
     const st = S.setup, a = st.actions, now = i === S.turn, total = allow(p) + (p.banked || 0);
@@ -321,7 +344,8 @@
   }
 
   /* ---------- Actions ---------- */
-  let msg = "", pickTurn = false, endConfirm = false;
+  let msg = "", pickTurn = false, endConfirm = false, E = null;
+  function readEnd() { if (!E) return; E.game = $("eGame")?.value ?? E.game; E.low = !!$("eLow")?.checked; document.querySelectorAll("[data-esc]").forEach((i) => { E.scores[i.dataset.esc] = i.value; }); S.game = E.game; }
   function readDraft() {
     const d = draft;
     if (d.actions) { d.actions.per = Number($("aPer").value) || 0; d.actions.refresh = $("aRefresh").value; d.actions.carry = Math.max(0, Number($("aCarry").value) || 0); d.actions.upgrades = $("aUp").checked;
@@ -366,15 +390,19 @@
     else if (d.mv) { snap(); const [i, dir] = d.mv.split(":").map(Number), j = i + dir, cur = S.order[S.turn], first = S.order[S.first]; [S.order[i], S.order[j]] = [S.order[j], S.order[i]]; S.turn = S.order.indexOf(cur); S.first = S.order.indexOf(first); commit(); }
     else if (d.setturn) { pickTurn = !pickTurn; render(); }
     else if (d.turnto) { snap(); S.turn = Number(d.turnto); pickTurn = false; if (S.setup.actions?.refresh === "turn") refill(current()); log(`${current().name}'s turn`); commit(); }
-    else if (b.id === "endGame") { endConfirm = true; render(); }
+    else if (b.id === "endGame") { endConfirm = true; E = { game: S.game || "", scores: {}, from: "", low: false }; const auto = scoreRes().find((r) => /point|score|vp|victory|fame|glory/i.test(r.label)); if (auto) fillScores(auto.id); render(); $("eGame")?.focus(); }
+    else if (d.bgs) { readEnd(); tablePlay().then((p) => BGStats.sendFrom(b, p)); }
     else if (b.id === "endNo") { endConfirm = false; render(); }
-    else if (b.id === "endYes") { endConfirm = false; S = null; DB.session = null; persist(); pickSetup(pickId); render(); }
+    else if (b.id === "endYes") { endConfirm = false; E = null; S = null; DB.session = null; persist(); pickSetup(pickId); render(); }
   });
-  document.addEventListener("change", (e) => { if (S) return; const t = e.target; if (["aOn"].includes(t.id)) { readDraftSafe(); draft.actions = t.checked ? { per: 3, refresh: "turn", carry: 0, costs: [{ label: "Action", cost: 1 }], upgrades: false } : null; render(); $("aOn").focus(); } });
+  document.addEventListener("change", (e) => { if (S && e.target.id === "eFrom") { readEnd(); fillScores(e.target.value); render(); $("eFrom")?.focus(); return; }
+    if (S && E) { readEnd(); DB.session = S; persist(); return; }
+    if (S) return; const t = e.target; if (["aOn"].includes(t.id)) { readDraftSafe(); draft.actions = t.checked ? { per: 3, refresh: "turn", carry: 0, costs: [{ label: "Action", cost: 1 }], upgrades: false } : null; render(); $("aOn").focus(); } });
   function readDraftSafe() { const on = draft.actions; try { readDraft(); } catch (err) {} draft.actions = on; }
   render();
 })();
 </script>
+<script>BGStats.collection().then((gs) => { const dl = document.createElement("datalist"); dl.id = "gameNames"; dl.innerHTML = gs.filter((g) => g.type === "Base game").map((g) => `<option value="${String(g.name).replace(/[&<>"]/g, "")}">`).join(""); document.body.appendChild(dl); });</script>
 <script src="/pwa.js" defer></script>
 </body>
 </html>

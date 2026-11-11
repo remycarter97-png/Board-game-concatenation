@@ -167,6 +167,7 @@
   <footer>Tournaments are saved in this browser.</footer>
 </div>
 <script src="/tools/tournament-core.js"></script>
+<script src="/tools/bgstats.js"></script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id), TC = window.TourneyCore;
@@ -235,6 +236,19 @@
       ${{ matches: matchesHtml, bracket: bracketHtml, standings: standingsHtml, entrants: entrantsHtml }[tab]()}
       <section class="card"><div class="row"><button class="link danger" type="button" id="delT">Delete this tournament</button></div></section>`;
   }
+  // A finished match as a BG Stats play. Teams send each member, with the team name.
+  async function matchPlay(m) {
+    const o = m.result.order.filter((id) => id !== TC.BYE), sc = m.result.scores || {}, hasScores = !m.result.picked && o.every((id) => sc[id] !== undefined && sc[id] !== "");
+    const { ties } = hasScores ? TC.orderFromScores(T, Object.fromEntries(o.map((id) => [id, sc[id]]))) : { ties: [] };
+    const tiePicked = hasScores && TC.tieMatters(T, m, o, ties);
+    // Equal scores share a place, unless a tie-break picked the order.
+    const rank = (i) => (hasScores && !tiePicked ? 1 + o.filter((id) => (T.lowWins ? Number(sc[id]) < Number(sc[o[i]]) : Number(sc[id]) > Number(sc[o[i]]))).length : i + 1);
+    const players = o.flatMap((id, i) => { const e = T.entrants.find((x) => x.id === id), r = rank(i), base = { score: hasScores ? sc[id] : undefined, rank: r, winner: r === 1 };
+      return e.members.length ? e.members.map((n) => ({ ...base, name: n, team: e.name })) : [{ ...base, name: e.name }]; });
+    const lbl = m.bracket === "GF" ? "Grand final" : m.bracket === "RR" || m.bracket === "S" ? m.label || `Round ${m.round}` : m.label;
+    return BGStats.play({ id: `${T.id}-${m.id}`, end: m.result.at, comments: [T.name, lbl].filter(Boolean).join(" · "),
+      game: { name: T.game || T.name, bggId: await BGStats.bggIdFor(T.game), lowWins: T.lowWins, noPoints: !hasScores }, players });
+  }
   function matchesHtml() {
     const groups = new Map();
     for (const m of T.matches) { if (!TC.needed(T, m) && !m.result) continue; const ps = TC.players(T, m); if (TC.isAuto(T, m)) continue; if (ps.every((p) => p !== undefined) && ps.filter((p) => p !== TC.BYE).length < 2 && !m.result) continue;
@@ -242,6 +256,7 @@
     const byes = T.byes.length ? `<p class="note">Byes: ${T.byes.map((b) => `round ${b.round}: ${esc(nm(b.e))}${b.points ? " (counts as a win)" : " (sits out)"}`).join(" · ")}</p>` : "";
     const next = T.format === "swiss" && TC.currentRound(T) < T.rounds ? `<p class="note">Round ${TC.currentRound(T) + 1} is paired as soon as every match in round ${TC.currentRound(T)} has a result.</p>` : "";
     return `<section class="card"><h2 class="sec">Matches</h2><p class="sub">Enter scores and save; ${T.lowWins ? "lowest" : "highest"} score wins. ${T.size === 2 ? "Or tap who won." : ""}</p>
+      ${T.matches.some((m) => m.result) ? `<div class="bgs"><label class="bgs-loc"><span>BG Stats location</span><input type="text" data-bgsloc maxlength="40" value="${esc(BGStats.getLocation())}" placeholder="Home"></label><span class="note">Each finished match can be sent to BG Stats as a play${T.game ? "" : " (add the game's name when you set up a tournament so BG Stats knows which game)"}.</span></div>` : ""}
       ${[...groups].map(([g, ms]) => `<div class="rgroup"><h3>${esc(g)}</h3><div class="matches">${ms.map(matchHtml).join("")}</div></div>`).join("") || `<p class="empty">No matches yet.</p>`}${byes}${next}</section>`;
   }
   function matchHtml(m) {
@@ -250,7 +265,7 @@
     if (!done && !ready) return `<div class="match wait"><span class="lbl">${esc(lbl)}</span>${ps.map((p) => `<div class="who out"><span>${p === undefined ? "Waiting…" : esc(nm(p))}</span></div>`).join("")}</div>`;
     if (done && !edit) { const o = m.result.order, sc = m.result.scores || {}, go = m.bracket === "RR" || m.bracket === "S" ? 1 : T.size === 2 ? 1 : T.advance;
       return `<div class="match done"><span class="lbl">${esc(lbl)}</span>${o.map((id, i) => `<div class="who${i >= go ? " out" : ""}"><span>${i < go ? "✓ " : ""}${esc(nm(id))}</span><span>${sc[id] ?? ""}</span><span></span></div>`).join("")}
-        <div class="row"><button class="link" type="button" data-edit="${m.id}">Change result</button></div></div>`; }
+        <div class="row"><button class="link" type="button" data-edit="${m.id}">Change result</button><button class="link" type="button" data-bgs="${m.id}">📊 Send to BG Stats</button></div></div>`; }
     const pick = tiePick[m.id];
     return `<div class="match"><span class="lbl">${esc(lbl)}</span>
       ${real.map((p) => `<div class="who"><label for="sc-${m.id}-${p}">${esc(nm(p))}</label><input type="number" id="sc-${m.id}-${p}" data-sc="${m.id}" data-p="${p}" value="${esc(tiePick[m.id]?.scores[p] ?? m.result?.scores?.[p] ?? "")}" inputmode="numeric" data-focus="sc-${m.id}-${p}">
@@ -297,9 +312,10 @@
     if (!T) return;
     if (d.tab) { tab = d.tab; render(); }
     else if (d.save) saveMatch(d.save);
+    else if (d.bgs) matchPlay(T.matches.find((x) => x.id === d.bgs)).then((p) => BGStats.sendFrom(b, p));
     else if (d.won) { const [id, p] = d.won.split(":"), m = T.matches.find((x) => x.id === id), other = TC.players(T, m).find((x) => x && x !== TC.BYE && x !== p);
       if (m.result && T.matches.some((x) => x.result && x.slots.some((s) => s.m === id)) && !confirm("Changing this clears the results that came after it. Go ahead?")) return;
-      editing.delete(id); TC.setResult(T, id, { [p]: T.lowWins ? 0 : 1, [other]: T.lowWins ? 1 : 0 }, [p, other]); save(); }
+      editing.delete(id); TC.setResult(T, id, { [p]: T.lowWins ? 0 : 1, [other]: T.lowWins ? 1 : 0 }, [p, other]); m.result.picked = true; save(); }
     else if (d.tiewin) { const [id, p] = d.tiewin.split(":"); saveMatch(id, p); }
     else if (d.edit) { editing.add(d.edit); render(); }
     else if (d.canceledit) { editing.delete(d.canceledit); delete tiePick[d.canceledit]; render(); }

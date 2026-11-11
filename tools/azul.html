@@ -165,6 +165,7 @@
   <footer>Scoring follows the Azul rulebook. Your game is saved in this browser, so you can close the page mid-game.</footer>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/tools/bgstats.js"></script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
@@ -257,7 +258,16 @@
       <div class="tw"><table><thead><tr><th>Player</th><th>Board</th><th>Rows</th><th>Columns</th><th>Colors</th><th>Final</th></tr></thead><tbody>
       ${rows.map((x) => `<tr class="${winners.includes(x) ? "win" : ""}"><td>${esc(S.players[x.i].name)}</td><td>${x.board}</td><td>${x.rows} <small>+${x.rows * 2}</small></td><td>${x.cols} <small>+${x.cols * 7}</small></td><td>${x.colors} <small>+${x.colors * 10}</small></td><td><b>${x.final}</b></td></tr>`).join("")}</tbody></table></div>
       ${winners.length === 1 && rows[1] && rows[1].final === top.final ? `<p class="note">Tied on points; ${esc(S.players[top.i].name)} wins with more complete rows.</p>` : ""}
-      <div class="row"><button class="btn yellow" type="button" id="again">New game, same players</button><button class="link" type="button" id="undoFinish">Oops, keep playing</button></div></section>`;
+      <div class="row"><button class="btn yellow" type="button" id="again">New game, same players</button><button class="link" type="button" id="undoFinish">Oops, keep playing</button></div>
+      ${BGStats.block("azul", "Opens BG Stats with this game filled in.")}</section>`;
+  }
+  // The finished game as a BG Stats play: ranks follow the final table (points, then complete rows).
+  function azulPlay() {
+    const rows = [...S.done].sort((a, b) => b.final - a.final || b.rows - a.rows), top = rows[0];
+    return BGStats.play({ id: S.id || `azul-${S.ended || Date.now()}`, start: S.started, end: S.ended || Date.now(),
+      game: { name: "Azul", bggId: 230802 },
+      players: rows.map((x) => ({ name: S.players[x.i].name, score: x.final, winner: x.final === top.final && x.rows === top.rows,
+        rank: 1 + rows.filter((y) => y.final > x.final || (y.final === x.final && y.rows > x.rows)).length })) });
   }
   function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("on"), 1300); }
 
@@ -274,17 +284,18 @@
     if (d.rmp) { S.players.splice(Number(d.rmp), 1); S.cur = Math.min(S.cur, S.players.length - 1); save(); render(); return; }
     if (b.id === "again") { S = { players: S.players.map((q) => newPlayer(q.name)), cur: 0, roundNo: 1, history: [], done: null }; save(); render(); return; }
     if (b.id === "undoFinish") { const h = S.history.pop(); if (h) { S.players = h.players; S.roundNo = h.roundNo; } S.done = null; save(); render(); return; }
+    if (d.bgs && S.done) { BGStats.sendFrom(b, azulPlay()); return; }
     if (S.done) return;
-    if (d.t) { const [r, c] = d.t.split(",").map(Number); if (p.wall[r][c]) return; const i = p.round.findIndex(([a, z]) => a === r && z === c);
+    if (d.t) { S.started = S.started || Date.now(); const [r, c] = d.t.split(",").map(Number); if (p.wall[r][c]) return; const i = p.round.findIndex(([a, z]) => a === r && z === c);
       const lowest = p.round.length ? p.round.at(-1)[0] : -1;
       if (i >= 0 && i < p.round.length - 1) toast("Take back the lower tiles first");
       else if (i >= 0) { p.round.pop(); save(); render(); toast("Taken back"); }
       else if (p.round.some(([a]) => a === r)) toast(`Row ${r + 1} already has a tile this round`);
       else if (r < lowest) toast(`Scoring goes top to bottom: row ${r + 1} is above row ${lowest + 1}`);
       else { const col = colorAt(r, c); p.round.push([r, c]); save(); const pts = roundScores(p).each.at(-1); render(`${r},${c}`); toast(`${col.name} +${pts}`); } return; }
-    if (d.floor) { const i = Number(d.floor); p.floor = p.floor === i + 1 ? i : i + 1; save(); render(); return; }
+    if (d.floor) { S.started = S.started || Date.now(); const i = Number(d.floor); p.floor = p.floor === i + 1 ? i : i + 1; save(); render(); return; }
     if (b.id === "next") { const lastRound = someoneFinishedRow(); commitRound(); S.roundNo++; confirmReset = false; save(); render(); toast(lastRound ? "A row is complete: tap Finish game" : `Round ${S.roundNo}`); scrollTo({ top: 0 }); return; }
-    if (b.id === "finish") { commitRound(); S.done = S.players.map((q, i) => { const bo = bonuses(q.wall); return { i, board: q.total, ...bo, final: q.total + bo.points }; }); save(); clearTimeout(toastT); $("toast").classList.remove("on"); render(); scrollTo({ top: 0 }); return; }
+    if (b.id === "finish") { commitRound(); S.ended = Date.now(); S.id = S.id || `azul-${S.started || S.ended}`; S.done = S.players.map((q, i) => { const bo = bonuses(q.wall); return { i, board: q.total, ...bo, final: q.total + bo.points }; }); save(); clearTimeout(toastT); $("toast").classList.remove("on"); render(); scrollTo({ top: 0 }); return; }
     if (b.id === "reset") { confirmReset = true; render(); $("resetNo")?.focus(); return; }
     if (b.id === "resetNo") { confirmReset = false; render(); return; }
     if (b.id === "resetYes") { S = { players: S.players.map((q) => newPlayer(q.name)), cur: 0, roundNo: 1, history: [], done: null }; confirmReset = false; save(); render(); return; }
