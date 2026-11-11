@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Insert Guides</title>
+<meta name="description" content="How each 3D-printed insert goes back in its box: steps, our photos and the designers' photos.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#fff3e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1528" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Game Shelf">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff3e2; --surface: #fffdf8; --surface-2: #fdeedb; --ink: #3d2a4f; --ink-2: #6b5878; --muted: #9b8aa5;
+    --line: #efdcc2; --outline: #3d2a4f; --accent: #ff7a5a; --accent-ink: #ffffff; --accent-soft: #ffe2d8;
+    --yellow: #ffd45c; --yellow-soft: #fff1c2; --mint: #8be0bd; --mint-soft: #ddf6ea;
+    --ok: #24a26b; --danger: #d43c41; --warn: #a35a00; --warn-soft: #ffe8cc;
+    --edge: 2.5px solid var(--outline); --pop: 4px 4px 0 var(--outline); --pop-sm: 3px 3px 0 var(--outline);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+      --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+      --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1528; --surface: #2a2039; --surface-2: #342846; --ink: #fff3e2; --ink-2: #d8c8e0; --muted: #a795b3;
+    --line: #46375a; --outline: #0c0714; --accent: #ff8f73; --accent-ink: #1c1528; --accent-soft: #4a2b2a;
+    --yellow-soft: #4a3d1e; --mint-soft: #1f3d33; --ok: #6fd3ac; --danger: #ff8a80; --warn: #ffb36b; --warn-soft: #4a321c; --hl: #6b44c9;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; color: var(--ink); font: 16px/1.5 Nunito, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--bg); background-image: radial-gradient(circle, color-mix(in srgb, var(--outline) 9%, transparent) 1.3px, transparent 1.7px); background-size: 22px 22px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header (matches the other pages) */
+  header.top { padding: 36px 0 8px; }
+  .titlebar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .brand { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; }
+  .logo { width: 72px; height: 72px; flex: none; transform: rotate(-5deg); filter: drop-shadow(4px 4px 0 var(--outline)); transition: transform .3s; }
+  .logo:hover { transform: rotate(4deg) scale(1.05); }
+  h1 { font: 700 clamp(2rem, 4vw, 2.9rem)/1.05 Fredoka, ui-rounded, system-ui, sans-serif; margin: 0; letter-spacing: -0.01em; }
+  h1 .hl { background: linear-gradient(transparent 62%, var(--hl, var(--yellow)) 62% 92%, transparent 92%); padding: 0 2px; }
+  .tagline { margin: 6px 0 0; color: var(--ink-2); font-size: 1.05rem; font-weight: 600; }
+  .pagenav { display: inline-flex; gap: 4px; padding: 3px; background: var(--surface); border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm); }
+  .pagenav a { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 .98rem Fredoka, ui-rounded, sans-serif; color: var(--ink-2); text-decoration: none; }
+  .pagenav a:hover { color: var(--ink); background: var(--surface-2); }
+  .pagenav a[aria-current="page"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+
+  /* Shared bits */
+  .card { background: var(--surface); border: var(--edge); border-radius: 22px; box-shadow: var(--pop); padding: 18px 20px; min-width: 0; display: grid; gap: 14px; align-content: start; }
+  h2 { font: 700 1.3rem/1.2 Fredoka, ui-rounded, sans-serif; margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  h2 small { font: 700 .88rem Nunito, sans-serif; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: var(--edge); border-radius: 14px; box-shadow: var(--pop-sm);
+    background: var(--surface); color: var(--ink); font: 600 1rem Fredoka, ui-rounded, sans-serif; transition: transform .12s, box-shadow .12s; text-decoration: none; }
+  .btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--outline); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--outline); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.yellow { background: var(--yellow); color: #3d2a4f; }
+  .btn.big { min-height: 52px; font-size: 1.15rem; padding: 0 22px; }
+  .btn.sm { min-height: 34px; padding: 0 12px; font-size: .9rem; border-radius: 11px; }
+  .link { border: 0; background: none; padding: 4px 2px; color: var(--accent); font-weight: 800; font-size: .92rem; }
+  .link:hover { text-decoration: underline; }
+  .link.danger { color: var(--danger); }
+  input[type=text], input[type=number] { height: 44px; border: var(--edge); border-radius: 13px; background: var(--surface); padding: 0 12px; font-weight: 700; min-width: 0; box-shadow: var(--pop-sm); }
+  input:focus { outline: none; box-shadow: 0 0 0 4px var(--yellow), 3px 3px 0 4px var(--outline); }
+  input[readonly] { opacity: .65; }
+  .note { margin: 0; font-size: .88rem; color: var(--ink-2); font-weight: 600; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 2px solid var(--outline); border-radius: 12px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: none; min-height: 30px; padding: 0 12px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--yellow); color: #3d2a4f; box-shadow: inset 0 0 0 2px var(--outline); }
+  .ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ctl > span { font: 600 .75rem Fredoka, ui-rounded, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+
+  .crumbs { margin-top: 18px; } .crumbs a { color: var(--accent); font-weight: 800; text-decoration: none; } .crumbs a:hover { text-decoration: underline; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .note { margin: 0; color: var(--ink-2); font-weight: 700; font-size: .86rem; }
+  .sub { margin: 0 0 10px; color: var(--ink-2); font-weight: 600; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  main { display: grid; gap: 18px; margin-top: 14px; }
+  h2.sec { margin: 0 0 10px; font: 700 1.2rem Fredoka, ui-rounded, sans-serif; }
+  h3.sec3 { margin: 0 0 6px; font: 700 1.02rem Fredoka, ui-rounded, sans-serif; }
+  .lock { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  input[type=text], input[type=password], input[type=search], textarea, select { font: inherit; color: var(--ink); background: var(--surface); border: 2px solid var(--outline); border-radius: 12px; padding: 8px 10px; }
+  textarea { width: 100%; min-height: 70px; resize: vertical; }
+  .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .tools input[type=search] { flex: 1 1 220px; min-width: 0; }
+  .chip { min-height: 34px; padding: 0 12px; border-radius: 999px; border: 2px solid var(--line); background: var(--surface); font-weight: 800; color: var(--ink); }
+  .chip[aria-pressed="true"] { border-color: var(--outline); background: var(--yellow); color: #3d2a4f; box-shadow: 2px 2px 0 var(--outline); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+  .gc { display: grid; grid-template-rows: 120px auto; border: 2px solid var(--outline); border-radius: 14px; overflow: hidden; background: var(--surface); text-decoration: none; color: var(--ink); box-shadow: 3px 3px 0 var(--outline); }
+  .gc:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--outline); }
+  .gc .im { background: var(--yellow-soft) center / cover no-repeat; display: grid; place-items: center; font-size: 2rem; }
+  .gc .tx { padding: 8px 10px; display: grid; gap: 4px; }
+  .gc b { font: 700 .98rem Fredoka, ui-rounded, sans-serif; line-height: 1.2; }
+  .badges { display: flex; flex-wrap: wrap; gap: 4px; }
+  .bd { font-size: .7rem; font-weight: 800; padding: 1px 6px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); color: var(--ink-2); }
+  .bd.mine { background: var(--mint-soft, #d8f5e6); color: #23573d; border-color: #9fd6b8; }
+  .back { font-weight: 800; color: var(--accent); text-decoration: none; }
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .step { border: 2px solid var(--line); border-radius: 14px; padding: 10px 12px; display: grid; gap: 8px; background: var(--surface); }
+  .step .hd { display: flex; gap: 10px; align-items: baseline; }
+  .step .n { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--yellow); border: 2px solid var(--outline); font: 700 .95rem Fredoka, ui-rounded, sans-serif; }
+  .step p { margin: 0; white-space: pre-wrap; }
+  .step input[type=text] { width: 100%; }
+  .thumbs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .thumbs button.ph { flex: none; width: 140px; height: 105px; border: 2px solid var(--outline); border-radius: 10px; padding: 0; background: #eee center / cover no-repeat; cursor: zoom-in; }
+  .thumbs button.ph.gone { display: none; }
+  .mph { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .mph figure { margin: 0; display: grid; gap: 6px; }
+  .mph figure > button { aspect-ratio: 4 / 3; border: 2px solid var(--outline); border-radius: 10px; padding: 0; background: #eee center / cover no-repeat; cursor: zoom-in; }
+  .mph select, .mph input { font-size: .85rem; padding: 5px 6px; width: 100%; }
+  .src { border-top: 2px dashed var(--line); padding-top: 12px; display: grid; gap: 8px; }
+  .src:first-of-type { border-top: 0; padding-top: 0; }
+  .src a.t { font-weight: 800; }
+  .src details summary { cursor: pointer; font-weight: 800; color: var(--ink-2); }
+  .src details p { white-space: pre-wrap; margin: 6px 0 0; font-size: .92rem; }
+  .drive a { font-weight: 800; }
+  .lb { position: fixed; inset: 0; z-index: 60; background: rgba(20,12,30,.92); display: grid; grid-template-rows: auto 1fr auto; padding: calc(10px + var(--sa-t, 0px)) calc(10px + var(--sa-r, 0px)) calc(10px + var(--sa-b, 0px)) calc(10px + var(--sa-l, 0px)); }
+  .lb[hidden] { display: none; }
+  .lb img { max-width: 100%; max-height: 100%; margin: auto; object-fit: contain; align-self: center; justify-self: center; }
+  .lb .bar { display: flex; justify-content: space-between; align-items: center; color: #fff; gap: 8px; }
+  .lb .bar button { color: #fff; background: transparent; border: 2px solid rgba(255,255,255,.5); border-radius: 999px; min-width: 44px; min-height: 44px; font-weight: 800; }
+  .lb .cap { color: #fff; text-align: center; font-weight: 700; }
+  .empty { padding: 14px; border: 2px dashed var(--line); border-radius: 14px; color: var(--ink-2); font-weight: 700; }
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 70; padding: 8px 16px; border-radius: 999px; border: 2px solid var(--outline); background: var(--yellow); color: #3d2a4f; font: 700 1rem Fredoka, ui-rounded, sans-serif; box-shadow: var(--pop-sm); pointer-events: none; opacity: 0; transition: opacity .2s; max-width: 90vw; text-align: center; }
+  .toast.on { opacity: 1; }
+  .upl input[type=file] { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  @media (max-width: 560px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .gc { grid-template-rows: 96px auto; } }
+</style>
+<link rel="stylesheet" href="/safe-area.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <a class="brand" href="/">
+        <svg class="logo" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="3" y="3" width="66" height="66" rx="18" fill="var(--yellow)" stroke="var(--outline)" stroke-width="3"/>
+          <g transform="translate(36 10) rotate(14)"><rect x="0" y="0" width="22" height="22" rx="5" fill="#fff" stroke="var(--outline)" stroke-width="2.5"/>
+            <circle cx="6" cy="6" r="2.2" fill="var(--outline)"/><circle cx="11" cy="11" r="2.2" fill="var(--outline)"/><circle cx="16" cy="16" r="2.2" fill="var(--outline)"/></g>
+          <g transform="translate(9 20) scale(1.75)"><path d="M12 2.6a3.3 3.3 0 0 1 3.3 3.3c0 1-.4 1.8-1.1 2.4 2.7.5 6.5 1.7 6.5 3.5 0 1.1-1.5 1.6-3.3 1.4l2.3 6.6c.3.8-.3 1.6-1.1 1.6h-3.3L12 16.3l-3.3 5.1H5.4c-.8 0-1.4-.8-1.1-1.6l2.3-6.6c-1.8.2-3.3-.3-3.3-1.4 0-1.8 3.8-3 6.5-3.5-.7-.6-1.1-1.4-1.1-2.4A3.3 3.3 0 0 1 12 2.6Z" fill="var(--accent)" stroke="var(--outline)" stroke-width="1.4" stroke-linejoin="round"/></g>
+        </svg>
+        <div>
+          <h1>Insert <span class="hl">Guides</span></h1>
+          <p class="tagline">Every tray back where it belongs.</p>
+        </div>
+      </a>
+      <nav class="pagenav" aria-label="Pages"><a href="/">Games</a><a href="/stats">Charts</a><a href="/tools" aria-current="page">Tools</a></nav>
+    </div>
+  </header>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools">‹ All tools</a></nav>
+  <main id="app"><section class="card"><p class="note">Loading…</p></section></main>
+  <footer>Designer photos and notes belong to their designers and link back to their pages. Private to the two of us: the guides need the shelf code.</footer>
+</div>
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Photo"><div class="bar"><button type="button" id="lbPrev" aria-label="Previous photo">‹</button><span id="lbN"></span><button type="button" id="lbNext" aria-label="Next photo">›</button><button type="button" id="lbClose" aria-label="Close">✕</button></div><img id="lbImg" alt=""><p class="cap" id="lbCap"></p></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/tools/shelf-core.js"></script>
+<script src="/tools/insert-core.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id), IC = window.InsertCore;
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  let pin = null; try { pin = localStorage.getItem(IC.CODE_KEY); } catch (e) {}
+  let state = "loading", list = [], filter = "all", query = "", msg = "", cur = null, editing = false, draft = null, saving = "", toastT = null, lbList = [], lbI = 0;
+  const toast = (t) => { const el = $("toast"); el.textContent = t; el.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("on"), 1800); };
+  const SITE = { makerworld: "MakerWorld", printables: "Printables", thingiverse: "Thingiverse" };
+  const route = () => decodeURIComponent((location.hash.match(/g=([^&]+)/) || [])[1] || "");
+
+  async function boot() {
+    if (!pin) { state = "locked"; try { state = (await IC.hasCode()) ? "locked" : "nocode"; } catch (e) { msg = "Couldn't reach the guides. Check your connection."; } return render(); }
+    try { const r = await IC.list(pin); if (r.error) return fail(r.error); list = r.games; state = "list"; } catch (e) { return failNet(e); }
+    if (route()) return openGame(route());
+    render();
+  }
+  function fail(code) {
+    if (code === "wrong_pin") { try { localStorage.removeItem(IC.CODE_KEY); } catch (e) {} pin = null; state = "locked"; msg = "That code doesn't match."; }
+    else if (code === "no_code") { state = "nocode"; }
+    else msg = "Something went wrong (" + code + ").";
+    render();
+  }
+  function failNet(e) { msg = /too_many/.test(e.message) ? "Too many wrong codes. Wait 15 minutes and try again." : "Couldn't reach the guides. Check your connection."; render(); }
+
+  async function openGame(id) {
+    try { const r = await IC.get(pin, id); if (r.error) return r.error === "not_found" ? (location.hash = "", render()) : fail(r.error);
+      cur = { ...r.game, photos: r.photos }; editing = false; draft = null; state = "game"; render(); scrollTo(0, 0); } catch (e) { failNet(e); }
+  }
+  window.addEventListener("hashchange", () => { if (state === "locked" || state === "nocode") return; const id = route(); if (id) openGame(id); else { state = "list"; cur = null; render(); refreshList(); } });
+  async function refreshList() { try { const r = await IC.list(pin); if (!r.error) { list = r.games; if (state === "list") render(); } } catch (e) {} }
+
+  /* ---------- Views ---------- */
+  function render() {
+    const y = state === "list" ? scrollY : 0;
+    $("app").innerHTML = state === "locked" || state === "nocode" ? lockHtml() : state === "list" ? listHtml() : state === "game" ? gameHtml() : `<section class="card"><p class="note">${esc(msg || "Loading…")}</p></section>`;
+    if (state === "list") scrollTo(0, y);
+  }
+  function lockHtml() {
+    const fresh = state === "nocode";
+    return `<section class="card" aria-labelledby="lockH"><h2 class="sec" id="lockH">🔒 ${fresh ? "Set the shelf code" : "Enter the shelf code"}</h2>
+      <p class="sub">${fresh ? "The insert guides are private. Choose a code of 6 or more characters; it's the same code as the Shelf finder, so share it with Jonathan." : "The insert guides are private. Use the same code as the Shelf finder. This device remembers it."}</p>
+      <div class="lock"><label class="vh" for="pinIn">Code</label><input type="password" id="pinIn" autocomplete="off" style="width:12em" placeholder="Code"><button class="btn sm yellow" type="button" id="unlockBtn">${fresh ? "Set code and open" : "Open"}</button><span class="note" role="status">${esc(msg)}</span></div></section>`;
+  }
+  const img = (p) => IC.photoUrl(p);
+  function shown() {
+    const q = IC.norm(query);
+    return list.filter((g) => !g.hidden).filter((g) => !q || IC.norm(g.name).includes(q))
+      .filter((g) => filter === "all" || (filter === "mine" ? g.steps || g.photos : filter === "todo" ? !g.steps : filter === "nophotos" ? !g.cover : true));
+  }
+  function listHtml() {
+    const s = shown(), mineN = list.filter((g) => g.steps || g.photos).length;
+    return `<section class="card"><h2 class="sec">Find a game</h2>
+      <div class="tools"><label class="vh" for="q">Search</label><input type="search" id="q" placeholder="Search ${list.length} games…" value="${esc(query)}" autocomplete="off">
+      <button class="btn sm" type="button" id="addGame">＋ Add a game</button></div>
+      <div class="tools" style="margin-top:10px" role="group" aria-label="Show">${[["all", "All"], ["mine", `Our steps & photos (${mineN})`], ["todo", "No steps yet"], ["nophotos", "No photos"]].map(([k, t]) => `<button type="button" class="chip" data-filter="${k}" aria-pressed="${filter === k}">${t}</button>`).join("")}</div></section>
+      <section aria-label="Games">${s.length ? `<div class="grid">${s.map(cardHtml).join("")}</div>` : `<p class="empty">No games match.</p>`}</section>`;
+  }
+  function cardHtml(g) {
+    const kinds = g.kinds.map((k) => `<span class="bd">${SITE[k] || k}</span>`).join("") + (g.drive ? `<span class="bd">Drive</span>` : "");
+    const mine = (g.steps ? `<span class="bd mine">${g.steps} step${g.steps > 1 ? "s" : ""}</span>` : "") + (g.photos ? `<span class="bd mine">📷 ${g.photos}</span>` : "");
+    return `<a class="gc" href="#g=${encodeURIComponent(g.id)}"><span class="im" ${g.cover ? `style="background-image:url('${esc(img(g.cover))}')"` : ""}>${g.cover ? "" : "📦"}</span>
+      <span class="tx"><b>${esc(g.name)}</b><span class="badges">${mine}${kinds}</span></span></a>`;
+  }
+  function gameHtml() {
+    const g = cur, steps = editing ? draft.steps : g.steps, srcs = g.sources;
+    const stepPhotos = (i) => g.photos.filter((p) => p.step === i);
+    return `<section class="card"><a class="back" href="#">‹ All games</a>
+      <h2 class="sec" style="margin-top:8px;font-size:1.5rem">${esc(g.name)}</h2>
+      <p class="sub">${srcs.length ? `${srcs.length} model${srcs.length > 1 ? "s" : ""} from ${[...new Set(srcs.map((s) => SITE[s.src]))].join(", ")}` : "No designer pages linked"}${g.drive.length ? " · print files in Drive" : ""}${g.bgg ? ` · <a href="https://boardgamegeek.com/boardgame/${g.bgg}" target="_blank" rel="noopener">BGG ↗</a>` : ""}</p></section>
+
+      <section class="card" aria-labelledby="stH"><div class="row" style="justify-content:space-between"><h2 class="sec" id="stH" style="margin:0">📦 Packing it back in</h2>
+        ${editing ? `<div class="row"><button class="btn sm yellow" type="button" id="saveSteps">Save</button><button class="link" type="button" id="cancelSteps">Cancel</button></div>` : `<button class="btn sm" type="button" id="editSteps">${steps.length ? "Edit steps" : "Write the steps"}</button>`}</div>
+        <p class="sub" style="margin-top:6px">Bottom of the box first. ${editing ? "Add a step for each layer or tray; attach your photos to steps below." : ""}<span class="note" role="status"> ${esc(saving)}</span></p>
+        ${steps.length || editing ? `<ol class="steps">${steps.map((s, i) => editing ? editStepHtml(s, i, steps.length) : `<li class="step"><div class="hd"><span class="n">${i + 1}</span><div><b>${esc(s.title || `Step ${i + 1}`)}</b>${s.text ? `<p>${esc(s.text)}</p>` : ""}</div></div>${stepPhotos(i).length ? `<div class="thumbs">${stepPhotos(i).map((p) => phBtn(img(p.path), p.caption, "mine")).join("")}</div>` : ""}</li>`).join("")}</ol>` : `<p class="empty">No packing steps yet. ${srcs.some((s) => s.summary) ? "The designer notes below may say how it goes back in." : ""} Tap “Write the steps” to add them.</p>`}
+        ${editing ? `<div class="row" style="margin-top:10px"><button class="btn sm" type="button" id="addStep">＋ Add a step</button></div>
+          <label class="sec3" for="notesIn" style="display:block;margin-top:14px">Other notes</label><textarea id="notesIn" placeholder="Sleeved or not, what's missing, setup tips…">${esc(draft.notes)}</textarea>`
+          : g.notes ? `<h3 class="sec3" style="margin-top:14px">Notes</h3><p style="white-space:pre-wrap;margin:0">${esc(g.notes)}</p>` : ""}</section>
+
+      <section class="card" aria-labelledby="phH"><div class="row" style="justify-content:space-between"><h2 class="sec" id="phH" style="margin:0">📷 Our photos</h2>
+        <label class="btn sm yellow upl" for="up">Add photos<input type="file" id="up" accept="image/*" multiple></label></div>
+        <p class="sub" style="margin-top:6px">For when the designer's photos don't show enough. Pick which step each one belongs to.</p>
+        ${g.photos.length ? `<div class="mph">${g.photos.map((p) => `<figure><button type="button" class="ph" data-lb="mine" data-src="${esc(img(p.path))}" data-cap="${esc(p.caption)}" style="background-image:url('${esc(img(p.path))}')" aria-label="View photo${p.caption ? ": " + esc(p.caption) : ""}"></button>
+          <input type="text" data-cap-id="${p.id}" value="${esc(p.caption)}" placeholder="Caption" maxlength="300" aria-label="Caption">
+          <div class="row"><select data-step-id="${p.id}" aria-label="Step" style="flex:1">${["", ...g.steps.map((_, i) => i)].map((v) => `<option value="${v}"${(p.step ?? "") === v ? " selected" : ""}>${v === "" ? "No step" : `Step ${v + 1}`}</option>`).join("")}</select>
+          <button class="link danger" type="button" data-rm="${p.id}" aria-label="Remove photo">Remove</button></div></figure>`).join("")}</div>` : `<p class="empty">No photos of ours yet.</p>`}</section>
+
+      ${srcs.length ? `<section class="card" aria-labelledby="dsH"><h2 class="sec" id="dsH">From the designers</h2>${srcs.map(srcHtml).join("")}</section>` : ""}
+      ${g.drive.length ? `<section class="card drive" aria-labelledby="drH"><h2 class="sec" id="drH">Print files in Jonathan's Drive</h2><p class="sub">Opens for anyone the folder is shared with.</p><ul>${g.drive.map((d) => `<li><a href="https://drive.google.com/drive/folders/${encodeURIComponent(d.id)}" target="_blank" rel="noopener">📁 ${esc(d.name)} ↗</a></li>`).join("")}</ul></section>` : ""}`;
+  }
+  const phBtn = (src, cap, group) => `<button type="button" class="ph" data-lb="${group}" data-src="${esc(src)}" data-cap="${esc(cap || "")}" style="background-image:url('${esc(src)}')" aria-label="View photo"><img src="${esc(src)}" alt="" hidden onerror="this.parentNode.classList.add('gone')"></button>`;
+  function srcHtml(s, i) {
+    return `<div class="src"><div><a class="t" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)} ↗</a><div class="note">${esc(s.designer || "")} · ${SITE[s.src] || s.src}</div></div>
+      ${s.pics.length ? `<div class="thumbs">${s.pics.map((p) => phBtn(p, s.title, "s" + i)).join("")}</div>` : ""}
+      ${s.summary ? `<details><summary>Designer's notes</summary><p>${esc(s.summary)}</p></details>` : s.src !== "makerworld" ? `<p class="note">Designer's notes are on the <a href="${esc(s.url)}" target="_blank" rel="noopener">${SITE[s.src]} page ↗</a>.</p>` : ""}</div>`;
+  }
+  function editStepHtml(s, i, n) {
+    return `<li class="step"><div class="hd"><span class="n">${i + 1}</span><input type="text" data-st="${i}" value="${esc(s.title)}" placeholder="What goes here (e.g. Card tray, left side)" maxlength="120" aria-label="Step ${i + 1} title"></div>
+      <textarea data-sx="${i}" placeholder="Which pieces go in it, which way it faces, what sits on top…" aria-label="Step ${i + 1} details">${esc(s.text)}</textarea>
+      <div class="row"><button class="link" type="button" data-up="${i}"${i ? "" : " disabled"}>↑ Up</button><button class="link" type="button" data-down="${i}"${i < n - 1 ? "" : " disabled"}>↓ Down</button><button class="link danger" type="button" data-del="${i}">Delete step</button></div></li>`;
+  }
+  function readDraft() { if (!editing) return; document.querySelectorAll("[data-st]").forEach((el) => { draft.steps[+el.dataset.st].title = el.value; }); document.querySelectorAll("[data-sx]").forEach((el) => { draft.steps[+el.dataset.sx].text = el.value; }); const n = $("notesIn"); if (n) draft.notes = n.value; }
+
+  /* ---------- Lightbox ---------- */
+  function openLb(group, src) { lbList = [...document.querySelectorAll(`button.ph[data-lb="${group}"]:not(.gone)`)].map((b) => ({ src: b.dataset.src, cap: b.dataset.cap })); lbI = Math.max(0, lbList.findIndex((x) => x.src === src)); showLb(); $("lb").hidden = false; $("lbClose").focus(); }
+  function showLb() { const x = lbList[lbI]; $("lbImg").src = x.src; $("lbCap").textContent = x.cap || ""; $("lbN").textContent = `${lbI + 1} / ${lbList.length}`; $("lbPrev").disabled = lbList.length < 2; $("lbNext").disabled = lbList.length < 2; }
+  const closeLb = () => { $("lb").hidden = true; $("lbImg").removeAttribute("src"); };
+  document.addEventListener("keydown", (e) => { if ($("lb").hidden) return; if (e.key === "Escape") closeLb(); if (e.key === "ArrowRight") { lbI = (lbI + 1) % lbList.length; showLb(); } if (e.key === "ArrowLeft") { lbI = (lbI - 1 + lbList.length) % lbList.length; showLb(); } });
+
+  /* ---------- Actions ---------- */
+  document.addEventListener("click", async (e) => {
+    const b = e.target.closest("button"); if (!b) return; const d = b.dataset;
+    if (b.id === "lbClose") return closeLb();
+    if (b.id === "lbNext") { lbI = (lbI + 1) % lbList.length; return showLb(); }
+    if (b.id === "lbPrev") { lbI = (lbI - 1 + lbList.length) % lbList.length; return showLb(); }
+    if (d.lb) return openLb(d.lb, d.src);
+    if (b.id === "unlockBtn") { const p = $("pinIn").value.trim(); msg = "";
+      if (state === "nocode") { if (p.length < 6) { msg = "Codes need at least 6 characters."; return render(); }
+        try { const r = await window.ShelfMap.put(p, window.ShelfMap.empty(), null); if (r.error) return fail(r.error); } catch (err) { return failNet(err); } }
+      else if (!p) { msg = "Enter the code."; return render(); }
+      pin = p; try { localStorage.setItem(IC.CODE_KEY, p); } catch (err) {} return boot(); }
+    if (d.filter) { filter = d.filter; return render(); }
+    if (b.id === "addGame") { const name = prompt("Game name"); if (!name || !name.trim()) return;
+      try { const r = await IC.add(pin, name.trim()); if (r.error) return fail(r.error); location.hash = "g=" + encodeURIComponent(r.id); } catch (err) { toast("Couldn't add it"); } return; }
+    if (b.id === "editSteps") { editing = true; draft = { steps: cur.steps.map((s, i) => ({ ...s, _o: i })), notes: cur.notes || "" }; if (!draft.steps.length) draft.steps.push({ title: "", text: "" }); return render(); }
+    if (b.id === "cancelSteps") { editing = false; draft = null; return render(); }
+    if (b.id === "addStep") { readDraft(); draft.steps.push({ title: "", text: "" }); render(); document.querySelector(`[data-st="${draft.steps.length - 1}"]`)?.focus(); return; }
+    if (d.up || d.down || d.del) { readDraft(); const i = +(d.up ?? d.down ?? d.del), S = draft.steps;
+      if (d.up) [S[i - 1], S[i]] = [S[i], S[i - 1]]; else if (d.down) [S[i + 1], S[i]] = [S[i], S[i + 1]]; else S.splice(i, 1);
+      return render(); }
+    if (b.id === "saveSteps") { readDraft(); const kept = draft.steps.filter((s) => s.title.trim() || s.text.trim()), steps = kept.map((s) => ({ title: s.title.trim(), text: s.text.trim() }));
+      const newIndex = (o) => { const k = kept.findIndex((s) => s._o === o); return k < 0 ? null : k; };
+      saving = "Saving…"; render();
+      try { const r = await IC.save(pin, cur.id, steps, draft.notes.trim(), cur.updated_at);
+        if (r.error === "conflict") { saving = ""; toast("Jonathan changed this guide meanwhile. Showing the latest; your edits are still open."); cur = { ...r.game, photos: cur.photos }; return render(); }
+        if (r.error) return fail(r.error);
+        // Keep photos attached to the same steps when steps moved or were removed.
+        for (const p of cur.photos) if (p.step != null && newIndex(p.step) !== p.step) await IC.setPhoto(pin, p.id, { caption: p.caption, step: newIndex(p.step) });
+        saving = "Saved"; editing = false; draft = null; await openGame(cur.id); } catch (err) { saving = "Couldn't save. Check your connection."; render(); }
+      return; }
+    if (d.rm) { if (!confirm("Remove this photo?")) return; try { await IC.setPhoto(pin, d.rm, { removed: true }); cur.photos = cur.photos.filter((p) => p.id !== d.rm); render(); toast("Removed"); } catch (err) { toast("Couldn't remove it"); } return; }
+  });
+  document.addEventListener("input", (e) => { if (e.target.id === "q") { query = e.target.value; const pos = e.target.selectionStart; render(); const q = $("q"); q.focus(); q.setSelectionRange(pos, pos); } });
+  document.addEventListener("change", async (e) => {
+    const t = e.target;
+    if (t.id === "up") { const files = [...t.files]; t.value = ""; for (const [n, f] of files.entries()) { toast(`Uploading ${n + 1} of ${files.length}…`);
+        try { const r = await IC.upload(pin, cur.id, f, "", null); if (r.error) { toast(r.error === "wrong_pin" ? "The code changed. Enter it again." : "Couldn't upload that photo"); if (r.error === "wrong_pin") return fail("wrong_pin"); continue; }
+          cur.photos.push({ id: r.id, path: r.path, caption: "", step: null }); render(); } catch (err) { toast("Couldn't upload that photo"); } }
+      toast(files.length > 1 ? "Photos added" : "Photo added"); return; }
+    if (t.dataset.capId || t.dataset.stepId) { const id = t.dataset.capId || t.dataset.stepId, p = cur.photos.find((x) => x.id === id);
+      if (t.dataset.capId) p.caption = t.value.trim(); else p.step = t.value === "" ? null : Number(t.value);
+      try { await IC.setPhoto(pin, id, { caption: p.caption, step: p.step }); toast("Saved"); if (t.dataset.stepId) render(); } catch (err) { toast("Couldn't save"); } }
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.id === "pinIn") $("unlockBtn").click(); });
+  boot();
+})();
+</script>
+<script src="/pwa.js" defer></script>
+</body>
+</html>
