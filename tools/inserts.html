@@ -107,7 +107,8 @@
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
   .gc { display: grid; grid-template-rows: 120px auto; border: 2px solid var(--outline); border-radius: 14px; overflow: hidden; background: var(--surface); text-decoration: none; color: var(--ink); box-shadow: 3px 3px 0 var(--outline); }
   .gc:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--outline); }
-  .gc .im { background: var(--yellow-soft) center / cover no-repeat; display: grid; place-items: center; font-size: 2rem; }
+  .gc .im { background: var(--yellow-soft); display: grid; place-items: center; font-size: 2rem; overflow: hidden; }
+  .gc .im img { width: 100%; height: 100%; object-fit: cover; }
   .gc .tx { padding: 8px 10px; display: grid; gap: 4px; }
   .gc b { font: 700 .98rem Fredoka, ui-rounded, sans-serif; line-height: 1.2; }
   .badges { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -121,11 +122,12 @@
   .step p { margin: 0; white-space: pre-wrap; }
   .step input[type=text] { width: 100%; }
   .thumbs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
-  .thumbs button.ph { flex: none; width: 140px; height: 105px; border: 2px solid var(--outline); border-radius: 10px; padding: 0; background: #eee center / cover no-repeat; cursor: zoom-in; }
-  .thumbs button.ph.gone { display: none; }
+  .thumbs button.ph { flex: none; width: 140px; height: 105px; border: 2px solid var(--outline); border-radius: 10px; padding: 0; background: #eee; cursor: zoom-in; overflow: hidden; }
+  button.ph img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  button.ph.gone { display: none; }
   .mph { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
   .mph figure { margin: 0; display: grid; gap: 6px; }
-  .mph figure > button { aspect-ratio: 4 / 3; border: 2px solid var(--outline); border-radius: 10px; padding: 0; background: #eee center / cover no-repeat; cursor: zoom-in; }
+  .mph figure > button { aspect-ratio: 4 / 3; border: 2px solid var(--outline); border-radius: 10px; padding: 0; background: #eee; cursor: zoom-in; overflow: hidden; }
   .mph select, .mph input { font-size: .85rem; padding: 5px 6px; width: 100%; }
   .src { border-top: 2px dashed var(--line); padding-top: 12px; display: grid; gap: 8px; }
   .src:first-of-type { border-top: 0; padding-top: 0; }
@@ -133,12 +135,36 @@
   .src details summary { cursor: pointer; font-weight: 800; color: var(--ink-2); }
   .src details p { white-space: pre-wrap; margin: 6px 0 0; font-size: .92rem; }
   .drive a { font-weight: 800; }
-  .lb { position: fixed; inset: 0; z-index: 60; background: rgba(20,12,30,.92); display: grid; grid-template-rows: auto 1fr auto; padding: calc(10px + var(--sa-t, 0px)) calc(10px + var(--sa-r, 0px)) calc(10px + var(--sa-b, 0px)) calc(10px + var(--sa-l, 0px)); }
+  /* Photo viewer: full screen, each photo fitted to the screen, swipe / arrows / keys to flip, thumbnail strip, double-tap to zoom. */
+  .lb { position: fixed; inset: 0; z-index: 60; background: #0d0a12; color: #fff; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-columns: minmax(0, 1fr); padding: var(--sa-t, 0px) var(--sa-r, 0px) var(--sa-b, 0px) var(--sa-l, 0px); }
   .lb[hidden] { display: none; }
-  .lb img { max-width: 100%; max-height: 100%; margin: auto; object-fit: contain; align-self: center; justify-self: center; }
-  .lb .bar { display: flex; justify-content: space-between; align-items: center; color: #fff; gap: 8px; }
-  .lb .bar button { color: #fff; background: transparent; border: 2px solid rgba(255,255,255,.5); border-radius: 999px; min-width: 44px; min-height: 44px; font-weight: 800; }
-  .lb .cap { color: #fff; text-align: center; font-weight: 700; }
+  .lbtop { display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 16px; min-height: 56px; }
+  .lbtop .n { font: 700 1rem Fredoka, ui-rounded, sans-serif; flex: none; }
+  .lbtop .cap { flex: 1; min-width: 0; font-weight: 700; font-size: .92rem; opacity: .85; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lbtop a { color: #fff; font-weight: 800; font-size: .88rem; flex: none; }
+  .lbtop button, .lbnav { color: #fff; background: rgba(255,255,255,.12); border: 0; border-radius: 999px; width: 44px; height: 44px; font: 800 1.3rem/1 system-ui, sans-serif; cursor: pointer; flex: none; }
+  .lbtop button:hover, .lbnav:hover { background: rgba(255,255,255,.25); }
+  .lbstage { position: relative; min-height: 0; min-width: 0; }
+  .lbtrack { display: flex; height: 100%; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior: contain; }
+  .lbtrack::-webkit-scrollbar { display: none; }
+  .lbtrack.zoomed { overflow: hidden; }
+  .sl { flex: 0 0 100%; height: 100%; scroll-snap-align: center; scroll-snap-stop: always; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; touch-action: pan-x pan-y; }
+  .sl img { flex: none; max-width: 100%; max-height: 100%; object-fit: contain; user-select: none; -webkit-user-drag: none; cursor: zoom-in; opacity: 0; transition: opacity .2s; }
+  .sl img.ok { opacity: 1; }
+  .sl::before { content: "Loading…"; position: absolute; font-weight: 700; opacity: .5; }
+  .sl.done::before { content: none; }
+  .sl.z { overflow: auto; align-items: flex-start; justify-content: flex-start; touch-action: auto; }
+  .sl.z img { max-width: none; max-height: none; cursor: zoom-out; }
+  .lbnav { position: absolute; top: 50%; transform: translateY(-50%); width: 52px; height: 52px; font-size: 2rem; background: rgba(0,0,0,.45); z-index: 2; }
+  .lbnav.prev { left: 12px; } .lbnav.next { right: 12px; }
+  .lbnav[disabled] { display: none; }
+  .lbstrip { display: flex; gap: 6px; overflow-x: auto; padding: 8px 12px 12px; scrollbar-width: thin; justify-content: safe center; }
+  .lbstrip button { flex: none; width: 64px; height: 48px; padding: 0; border: 2px solid transparent; border-radius: 6px; overflow: hidden; background: #222; opacity: .55; cursor: pointer; }
+  .lbstrip button[aria-current="true"] { border-color: var(--yellow); opacity: 1; }
+  .lbstrip img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (hover: none) { .lbnav { display: none; } }
+  @media (max-width: 560px) { .lbstrip button { width: 52px; height: 40px; } .lbtop { padding-left: 12px; } }
+  @media (prefers-reduced-motion: reduce) { .sl img { transition: none; } }
   .empty { padding: 14px; border: 2px dashed var(--line); border-radius: 14px; color: var(--ink-2); font-weight: 700; }
   .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 70; padding: 8px 16px; border-radius: 999px; border: 2px solid var(--outline); background: var(--yellow); color: #3d2a4f; font: 700 1rem Fredoka, ui-rounded, sans-serif; box-shadow: var(--pop-sm); pointer-events: none; opacity: 0; transition: opacity .2s; max-width: 90vw; text-align: center; }
   .toast.on { opacity: 1; }
@@ -170,7 +196,11 @@
   <main id="app"><section class="card"><p class="note">Loading…</p></section></main>
   <footer>Designer photos and notes belong to their designers and link back to their pages. Private to the two of us: the guides need the shelf code.</footer>
 </div>
-<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Photo"><div class="bar"><button type="button" id="lbPrev" aria-label="Previous photo">‹</button><span id="lbN"></span><button type="button" id="lbNext" aria-label="Next photo">›</button><button type="button" id="lbClose" aria-label="Close">✕</button></div><img id="lbImg" alt=""><p class="cap" id="lbCap"></p></div>
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Photos">
+  <div class="lbtop"><span class="n" id="lbN" aria-live="polite"></span><span class="cap" id="lbCap"></span><a id="lbFull" href="#" target="_blank" rel="noopener">Full size ↗</a><button type="button" id="lbClose" aria-label="Close photos">✕</button></div>
+  <div class="lbstage"><div class="lbtrack" id="lbTrack"></div><button type="button" class="lbnav prev" id="lbPrev" aria-label="Previous photo">‹</button><button type="button" class="lbnav next" id="lbNext" aria-label="Next photo">›</button></div>
+  <div class="lbstrip" id="lbStrip" role="group" aria-label="All photos"></div>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="/tools/shelf-core.js"></script>
 <script src="/tools/insert-core.js"></script>
@@ -234,7 +264,7 @@
   function cardHtml(g) {
     const kinds = g.kinds.map((k) => `<span class="bd">${SITE[k] || k}</span>`).join("") + (g.drive && !g.kinds.length ? `<span class="bd">Drive</span>` : "");
     const mine = (g.steps ? `<span class="bd mine">${g.steps} step${g.steps > 1 ? "s" : ""}</span>` : "") + (g.photos ? `<span class="bd mine">📷 ${g.photos}</span>` : "");
-    return `<a class="gc" href="#g=${encodeURIComponent(g.id)}"><span class="im" ${g.cover ? `style="background-image:url('${esc(img(g.cover))}')"` : ""}>${g.cover ? "" : "📦"}</span>
+    return `<a class="gc" href="#g=${encodeURIComponent(g.id)}"><span class="im">${g.cover ? thumb(img(g.cover), true) : "📦"}</span>
       <span class="tx"><b>${esc(g.name)}</b><span class="badges">${mine}${kinds}</span></span></a>`;
   }
   function gameHtml() {
@@ -255,7 +285,7 @@
       <section class="card" aria-labelledby="phH"><div class="row" style="justify-content:space-between"><h2 class="sec" id="phH" style="margin:0">📷 Our photos</h2>
         <label class="btn sm yellow upl" for="up">Add photos<input type="file" id="up" accept="image/*" multiple></label></div>
         <p class="sub" style="margin-top:6px">For when the designer's photos don't show enough. Pick which step each one belongs to.</p>
-        ${g.photos.length ? `<div class="mph">${g.photos.map((p) => `<figure><button type="button" class="ph" data-lb="mine" data-src="${esc(img(p.path))}" data-cap="${esc(p.caption)}" style="background-image:url('${esc(img(p.path))}')" aria-label="View photo${p.caption ? ": " + esc(p.caption) : ""}"></button>
+        ${g.photos.length ? `<div class="mph">${g.photos.map((p) => `<figure>${phBtn(img(p.path), p.caption, "mine", "View photo" + (p.caption ? ": " + p.caption : ""))}
           <input type="text" data-cap-id="${p.id}" value="${esc(p.caption)}" placeholder="Caption" maxlength="300" aria-label="Caption">
           <div class="row"><select data-step-id="${p.id}" aria-label="Step" style="flex:1">${["", ...g.steps.map((_, i) => i)].map((v) => `<option value="${v}"${(p.step ?? "") === v ? " selected" : ""}>${v === "" ? "No step" : `Step ${v + 1}`}</option>`).join("")}</select>
           <button class="link danger" type="button" data-rm="${p.id}" aria-label="Remove photo">Remove</button></div></figure>`).join("")}</div>` : `<p class="empty">No photos of ours yet.</p>`}</section>
@@ -263,7 +293,12 @@
       ${srcs.length ? `<section class="card" aria-labelledby="dsH"><h2 class="sec" id="dsH">From the designers</h2>${srcs.map(srcHtml).join("")}</section>` : ""}
       ${!srcs.length && g.drive.length ? `<section class="card drive" aria-labelledby="drH"><h2 class="sec" id="drH">Print files in Jonathan's Drive</h2><p class="sub">No designer page found for this one. Opens for anyone the folder is shared with.</p><ul>${g.drive.map((d) => `<li><a href="https://drive.google.com/drive/folders/${encodeURIComponent(d.id)}" target="_blank" rel="noopener">📁 ${esc(d.name)} ↗</a></li>`).join("")}</ul></section>` : ""}`;
   }
-  const phBtn = (src, cap, group) => `<button type="button" class="ph" data-lb="${group}" data-src="${esc(src)}" data-cap="${esc(cap || "")}" style="background-image:url('${esc(src)}')" aria-label="View photo"><img src="${esc(src)}" alt="" hidden onerror="this.parentNode.classList.add('gone')"></button>`;
+  // A small, lazily loaded copy for thumbnails; data-src keeps the original for the viewer.
+  const thumb = (src, lazy) => `<img src="${esc(IC.sized(src, 400))}" data-full="${esc(IC.full(src))}" alt=""${lazy ? ' loading="lazy"' : ""} decoding="async" onerror="__imgFallback(this)">`;
+  window.__imgFallback = (el) => { // the resized copy failed: try the original once, then give up on the photo
+    if (el.dataset.full && !el.dataset.tried && el.getAttribute("src") !== el.dataset.full) { el.dataset.tried = 1; el.src = el.dataset.full; return; }
+    const b = el.closest("button.ph"); if (b) b.classList.add("gone"); else el.remove(); };
+  const phBtn = (src, cap, group, label) => `<button type="button" class="ph" data-lb="${group}" data-src="${esc(src)}" data-cap="${esc(cap || "")}" aria-label="${esc(label || "View photo")}">${thumb(src)}</button>`;
   function srcHtml(s, i) {
     return `<div class="src"><div><a class="t" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)} ↗</a><div class="note">${s.designer ? esc(s.designer) + " · " : ""}<a href="${esc(s.url)}" target="_blank" rel="noopener">Original model on ${SITE[s.src] || s.src} ↗</a>${s.price ? ` · ${esc(s.price)}` : ""}</div></div>
       ${s.pics.length ? `<div class="thumbs">${s.pics.map((p) => phBtn(p, s.title, "s" + i)).join("")}</div>` : `<p class="note">Photos are on the <a href="${esc(s.url)}" target="_blank" rel="noopener">original page ↗</a>.</p>`}
@@ -276,19 +311,86 @@
   }
   function readDraft() { if (!editing) return; document.querySelectorAll("[data-st]").forEach((el) => { draft.steps[+el.dataset.st].title = el.value; }); document.querySelectorAll("[data-sx]").forEach((el) => { draft.steps[+el.dataset.sx].text = el.value; }); const n = $("notesIn"); if (n) draft.notes = n.value; }
 
-  /* ---------- Lightbox ---------- */
-  function openLb(group, src) { lbList = [...document.querySelectorAll(`button.ph[data-lb="${group}"]:not(.gone)`)].map((b) => ({ src: b.dataset.src, cap: b.dataset.cap })); lbI = Math.max(0, lbList.findIndex((x) => x.src === src)); showLb(); $("lb").hidden = false; $("lbClose").focus(); }
-  function showLb() { const x = lbList[lbI]; $("lbImg").src = x.src; $("lbCap").textContent = x.cap || ""; $("lbN").textContent = `${lbI + 1} / ${lbList.length}`; $("lbPrev").disabled = lbList.length < 2; $("lbNext").disabled = lbList.length < 2; }
-  const closeLb = () => { $("lb").hidden = true; $("lbImg").removeAttribute("src"); };
-  document.addEventListener("keydown", (e) => { if ($("lb").hidden) return; if (e.key === "Escape") closeLb(); if (e.key === "ArrowRight") { lbI = (lbI + 1) % lbList.length; showLb(); } if (e.key === "ArrowLeft") { lbI = (lbI - 1 + lbList.length) % lbList.length; showLb(); } });
+  /* ---------- Photo viewer ----------
+     Photos in a group sit side by side in a scroll-snap track: swipe on a phone, trackpad-swipe, arrow buttons or ←/→ keys
+     to flip. Each photo is requested at about the screen's width (× pixel density) and fitted to the screen. Only the
+     current photo and its neighbours load. Double-tap / double-click zooms in 2.5× (drag or scroll to look around).
+     The phone's Back button closes the viewer. */
+  let lbOpener = null, lbScrollT = 0, lbTap = 0, lbTouchAt = 0;
+  const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const lbWant = () => Math.min(2400, Math.ceil(($("lbTrack").clientWidth || innerWidth) * (devicePixelRatio || 1)));
+  function openLb(group, src, opener) {
+    lbList = [...document.querySelectorAll(`button.ph[data-lb="${group}"]:not(.gone)`)].map((b) => ({ src: b.dataset.src, cap: b.dataset.cap }));
+    if (!lbList.length) return;
+    lbI = Math.max(0, lbList.findIndex((x) => x.src === src)); lbOpener = opener || null;
+    $("lbTrack").innerHTML = lbList.map((x, i) => `<div class="sl" data-i="${i}" role="group" aria-roledescription="slide" aria-label="Photo ${i + 1} of ${lbList.length}"><img alt="${esc(x.cap || "Photo " + (i + 1))}" draggable="false"></div>`).join("");
+    $("lbStrip").innerHTML = lbList.length > 1 ? lbList.map((x, i) => `<button type="button" data-lbgo="${i}" aria-label="Photo ${i + 1}">${thumb(x.src)}</button>`).join("") : "";
+    $("lbStrip").hidden = lbList.length < 2;
+    $("lb").hidden = false; document.documentElement.style.overflow = "hidden";
+    try { history.pushState({ lb: 1 }, ""); } catch (e) {}
+    lbGo(lbI, true); $("lbClose").focus();
+  }
+  function lbLoad(i) {
+    const sl = $("lbTrack").children[i]; if (!sl) return; const im = sl.querySelector("img"); if (im.dataset.on) return;
+    const x = lbList[i]; im.dataset.on = 1; im.dataset.full = IC.full(x.src);
+    im.onload = () => { im.classList.add("ok"); sl.classList.add("done"); };
+    im.onerror = () => { if (!im.dataset.tried && im.getAttribute("src") !== im.dataset.full) { im.dataset.tried = 1; im.src = im.dataset.full; } else { im.onerror = null; sl.classList.add("done"); im.alt = "This photo couldn't load"; im.classList.add("ok"); } };
+    im.src = IC.sized(x.src, lbWant());
+  }
+  function lbShow() {
+    const x = lbList[lbI]; [lbI, lbI + 1, lbI - 1, lbI + 2].forEach((i) => i >= 0 && i < lbList.length && lbLoad(i));
+    $("lbN").textContent = `${lbI + 1} / ${lbList.length}`; $("lbCap").textContent = x.cap || ""; $("lbFull").href = IC.full(x.src);
+    $("lbPrev").disabled = lbI === 0; $("lbNext").disabled = lbI === lbList.length - 1;
+    const strip = $("lbStrip"); strip.querySelectorAll("[data-lbgo]").forEach((b) => b.setAttribute("aria-current", +b.dataset.lbgo === lbI ? "true" : "false"));
+    const cur = strip.querySelector(`[data-lbgo="${lbI}"]`); if (cur) cur.scrollIntoView({ block: "nearest", inline: "center", behavior: reduceMotion() ? "auto" : "smooth" });
+  }
+  function lbGo(i, instant) {
+    unzoom(); lbI = Math.max(0, Math.min(lbList.length - 1, i)); const t = $("lbTrack");
+    t.scrollTo({ left: lbI * t.clientWidth, behavior: instant || reduceMotion() ? "auto" : "smooth" }); lbShow();
+  }
+  function unzoom() { $("lbTrack").classList.remove("zoomed"); $("lbTrack").querySelectorAll(".sl.z").forEach((sl) => { sl.classList.remove("z"); sl.querySelector("img").style.width = ""; }); }
+  function zoomAt(sl, cx, cy) {
+    const im = sl.querySelector("img"); if (!im.classList.contains("ok")) return;
+    if (sl.classList.contains("z")) return unzoom();
+    const r = im.getBoundingClientRect(), fx = (cx - r.left) / r.width, fy = (cy - r.top) / r.height, w = r.width * 2.5;
+    sl.classList.add("z"); $("lbTrack").classList.add("zoomed"); im.style.width = w + "px";
+    sl.scrollLeft = Math.max(0, fx * w - sl.clientWidth / 2); sl.scrollTop = Math.max(0, fy * im.offsetHeight - sl.clientHeight / 2);
+  }
+  function closeLb(fromHistory) {
+    if ($("lb").hidden) return;
+    $("lb").hidden = true; document.documentElement.style.overflow = ""; $("lbTrack").innerHTML = ""; $("lbStrip").innerHTML = "";
+    if (!fromHistory && history.state && history.state.lb) { try { history.back(); } catch (e) {} }
+    if (lbOpener && document.contains(lbOpener)) lbOpener.focus();
+  }
+  window.addEventListener("popstate", () => closeLb(true));
+  $("lbTrack").addEventListener("scroll", () => {
+    if ($("lbTrack").classList.contains("zoomed")) return;
+    clearTimeout(lbScrollT); lbScrollT = setTimeout(() => { const t = $("lbTrack"), i = Math.round(t.scrollLeft / Math.max(1, t.clientWidth)); if (i !== lbI && i >= 0 && i < lbList.length) { lbI = i; lbShow(); } }, 60);
+  }, { passive: true });
+  $("lbTrack").addEventListener("dblclick", (e) => { const sl = e.target.closest(".sl"); if (sl && Date.now() - lbTouchAt > 700) zoomAt(sl, e.clientX, e.clientY); });
+  $("lbTrack").addEventListener("pointerup", (e) => { // double-tap on touch screens
+    if (e.pointerType !== "touch") return; const now = Date.now(), sl = e.target.closest(".sl"); lbTouchAt = now;
+    if (sl && now - lbTap < 300) { lbTap = 0; zoomAt(sl, e.clientX, e.clientY); } else lbTap = now;
+  });
+  window.addEventListener("resize", () => { if (!$("lb").hidden) { const t = $("lbTrack"); t.scrollTo({ left: lbI * t.clientWidth, behavior: "auto" }); } });
+  document.addEventListener("keydown", (e) => {
+    if ($("lb").hidden) return;
+    if (e.key === "Escape") { e.preventDefault(); return closeLb(); }
+    if (e.key === "ArrowRight") { e.preventDefault(); return lbGo(lbI + 1); }
+    if (e.key === "ArrowLeft") { e.preventDefault(); return lbGo(lbI - 1); }
+    if (e.key === "Home") return lbGo(0); if (e.key === "End") return lbGo(lbList.length - 1);
+    if (e.key === "Tab") { const f = [...$("lb").querySelectorAll("a[href], button:not([disabled])")].filter((el) => el.offsetParent); if (!f.length) return; // keep focus inside the viewer
+      if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f.at(-1).focus(); } else if (!e.shiftKey && document.activeElement === f.at(-1)) { e.preventDefault(); f[0].focus(); } }
+  });
 
   /* ---------- Actions ---------- */
   document.addEventListener("click", async (e) => {
     const b = e.target.closest("button"); if (!b) return; const d = b.dataset;
     if (b.id === "lbClose") return closeLb();
-    if (b.id === "lbNext") { lbI = (lbI + 1) % lbList.length; return showLb(); }
-    if (b.id === "lbPrev") { lbI = (lbI - 1 + lbList.length) % lbList.length; return showLb(); }
-    if (d.lb) return openLb(d.lb, d.src);
+    if (b.id === "lbNext") return lbGo(lbI + 1);
+    if (b.id === "lbPrev") return lbGo(lbI - 1);
+    if (d.lbgo != null) return lbGo(+d.lbgo);
+    if (d.lb) return openLb(d.lb, d.src, b);
     if (b.id === "unlockBtn") { const p = $("pinIn").value.trim(); msg = "";
       if (state === "nocode") { if (p.length < 6) { msg = "Codes need at least 6 characters."; return render(); }
         try { const r = await window.ShelfMap.put(p, window.ShelfMap.empty(), null); if (r.error) return fail(r.error); } catch (err) { return failNet(err); } }

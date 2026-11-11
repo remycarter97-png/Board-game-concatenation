@@ -14,6 +14,26 @@
   const norm = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
   // Our own photos are stored as bucket paths; designer photos are full URLs.
   const photoUrl = (p) => (!p ? "" : /^https?:/.test(p) ? p : `${BASE}/storage/v1/object/public/insert-photos/${p}`);
+  // Ask each site's image service for a copy close to the width we need (thumbnails ~400px, the viewer about the screen
+  // width × pixel density), so phones don't pull 4000px originals. Unknown hosts get the original. If a resized copy
+  // ever fails to load, the page falls back to the original (data-full).
+  const STEPS = [400, 800, 1200, 1600, 2400];
+  function sized(u, want) {
+    if (!u || !/^https?:/.test(u)) return photoUrl(u);
+    const w = STEPS.find((s) => s >= want) || 2400;
+    try {
+      const url = new URL(u), h = url.hostname;
+      if (h === "makerworld.bblmw.com") return `${u.split("?")[0]}?x-oss-process=image/resize,w_${w}/format,webp`;
+      if (h === "cdn.thingiverse.com") return `https://resize.thingiverse.com/?url=${u}&w=${w}&h=${w}&fit=inside`;
+      if (h === "i.etsystatic.com") return u.replace(/il_fullxfull/, w <= 400 ? "il_340x270" : w <= 800 ? "il_794xN" : "il_1588xN");
+      if (h === "cdn.shopify.com") return `${u}${u.includes("?") ? "&" : "?"}width=${w}`;
+      if (h === "media.printables.com" && !u.includes("/thumbs/")) return u.replace(/\/([^/]+)\.(jpe?g|png|webp)$/i, `/thumbs/inside/${w <= 400 ? "320x240" : "1280x960"}/jpg/$1.webp`);
+      if (h === "images.cults3d.com" && w > 520) { const m = u.match(/https:\/\/fbi\.cults3d\.com\/.+$/); if (m) return m[0]; }
+    } catch (e) {}
+    return u;
+  }
+  // The largest copy we know of, for "open full size".
+  const full = (u) => { if (!u) return u; if (/images\.cults3d\.com/.test(u)) { const m = u.match(/https:\/\/fbi\.cults3d\.com\/.+$/); if (m) return m[0]; } return photoUrl(u); };
   // Phone photos are big: shrink to at most 1800px on the long side as JPEG before uploading.
   async function shrink(file, max = 1800) {
     try {
@@ -32,7 +52,7 @@
     return d;
   }
   const api = {
-    CODE_KEY: "game-shelf:shelf-pin", rpc, norm, photoUrl, shrink, upload,
+    CODE_KEY: "game-shelf:shelf-pin", rpc, norm, photoUrl, sized, full, shrink, upload,
     hasCode: () => rpc("shelf_get").then((r) => !!r?.exists),
     list: (pin) => rpc("inserts_list", { p_pin: pin }),
     get: (pin, id) => rpc("insert_get", { p_pin: pin, p_id: id }),
