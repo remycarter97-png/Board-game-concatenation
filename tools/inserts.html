@@ -232,7 +232,7 @@
       <section aria-label="Games">${s.length ? `<div class="grid">${s.map(cardHtml).join("")}</div>` : `<p class="empty">No games match.</p>`}</section>`;
   }
   function cardHtml(g) {
-    const kinds = g.kinds.map((k) => `<span class="bd">${SITE[k] || k}</span>`).join("") + (g.drive ? `<span class="bd">Drive</span>` : "");
+    const kinds = g.kinds.map((k) => `<span class="bd">${SITE[k] || k}</span>`).join("") + (g.drive && !g.kinds.length ? `<span class="bd">Drive</span>` : "");
     const mine = (g.steps ? `<span class="bd mine">${g.steps} step${g.steps > 1 ? "s" : ""}</span>` : "") + (g.photos ? `<span class="bd mine">📷 ${g.photos}</span>` : "");
     return `<a class="gc" href="#g=${encodeURIComponent(g.id)}"><span class="im" ${g.cover ? `style="background-image:url('${esc(img(g.cover))}')"` : ""}>${g.cover ? "" : "📦"}</span>
       <span class="tx"><b>${esc(g.name)}</b><span class="badges">${mine}${kinds}</span></span></a>`;
@@ -242,7 +242,7 @@
     const stepPhotos = (i) => g.photos.filter((p) => p.step === i);
     return `<section class="card"><a class="back" href="#">‹ All games</a>
       <h2 class="sec" style="margin-top:8px;font-size:1.5rem">${esc(g.name)}</h2>
-      <p class="sub">${srcs.length ? `${srcs.length} model${srcs.length > 1 ? "s" : ""} from ${[...new Set(srcs.map((s) => SITE[s.src]))].join(", ")}` : "No designer pages linked"}${g.drive.length ? " · print files in Drive" : ""}${g.bgg ? ` · <a href="https://boardgamegeek.com/boardgame/${g.bgg}" target="_blank" rel="noopener">BGG ↗</a>` : ""}</p></section>
+      <p class="sub">${srcs.length ? `${srcs.length} model${srcs.length > 1 ? "s" : ""} from ${[...new Set(srcs.map((s) => SITE[s.src]))].join(", ")}` : "No designer pages linked"}${!srcs.length && g.drive.length ? " · print files in Drive" : ""}${g.bgg ? ` · <a href="https://boardgamegeek.com/boardgame/${g.bgg}" target="_blank" rel="noopener">BGG ↗</a>` : ""}</p></section>
 
       <section class="card" aria-labelledby="stH"><div class="row" style="justify-content:space-between"><h2 class="sec" id="stH" style="margin:0">📦 Packing it back in</h2>
         ${editing ? `<div class="row"><button class="btn sm yellow" type="button" id="saveSteps">Save</button><button class="link" type="button" id="cancelSteps">Cancel</button></div>` : `<button class="btn sm" type="button" id="editSteps">${steps.length ? "Edit steps" : "Write the steps"}</button>`}</div>
@@ -261,12 +261,12 @@
           <button class="link danger" type="button" data-rm="${p.id}" aria-label="Remove photo">Remove</button></div></figure>`).join("")}</div>` : `<p class="empty">No photos of ours yet.</p>`}</section>
 
       ${srcs.length ? `<section class="card" aria-labelledby="dsH"><h2 class="sec" id="dsH">From the designers</h2>${srcs.map(srcHtml).join("")}</section>` : ""}
-      ${g.drive.length ? `<section class="card drive" aria-labelledby="drH"><h2 class="sec" id="drH">Print files in Jonathan's Drive</h2><p class="sub">Opens for anyone the folder is shared with.</p><ul>${g.drive.map((d) => `<li><a href="https://drive.google.com/drive/folders/${encodeURIComponent(d.id)}" target="_blank" rel="noopener">📁 ${esc(d.name)} ↗</a></li>`).join("")}</ul></section>` : ""}`;
+      ${!srcs.length && g.drive.length ? `<section class="card drive" aria-labelledby="drH"><h2 class="sec" id="drH">Print files in Jonathan's Drive</h2><p class="sub">No MakerWorld, Printables or Thingiverse page found for this one. Opens for anyone the folder is shared with.</p><ul>${g.drive.map((d) => `<li><a href="https://drive.google.com/drive/folders/${encodeURIComponent(d.id)}" target="_blank" rel="noopener">📁 ${esc(d.name)} ↗</a></li>`).join("")}</ul></section>` : ""}`;
   }
   const phBtn = (src, cap, group) => `<button type="button" class="ph" data-lb="${group}" data-src="${esc(src)}" data-cap="${esc(cap || "")}" style="background-image:url('${esc(src)}')" aria-label="View photo"><img src="${esc(src)}" alt="" hidden onerror="this.parentNode.classList.add('gone')"></button>`;
   function srcHtml(s, i) {
-    return `<div class="src"><div><a class="t" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)} ↗</a><div class="note">${esc(s.designer || "")} · ${SITE[s.src] || s.src}</div></div>
-      ${s.pics.length ? `<div class="thumbs">${s.pics.map((p) => phBtn(p, s.title, "s" + i)).join("")}</div>` : ""}
+    return `<div class="src"><div><a class="t" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)} ↗</a><div class="note">${s.designer ? esc(s.designer) + " · " : ""}<a href="${esc(s.url)}" target="_blank" rel="noopener">Original model on ${SITE[s.src] || s.src} ↗</a></div></div>
+      ${s.pics.length ? `<div class="thumbs">${s.pics.map((p) => phBtn(p, s.title, "s" + i)).join("")}</div>` : `<p class="note">Photos are on the <a href="${esc(s.url)}" target="_blank" rel="noopener">original page ↗</a>.</p>`}
       ${s.summary ? `<details><summary>Designer's notes</summary><p>${esc(s.summary)}</p></details>` : s.src !== "makerworld" ? `<p class="note">Designer's notes are on the <a href="${esc(s.url)}" target="_blank" rel="noopener">${SITE[s.src]} page ↗</a>.</p>` : ""}</div>`;
   }
   function editStepHtml(s, i, n) {
