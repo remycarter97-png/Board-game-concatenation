@@ -194,6 +194,9 @@
     .weeks { grid-template-columns: repeat(5, minmax(0, 1fr)); } .bld { grid-template-columns: 3em minmax(0, 1fr) auto; } .bld .bstate, .bld .blvl { grid-column: 2 / -1; }
     .chars { grid-template-columns: minmax(0, 1fr); }
   }
+  .bggp { margin: 14px 0 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .bggp .bgg { display: inline-block; background: #fff; border-radius: 10px; padding: 6px 10px; line-height: 0; border: 1px solid rgba(0,0,0,.12); }
+  .bggp .bgg img { width: 180px; height: auto; display: block; }
 </style>
 <link rel="stylesheet" href="/safe-area.css">
 </head>
@@ -218,7 +221,7 @@
   </header>
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools" id="crumb">‹ All tools</a></nav>
   <main id="app"><section class="card"><p>Loading…</p></section></main>
-  <footer>Campaigns are saved in this browser. Turn on a backup code to keep a copy online and open it on another device; whoever has the code can open and change it.</footer>
+  <footer>Campaigns are saved in this browser. Turn on a backup code to keep a copy online and open it on another device; whoever has the code can open and change it.<p class="bggp"><a class="bgg" href="https://boardgamegeek.com" target="_blank" rel="noopener"><img src="/powered-by-bgg.png" alt="Powered by BGG" width="180" height="53"></a><span>Game data from BoardGameGeek.</span></p></footer>
 </div>
 <script src="/tools/campaign-templates.js"></script>
 <script src="/tools/shelf-sync.js"></script>

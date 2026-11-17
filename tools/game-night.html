@@ -168,6 +168,9 @@
     .wrap { padding: 0 16px; } header.top { padding-top: 24px; } .logo { width: 54px; height: 54px; } .brand { gap: 12px; }
     .card { box-shadow: var(--pop-sm); padding: 16px; border-radius: 18px; } .art { width: 64px; height: 64px; }
   }
+  .bggp { margin: 14px 0 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .bggp .bgg { display: inline-block; background: #fff; border-radius: 10px; padding: 6px 10px; line-height: 0; border: 1px solid rgba(0,0,0,.12); }
+  .bggp .bgg img { width: 180px; height: auto; display: block; }
 </style>
 <link rel="stylesheet" href="/safe-area.css">
 </head>
@@ -224,7 +227,7 @@
       <div id="results" aria-live="polite"><p class="summary">Loading the shelf…</p></div>
     </section>
   </div>
-  <footer>People and their preferences are saved in this browser, and shared with anyone who has the group's code if you share it. "Played recently" uses Remy's logged plays on BoardGameGeek.</footer>
+  <footer>People and their preferences are saved in this browser, and shared with anyone who has the group's code if you share it. "Played recently" uses Remy's logged plays on BoardGameGeek.<p class="bggp"><a class="bgg" href="https://boardgamegeek.com" target="_blank" rel="noopener"><img src="/powered-by-bgg.png" alt="Powered by BGG" width="180" height="53"></a><span>Game data from BoardGameGeek.</span></p></footer>
 </div>
 <script src="/tools/gn-core.js"></script>
 <script>

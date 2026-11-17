@@ -86,3 +86,7 @@ Environment variables in Vercel:
 Pushes to `main` deploy automatically.
 
 Powered by [BoardGameGeek](https://boardgamegeek.com).
+
+## BoardGameGeek attribution
+
+Every page that shows BoardGameGeek data (the home page, Stats and the tools that use the collection) has the "Powered by BGG" logo linking to boardgamegeek.com, as BGG's XML API terms require. BGG text such as game descriptions is shown in full, never cut; long text is only visually limited, with the full version one tap away.

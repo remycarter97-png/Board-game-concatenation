@@ -1569,7 +1569,7 @@ function heroHtml() {
     ${pic ? `<div class="rhbg" style="background-image:url('${esc(pic)}')"></div>` : ""}<div class="rhshade"></div>
     <div class="rhtxt"><span class="rbadge">${esc(label)}</span><h2>${esc(g.name)}</h2>
       <div class="rhfacts">${[g.year, players(g) && `${players(g)} players`, timeText(g), g.weight && `Complexity ${g.weight.toFixed(1)}`, g.rating && `★ ${g.rating.toFixed(1)}`].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join("")}</div>
-      ${g.description ? `<p>${esc(g.description.trim().slice(0, 400))}</p>` : ""}
+      ${g.description ? `<p>${esc(g.description.trim())}</p>` : ""}
       <div class="rhbtns"><button class="btn" data-open="${esc(g.id)}">See details</button><button class="btn ghost" data-surprise="1">🎲 Surprise me</button></div></div>
     <div class="rhart">${pic ? imgTag(g, pic) : ""}</div>
     ${list.length > 1 ? `<div class="rhdots" role="group" aria-label="Choose a featured game">${list.map((x, i) => `<button data-hero="${i}" aria-label="Show ${esc(x.g.name)}" aria-current="${!heroPick && i === heroI}"></button>`).join("")}</div>` : ""}

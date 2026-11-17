@@ -143,6 +143,9 @@
     .hero { grid-template-columns: 1fr; box-shadow: 5px 5px 0 var(--outline); padding: 18px; } .hero .big { width: 84px; height: 84px; font-size: 3.4rem; }
     .mixrow { grid-template-columns: 120px minmax(0, 1fr) 3em; font-size: .9rem; }
   }
+  .bggp { margin: 14px 0 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .bggp .bgg { display: inline-block; background: #fff; border-radius: 10px; padding: 6px 10px; line-height: 0; border: 1px solid rgba(0,0,0,.12); }
+  .bggp .bgg img { width: 180px; height: auto; display: block; }
 </style>
 <link rel="stylesheet" href="/safe-area.css">
 </head>
@@ -167,7 +170,7 @@
   </header>
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools">‹ All tools</a></nav>
   <main id="app" aria-live="polite"><section class="card"><p>Loading the shelf…</p></section></main>
-  <footer>Your answers and result are saved in this browser. Game matches come from our collection on BoardGameGeek.</footer>
+  <footer>Your answers and result are saved in this browser. Game matches come from our collection on BoardGameGeek.<p class="bggp"><a class="bgg" href="https://boardgamegeek.com" target="_blank" rel="noopener"><img src="/powered-by-bgg.png" alt="Powered by BGG" width="180" height="53"></a><span>Game data from BoardGameGeek.</span></p></footer>
 </div>
 <script>
 (function () {

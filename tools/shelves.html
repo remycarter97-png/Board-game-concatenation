@@ -138,6 +138,9 @@
   .unplaced button { min-height: 32px; padding: 0 10px; border-radius: 999px; border: 2px solid var(--outline); background: var(--surface); font-weight: 800; font-size: .84rem; color: var(--ink); }
   footer { margin: 40px 0 0; padding: 24px 0 40px; border-top: 2.5px dashed var(--line); color: var(--muted); font-size: .88rem; font-weight: 600; }
   @media (max-width: 760px) { .wrap { padding: 0 16px; } header.top { padding-top: 22px; } .logo { width: 54px; height: 54px; } .brand { gap: 12px; } .card { box-shadow: var(--pop-sm); padding: 16px; border-radius: 18px; } .art { width: 72px; height: 72px; } .cb { min-height: 64px; } .cb .t:nth-of-type(n+4) { display: none; } }
+  .bggp { margin: 14px 0 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .bggp .bgg { display: inline-block; background: #fff; border-radius: 10px; padding: 6px 10px; line-height: 0; border: 1px solid rgba(0,0,0,.12); }
+  .bggp .bgg img { width: 180px; height: auto; display: block; }
 </style>
 <link rel="stylesheet" href="/safe-area.css">
 </head>
@@ -162,7 +165,7 @@
   </header>
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools">‹ All tools</a></nav>
   <main id="app"><section class="card"><p>Loading the shelves…</p></section></main>
-  <footer>The shelf map is private: seeing it and changing it both need the shelf code. Rows count from the top and columns from the left; games standing up count from the left, stacked games from the bottom.</footer>
+  <footer>The shelf map is private: seeing it and changing it both need the shelf code. Rows count from the top and columns from the left; games standing up count from the left, stacked games from the bottom.<p class="bggp"><a class="bgg" href="https://boardgamegeek.com" target="_blank" rel="noopener"><img src="/powered-by-bgg.png" alt="Powered by BGG" width="180" height="53"></a><span>Game data from BoardGameGeek.</span></p></footer>
 </div>
 <script src="/tools/shelf-core.js"></script>
 <script>

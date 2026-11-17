@@ -186,6 +186,9 @@
     .code { font-size: 1.8rem; }
   }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  .bggp { margin: 14px 0 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .bggp .bgg { display: inline-block; background: #fff; border-radius: 10px; padding: 6px 10px; line-height: 0; border: 1px solid rgba(0,0,0,.12); }
+  .bggp .bgg img { width: 180px; height: auto; display: block; }
 </style>
 <link rel="stylesheet" href="/safe-area.css">
 </head>
@@ -260,7 +263,7 @@
     </section>
   </div>
 
-  <footer>Each party and its turns are saved in this browser. A shared party's list of names is kept on this site so anyone with its code can open it; turns and initiative numbers stay on each device.</footer>
+  <footer>Each party and its turns are saved in this browser. A shared party's list of names is kept on this site so anyone with its code can open it; turns and initiative numbers stay on each device.<p class="bggp"><a class="bgg" href="https://boardgamegeek.com" target="_blank" rel="noopener"><img src="/powered-by-bgg.png" alt="Powered by BGG" width="180" height="53"></a><span>Game data from BoardGameGeek.</span></p></footer>
 </div>
 
 <script>

@@ -198,6 +198,9 @@
     .timeline li { grid-template-columns: 4.4em 16px minmax(0, 1fr) auto; gap: 8px; }
     .gtop { flex-wrap: wrap; } .vl { display: none; } .vbtn { min-width: 64px; justify-content: center; } .gitem { gap: 10px; padding: 10px; } .vbtn { padding: 0 8px; }
   }
+  .bggp { margin: 14px 0 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .bggp .bgg { display: inline-block; background: #fff; border-radius: 10px; padding: 6px 10px; line-height: 0; border: 1px solid rgba(0,0,0,.12); }
+  .bggp .bgg img { width: 180px; height: auto; display: block; }
 </style>
 <link rel="stylesheet" href="/safe-area.css">
 </head>
@@ -222,7 +225,7 @@
   </header>
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/tools/game-night">‹ Game night planner</a></nav>
   <main id="app" aria-live="polite"><section class="card"><p>Loading…</p></section></main>
-  <footer>Anyone with an event's link can see it, add their availability, ratings and votes. Only the organizer (the device that made it) can change the details, pick the time and build the night.</footer>
+  <footer>Anyone with an event's link can see it, add their availability, ratings and votes. Only the organizer (the device that made it) can change the details, pick the time and build the night.<p class="bggp"><a class="bgg" href="https://boardgamegeek.com" target="_blank" rel="noopener"><img src="/powered-by-bgg.png" alt="Powered by BGG" width="180" height="53"></a><span>Game data from BoardGameGeek.</span></p></footer>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="/tools/gn-core.js"></script>
