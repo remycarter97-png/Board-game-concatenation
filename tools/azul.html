@@ -258,7 +258,7 @@
       <div class="tw"><table><thead><tr><th>Player</th><th>Board</th><th>Rows</th><th>Columns</th><th>Colors</th><th>Final</th></tr></thead><tbody>
       ${rows.map((x) => `<tr class="${winners.includes(x) ? "win" : ""}"><td>${esc(S.players[x.i].name)}</td><td>${x.board}</td><td>${x.rows} <small>+${x.rows * 2}</small></td><td>${x.cols} <small>+${x.cols * 7}</small></td><td>${x.colors} <small>+${x.colors * 10}</small></td><td><b>${x.final}</b></td></tr>`).join("")}</tbody></table></div>
       ${winners.length === 1 && rows[1] && rows[1].final === top.final ? `<p class="note">Tied on points; ${esc(S.players[top.i].name)} wins with more complete rows.</p>` : ""}
-      <div class="row"><button class="btn yellow" type="button" id="again">New game, same players</button><button class="link" type="button" id="undoFinish">Oops, keep playing</button></div>
+      <div class="row"><button class="btn yellow" type="button" id="again">New game, same players</button><button class="btn" type="button" id="againNew">New game, different players</button><button class="link" type="button" id="undoFinish">Oops, keep playing</button></div>
       ${BGStats.block("azul", "Opens BG Stats with this game filled in.")}</section>`;
   }
   // The finished game as a BG Stats play: ranks follow the final table (points, then complete rows).
@@ -282,6 +282,9 @@
     if (b.id === "addP") { S.players.push(newPlayer(`Player ${S.players.length + 1}`)); S.cur = S.players.length - 1; editingNames = true; save(); render(); $(`nm${S.cur}`)?.select(); return; }
     if (b.id === "names") { editingNames = !editingNames; render(); return; }
     if (d.rmp) { S.players.splice(Number(d.rmp), 1); S.cur = Math.min(S.cur, S.players.length - 1); save(); render(); return; }
+    if (b.id === "againNew") { // fresh board and a fresh player list, with the name boxes open to fill in
+      S = { players: [newPlayer("Me")], cur: 0, roundNo: 1, history: [], done: null }; editingNames = true; save(); render();
+      const first = document.getElementById("nm0"); if (first) { first.focus(); first.select(); } return; }
     if (b.id === "again") { S = { players: S.players.map((q) => newPlayer(q.name)), cur: 0, roundNo: 1, history: [], done: null }; save(); render(); return; }
     if (b.id === "undoFinish") { const h = S.history.pop(); if (h) { S.players = h.players; S.roundNo = h.roundNo; } S.done = null; save(); render(); return; }
     if (d.bgs && S.done) { BGStats.sendFrom(b, azulPlay()); return; }
@@ -300,7 +303,11 @@
     if (b.id === "resetNo") { confirmReset = false; render(); return; }
     if (b.id === "resetYes") { S = { players: S.players.map((q) => newPlayer(q.name)), cur: 0, roundNo: 1, history: [], done: null }; confirmReset = false; save(); render(); return; }
   });
-  document.addEventListener("change", (e) => { const d = e.target.dataset; if (d.nm) { S.players[Number(d.nm)].name = e.target.value.trim().slice(0, 16) || `Player ${Number(d.nm) + 1}`; save(); render(); } });
+  // Saving a name updates the player tab in place instead of redrawing the page: a redraw here would swallow the tap
+  // that moved focus out of the box (e.g. tapping "+ Player" or "Done" straight after typing). The next redraw catches up.
+  document.addEventListener("change", (e) => { const d = e.target.dataset; if (!d.nm) return; const i = Number(d.nm);
+    S.players[i].name = e.target.value.trim().slice(0, 16) || `Player ${i + 1}`; save();
+    const tab = document.querySelector(`[data-p="${i}"]`); if (tab && tab.firstChild && tab.firstChild.nodeType === 3) tab.firstChild.nodeValue = S.players[i].name; });
   document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.dataset?.nm) e.target.blur(); });
   render();
 })();
